@@ -80,6 +80,10 @@ Break Gate 1 into numbered, commit-sized tasks with:
 - focused verification
 - gate-wide verification
 
+**Status: COMPLETE.** Gate 1 below contains ten numbered tasks, each with purpose, dependencies, expected files, acceptance criteria, focused verification, and prohibited adjacent work. A single internal Rust crate proves the contract before application scaffolding or integrations. The final task specifies full checks and an evidence-based handoff.
+
+Verification: reviewed task dependency order and scenario coverage; reconciled independent review by placing fulfillment resolution and checked expiry preflight before graph/source validation needs them. Mechanically checked all six required task fields across 1.1–1.10. The plan was checked against the authorized exclusions; no planned files were created and no toolchain/dependencies were installed.
+
 ### Gate 0 completion criteria
 
 - documentation set is internally consistent
@@ -99,29 +103,117 @@ When satisfied, append an evidence report below and mark:
 
 **Goal:** prove the domain model, virtual clock, deterministic pressure skeleton, and scenario harness before building the real UI.
 
-Gate 1 exact tasks are to be produced by Gate 0.4 and ratified before implementation.
+**Status: PLANNED; NOT STARTED.** This is Task 0.4's executable plan, bounded by `DOMAIN-CONTRACT.md` version 1 and `SCENARIOS.md` S01–S16. Gate 0 completion prepares the handoff; the Gate 0 run stops without executing this plan.
 
-Expected broad scope:
+Gate 1 builds one internal Rust library crate, `crates/temporal-core`, plus local synthetic tests. The eventual desktop stack is unchanged, but no Tauri/Svelte/TypeScript application, SQLite/persistence crate, source adapter, UI/renderer, compression formula, network service, background process, AI, travel, companion surfaces, mobile, FI99 package/SDK, packaging, public distribution, or remote publication belongs in this gate. Source kinds and health are normalized synthetic data only. No real Trace database/calendar/token is a test dependency.
 
-- minimal repository scaffold
-- `temporal-core`
-- injected clock
-- normalized object model
-- deterministic serialization/validation
-- synthetic scenario harness
-- first pressure/risk primitives
-- tests
+Use the task order below, one task per commit. Record actual files/check results in each task's evidence and update ASTRA to the next incomplete task only after its acceptance criteria pass. Future file/module paths below are expected organization, not files that already exist. A small private helper may be colocated differently without changing semantics; document meaningful deviations. Local focused commands use the test/module names established by the corresponding task, with the gate-wide commands fixed below.
 
-Explicitly out of scope:
+### 1.1 Establish the minimal Rust core workspace
 
-- polished Horizon UI
-- Quercus OAuth/token handling
-- Google/Outlook
-- background sync
-- AI
-- travel
-- mobile
-- FI99 extraction
+- **Purpose:** make a repeatable local build/check entry point for the core proof, independent of the eventual desktop shell.
+- **Dependencies:** completed Gate 0 and its committed domain/scenario contract; inspect toolchain availability before choosing versions.
+- **Expected files:** root `Cargo.toml`, `Cargo.lock`, `rust-toolchain.toml`, `.gitignore`, `.gitattributes`; `crates/temporal-core/Cargo.toml`, `crates/temporal-core/src/lib.rs`; README development commands.
+- **Acceptance:** one workspace member and an internal library with `publish=false`; explicitly pinned Rust release and committed lockfile. Ignore build products/local private inputs without hiding documentation/fixtures. Declare only dependencies needed for the following approved core tasks, chosen and pinned against the actual toolchain; no speculative crate tree. Record the exact rustc/cargo versions and local Windows build prerequisites that were verified. An empty business module at this scaffold step is acceptable and is not engine evidence.
+- **Focused verification:** `cargo metadata --no-deps --format-version 1`, `cargo check --workspace --locked`, and `cargo fmt --all -- --check`; inspect workspace membership and dependency directions. No artificial arithmetic test merely to manufacture a green test count.
+- **Prohibited adjacent work:** application shell, WebView setup, frontend package manager, database schema, CI hosting, installer, remote repository, extra public libraries, or implementation of temporal behavior in the scaffold commit.
+
+### 1.2 Implement explicit time primitives and the injected clock
+
+- **Purpose:** make every later rule operate on a captured instant and explicit civil-time rules.
+- **Dependencies:** 1.1; Domain Contract Sections 2–3 and S11/S16 time cases.
+- **Expected files:** `crates/temporal-core/src/clock.rs`, `time.rs`, exports from `lib.rs`; focused `tests/time_contract.rs`; manifest/lockfile changes only for required time support.
+- **Acceptance:** UTC millisecond instants, checked duration arithmetic, TimedSpan/DateSpan/cutoff primitives, explicit IANA rules and recorded rules version. One injected clock read at the evaluation boundary; frozen/advanceable test clock. Resolve only explicit zone/offset choices, enforce half-open intervals and civil-date endpoints, and reject ambiguous/nonexistent/unrepresentable input. Distinguish a snapshot's captured time from later evaluation time. Host zone and wall-clock reads cannot affect pure logic.
+- **Focused verification:** exact cutoff equality versus +1ms, inclusive due-date next-boundary behavior, touching/overlapping spans, cross-midnight spans, S11's 23/25-hour days and gap/fold resolutions, display-zone invariance, backwards-before-snapshot rejection, and checked overflow. Search the new core code for uncontrolled system-clock/local-zone reads. Run focused tests plus workspace check/format.
+- **Prohibited adjacent work:** compression coordinates, animation timers, recurring import parsing, reminders, OS background scheduling, or implicit local-time defaults.
+
+### 1.3 Implement distinct domain types and field ownership
+
+- **Purpose:** encode the species/provenance distinctions so later code cannot flatten them accidentally.
+- **Dependencies:** 1.2; Domain Contract Sections 1–6 and typed result definitions in Sections 7–10.
+- **Expected files:** `crates/temporal-core/src/domain/` (`ids.rs`, `objects.rs`, `work.rs`, `source.rs`, module exports), `results.rs`, `reasons.rs`; `tests/domain_types.rs`.
+- **Acceptance:** typed fixed UUID identities; source-instance/import keys; separate Anchor, Deadline, Trace Task Reference, Intention, Routine and keyed annotations/outcomes. Define Window/Suggestion/pressure/reason result types separately from stored facts. Encode DateSpan rather than an all-day boolean; explicit recorded versus Trace-task fulfillment; standalone versus single linked effort; certainty, confirmation revision, occupancy, significance, unknown/at_least effort, context and energy. Trace due projections and Milestone overlays cannot duplicate work or become a second generic event. No evaluator-side ID allocation or source writer exists.
+- **Focused verification:** constructors and representative synthetic values for each species; current/stale confirmation representation, source task state preservation, no completion field on Suggestion, no standalone Milestone workload, and explicit unknown variants. Use meaningful type/ownership/shape tests; lifecycle calculations belong to 1.5. Run focused tests and broader workspace check/format.
+- **Prohibited adjacent work:** generic event/property-bag schema, generic source SDK, database models, actual Trace schema assumptions, task editing/writeback, source deduplication heuristics, or ranking behavior.
+
+### 1.4 Add strict serialization, validation, and the synthetic fixture harness
+
+- **Purpose:** make the contract executable as inspectable inputs and reject invalid states before evaluation.
+- **Dependencies:** 1.3; Domain Contract Section 10; SCENARIOS fixture conventions and S16 rejection matrix.
+- **Expected files:** `crates/temporal-core/src/validation.rs`, `codec.rs`, `fulfillment.rs`; `crates/temporal-core/tests/support/`, `tests/fixtures/`, `tests/validation_contract.rs`, `tests/fixture_contract.rs`; a concise fixture coverage manifest in `tests/fixtures/README.md`.
+- **Acceptance:** strict schema/version/field/tag parsing including duplicate JSON-key detection, ownership/reference/identity/link validation, timestamp/interval/source consistency, and deterministic issue ordering. Include the minimal clock-independent authoritative fulfillment resolver needed to count unresolved/unknown work owners correctly (valid Done-linked S13 versus invalid duplicate-owner S16); 1.5 must reuse it. Preflight source-expiry addition with 1.2's checked arithmetic so the S16 overflow fixture fails validation before health evaluation. Canonical JSON honors the contract's integer, escaping, optional-field, set, and key rules. Materialize every S01–S16 base and named variant as explicit synthetic fixtures or named deterministic fixture mutations, with stable IDs and frozen settings. The harness can select a scenario/stage and report expected validation issues. Record which semantic stages are implemented; do not mark the whole scenario suite passed yet.
+- **Focused verification:** all valid snapshots parse/validate/round-trip without losing provenance or unknown values; S16 invalid variants fail as specified without partial output; canonical bytes agree across reordered collections; each scenario/variant ID is accounted for in the coverage manifest. Prior Suggestions remain a separate inferred collection. Run focused tests, all existing workspace tests, check/format/clippy.
+- **Prohibited adjacent work:** real source parsing, ICS/RRULE support, Trace transport, SQLite migrations, new fixture semantics beyond the contract, expected values generated from the implementation being tested, or skipped tests that pretend unimplemented engine stages are complete.
+
+### 1.5 Implement temporal lifecycle and bounded routine occurrences
+
+- **Purpose:** establish fixed/soft passage, explicit completion, and stable recurrence semantics before capacity calculation.
+- **Dependencies:** 1.4; Domain Contract Section 5; S01–S03/S07–S11/S13–S14 lifecycle cases.
+- **Expected files:** `crates/temporal-core/src/lifecycle.rs`, `recurrence.rs`; `tests/lifecycle_contract.rs`, `tests/recurrence_contract.rs`; scenario-stage assertions/coverage updates.
+- **Acceptance:** Anchor upcoming/ongoing/passed/inactive; complete Deadline phase/resolution table including unknown fulfillment and exact/date-only boundaries, reusing 1.4's fulfillment resolver. Done-linked independent work can have derived zero effort without satisfying its Deadline. Intention preference passage preserves active user state. Weekly Routine expansion is bounded, uses stable date keys, respects pause/outcomes/rule edits, and never accumulates debt. Helpers can inspect historical occurrence state without restoring it as a candidate.
+- **Focused verification:** S09 real overdue versus S10 underlying flexible work, S11 temporal boundaries, both valid one-link S13 unknown-status fixtures, authoritative removal/completion, and all S14 current/future/past/paused/edited-rule/outcome cases. Advance only the injected clock and assert stored input equality. Run focused and existing broader checks.
+- **Prohibited adjacent work:** attendance inference, effort learning, Trace completion commands, automatic intention-to-Deadline conversion, general recurrence engines, or UI rollover behavior.
+
+### 1.6 Derive source health and dependency coverage
+
+- **Purpose:** prevent missing or stale sources from producing unqualified conclusions.
+- **Dependencies:** 1.5; Domain Contract Section 6; S06/S08/S12/S13.
+- **Expected files:** `crates/temporal-core/src/source_health.rs`; `tests/source_health_contract.rs`; harness stage/coverage updates.
+- **Acceptance:** deterministic never_loaded/healthy/stale/partial/unavailable/incompatible precedence; exact freshness equality; checked expiry arithmetic. Calculate coverage per role and automatically include factual dependencies even when omitted from explicit requirements. Trace due projections inherit complete Task catalog coverage; unrelated linked deadlines retain their own source coverage. Empty required sources remain visible, last-known records remain inputs, and overdue/inactive assessments need no backwards future interval. Source health qualifies facts without rewriting status/provenance.
+- **Focused verification:** all S12 variants including 09:30 equality/+1ms health, S13 stale Done/zero work despite omitted explicit T requirements, healthy task_due without separate Deadline coverage, and wrong role/interval coverage. S16 expiry overflow remains covered by 1.4's preflight validation. Separate health tests from opportunity arithmetic until 1.7. Run focused and broader existing checks.
+- **Prohibited adjacent work:** adapter reconciliation transport, actual refresh jobs, database queries, credentials, OAuth, source discovery, or automatic deletion/completion on failure.
+
+### 1.7 Derive Windows and the complete work-fit matrix
+
+- **Purpose:** prove primitive usable opportunity from declared willingness, fixed blockers, and explicit compatibility.
+- **Dependencies:** 1.6; Domain Contract Section 7; S01–S08/S11–S16.
+- **Expected files:** `crates/temporal-core/src/opportunity.rs`, `fit.rs`; `tests/opportunity_contract.rs`, `tests/fit_contract.rs`; fixture-stage assertions/coverage.
+- **Acceptance:** clip declarations to evaluation range, union blocking Anchors once, preserve transparent/tentative/unknown occupancy semantics, and expose conflicts separately. Derive stable Window keys and every eligible target × Window fit row, including empty clipping. Match context/energy and useful chunk duration explicitly; handle earliest bounds, routine dates, single-work targets, and out-of-range deadlines. Known-zero temporal impossibility precedes missing-input uncertainty. Unknown fit capacity retains its known subtotal; shared Windows are never reservations.
+- **Focused verification:** S02 raw versus usable opportunity, S05 union/conflict/transparency, S06 fragments/zero, S11 civil-day durations, S12 chunk loss after +1ms, S14 complete occurrence/Window pairing, and S15 definite mismatch versus unknown and mathematical zero. Check interval containment, disjoint Windows, capacity conservation, and input-order invariance. Run focused and broader existing checks.
+- **Prohibited adjacent work:** guessed free time, working-hours defaults, inferred travel/location/energy, calendar auto-blocking, shared-capacity allocation, task scheduling, or visual Window layout.
+
+### 1.8 Implement proof-v1 pressure with structured reasons
+
+- **Purpose:** calculate the first transparent individual-work risk assessment from the contract's exact table.
+- **Dependencies:** 1.7; Domain Contract Sections 8–9; all scenario pressure expectations.
+- **Expected files:** `crates/temporal-core/src/pressure.rs`, reason construction in `reasons.rs`; `tests/pressure_contract.rs`; pressure-stage fixture assertions/coverage.
+- **Acceptance:** one result per present Deadline, endpoint/ID order, authoritative fulfillment first, exact unreduced integer ratios, room/tight/insufficient thresholds, zero/unknown/lower-bound cases, and consistent early-return field omission. Source qualifications are computed even for unknown/overdue/resolved outcomes. Explain inputs, cutoff, blocking/fit decisions, shortages/uncertainty, and individual_capacity_only. Importance and Trace priority do not modify E/O; no aggregate success verdict is emitted.
+- **Focused verification:** S03 time-driven escalation with unchanged effort, S04 tie order/shared-capacity limitation, S06 shortage and zero denominator, S09 overdue early return, S13 effective zero/unknown/lower bounds, and S16 threshold/range equality and +1ms variants. Check that less usable capacity cannot lower a fixed positive-work ratio, and that every emitted value is reproducible from referenced inputs. Run focused and broader existing checks.
+- **Prohibited adjacent work:** learned/calibrated weights, a final Today ranking, pressure-zone coordinates, dependence graphs, global optimization, AI explanations, or changing contract thresholds to make tests pass.
+
+### 1.9 Assemble deterministic evaluation and suggestion validity
+
+- **Purpose:** expose a complete pure evaluation result and prove that old advice cannot become current obligations.
+- **Dependencies:** 1.8; Domain Contract Sections 3/9/10; full S01–S16 expectations.
+- **Expected files:** `crates/temporal-core/src/evaluate.rs`, `suggestion.rs`; final exports; `tests/scenarios.rs`, `tests/suggestion_contract.rs`; complete fixture expected assertions/coverage manifest.
+- **Acceptance:** one frozen EvaluationKey, validated immutable input, complete typed output arrays, canonical ordering/reasons, and no hidden environment reads. Check basis change, expiry equality, target eligibility, and current fit/pressure revalidation in the specified order. Retain historical Suggestion reasons while validity carries current evidence. No recommendation generator is required. Every scenario and named variant now has all Gate 1 semantic assertions active; no semantic TODO/ignored test may masquerade as a pass.
+- **Focused verification:** S10 clock-only expiry versus later-snapshot invalidation and no task mutation; S16 unexpired-but-no-longer-fitting G1, recalculated G2, and a newly based room notice becoming ineligible. Run the full scenario harness twice with the same inputs, permuted collections, fixed timezone rules, and explicit virtual-time steps; compare canonical output bytes and original input bytes. Run focused and all broader checks.
+- **Prohibited adjacent work:** creating a Today edit, showing a Horizon UI, persisting evaluation history, promoting advice to facts, emitting rigid schedules, or hiding unimplemented semantics behind serialization snapshots.
+
+### 1.10 Verify and report the temporal core proof
+
+- **Purpose:** establish evidence for Gate 1 completion and an honest Gate 2 handoff.
+- **Dependencies:** 1.9 and every earlier task's recorded evidence.
+- **Expected files:** tests/coverage corrections only where verification exposes an existing-contract gap; `docs/BUILD-GATES.md`, `ASTRA.md`, and README commands if needed. No new product feature/module is planned in this task.
+- **Acceptance:** reconcile every S01–S16 base/named variant and all contract invariants against executed tests; perform a fresh full Gate 1 diff review. Resolve failures within the existing contract before claiming completion. Record exact toolchain/timezone versions, commands, results, manual inspection, deviations, and residual risks. The four core product questions must be answerable from synthetic outputs; visual usability remains explicitly unverified until Gate 2. Update ASTRA to the first genuinely incomplete Gate 2 task only after its executable scope has been recorded; do not start Gate 2.
+- **Focused verification:** all gate-wide checks below and manual inspection of representative synthetic outputs from S03, S05, S09, S10, S12, and S13 for facts versus inference, unknown data, and source-qualified evidence. Verify no personal data, credentials, runtime agent dependency, unsolicited modules, remote publishing, or integration code entered the gate. Verify the working tree/history preserve one-task commits.
+- **Prohibited adjacent work:** improving visuals, expanding scope to the desktop/integrations, performing a personal-data trial, or marking the gate complete while tests are skipped/failing or semantic behavior is still undecided.
+
+### Gate 1 verification and completion criteria
+
+Execute from the workspace root with the committed toolchain/lockfile:
+
+```text
+cargo fmt --all -- --check
+cargo check --workspace --all-targets --locked
+cargo clippy --workspace --all-targets --locked -- -D warnings
+cargo test --workspace --locked
+git diff --check
+```
+
+Use focused tests after their responsible task and the relevant broader checks after each change; run this full set for 1.10. No UI/type build command is required because no frontend exists. Subsequent core test runs must need no source access, wall-clock waits, credentials, or personal dataset. Dependency acquisition during initial toolchain setup is distinct from runtime/test network access.
+
+Gate 1 is complete only when all ten task acceptances and these checks pass, every documented Gate 1 semantic scenario/variant is covered, canonical output is deterministic, the source/Trace/inference boundaries are preserved, and the scope review is clean. Evidence must distinguish synthetic algorithm proof from still-deferred visual, adapter, calibration, and personal-use validation. Append an actual gate report before adding a Gate 1 completion marker; this plan contains no such marker.
 
 ---
 
