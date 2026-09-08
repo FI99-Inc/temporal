@@ -1,0 +1,13 @@
+temporal-engine-foundation/
+├── README.md
+├── AGENTS.md
+├── ASTRA.md
+└── docs/
+    ├── PRODUCT.md
+    ├── TEMPORAL-MODEL.md
+    ├── HORIZON.md
+    ├── ARCHITECTURE.md
+    ├── TRACE-CONTRACT.md
+    ├── PRIVACY.md
+    ├── DECISIONS.md
+    └── BUILD-GATES.md
