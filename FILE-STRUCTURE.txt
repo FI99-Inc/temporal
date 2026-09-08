@@ -2,6 +2,16 @@ temporal-engine-foundation/
 ├── README.md
 ├── AGENTS.md
 ├── ASTRA.md
+├── Cargo.toml
+├── Cargo.lock
+├── rust-toolchain.toml
+├── .gitattributes
+├── .gitignore
+├── .scratch/temporal-engine/ # local wayfinder map and decision tickets
+├── crates/
+│   └── temporal-core/
+│       ├── Cargo.toml
+│       └── src/lib.rs
 └── docs/
     ├── PRODUCT.md
     ├── TEMPORAL-MODEL.md

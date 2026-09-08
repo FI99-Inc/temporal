@@ -1,0 +1,10 @@
+/target/
+/.scratch/research-worktrees/
+/local-private/
+.env
+.env.*
+!.env.example
+*.db
+*.sqlite
+*.sqlite3
+*.log

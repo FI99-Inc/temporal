@@ -131,13 +131,17 @@ GATE 0 COMPLETE
 
 **Goal:** prove the domain model, virtual clock, deterministic pressure skeleton, and scenario harness before building the real UI.
 
-**Status: PLANNED; NOT STARTED.** This is Task 0.4's executable plan, bounded by `DOMAIN-CONTRACT.md` version 1 and `SCENARIOS.md` S01–S16. Gate 0 completion prepares the handoff; the Gate 0 run stops without executing this plan.
+**Status: IN PROGRESS.** The subsequent user instruction authorizes building the application. Execute this plan against `DOMAIN-CONTRACT.md` version 1 and `SCENARIOS.md` S01–S16 before proceeding to the later gates.
 
 Gate 1 builds one internal Rust library crate, `crates/temporal-core`, plus local synthetic tests. The eventual desktop stack is unchanged, but no Tauri/Svelte/TypeScript application, SQLite/persistence crate, source adapter, UI/renderer, compression formula, network service, background process, AI, travel, companion surfaces, mobile, FI99 package/SDK, packaging, public distribution, or remote publication belongs in this gate. Source kinds and health are normalized synthetic data only. No real Trace database/calendar/token is a test dependency.
 
 Use the task order below, one task per commit. Record actual files/check results in each task's evidence and update ASTRA to the next incomplete task only after its acceptance criteria pass. Future file/module paths below are expected organization, not files that already exist. A small private helper may be colocated differently without changing semantics; document meaningful deviations. Local focused commands use the test/module names established by the corresponding task, with the gate-wide commands fixed below.
 
 ### 1.1 Establish the minimal Rust core workspace
+
+**Status: COMPLETE — 2026-09-08.** Added a single unpublished `temporal-core` library, workspace/lockfile, Rust 1.98.0 toolchain pin, line-ending/build/private-input rules, and README commands. The requested wayfinder map and its decision prerequisites are local Markdown under `.scratch/temporal-engine`; they retain this gate plan's authority.
+
+**Evidence:** `cargo metadata --no-deps --format-version 1` reports exactly one workspace member and no dependencies; `cargo check --workspace --locked`, `cargo fmt --all -- --check`, and `git diff --check` passed. Compiler: rustc 1.98.0 (`88d9e12ae`, 2026-08-18), cargo 1.98.0 (`797e8a9bc`, 2026-08-05), x86_64-pc-windows-msvc; rustfmt/clippy installed for the pinned release. Visual Studio 2022 Community with the MSVC C++ component is installed. Linking is verified by the first substantive test binaries in Task 1.2, not claimed by this library check. No temporal behavior or application shell exists yet.
 
 - **Purpose:** make a repeatable local build/check entry point for the core proof, independent of the eventual desktop shell.
 - **Dependencies:** completed Gate 0 and its committed domain/scenario contract; inspect toolchain availability before choosing versions.

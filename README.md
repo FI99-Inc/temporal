@@ -55,3 +55,21 @@ Before implementing anything, read:
 The documents are part of the product contract, not background notes.
 
 `AGENTS.md` defines authority and working discipline. `docs/DECISIONS.md` holds settled decisions; the product/spec documents elaborate them. Implementation contracts must refine those semantics, not override them. `docs/BUILD-GATES.md` controls work scope and evidence; `ASTRA.md` points to the first incomplete task. Neither progress document can settle a new product decision.
+
+## Development
+
+The initial executable proof is one internal Rust library in `crates/temporal-core`. The desktop shell and integrations follow later gates.
+
+Use Rust **1.98.0**, pinned in `rust-toolchain.toml`, with rustfmt and clippy. On Windows, install the MSVC C++ build tools and Windows SDK (Visual Studio's Desktop development with C++ workload). The initial setup was checked with Visual Studio 2022 Community's MSVC toolchain. Rust dependencies are locked in `Cargo.lock`.
+
+From the repository root:
+
+```text
+cargo metadata --no-deps --format-version 1
+cargo check --workspace --all-targets --locked
+cargo fmt --all -- --check
+cargo clippy --workspace --all-targets --locked -- -D warnings
+cargo test --workspace --locked
+```
+
+Keep private local inputs under ignored `local-private/`; repository fixtures must be synthetic. The [local wayfinder map](.scratch/temporal-engine/map.md) tracks remaining decisions. `ASTRA.md` and the gate evidence remain the implementation handoff.
