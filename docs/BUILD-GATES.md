@@ -93,9 +93,37 @@ Verification: reviewed task dependency order and scenario coverage; reconciled i
 - Gate 1 implementation plan is executable
 - no product source code was added unless separately authorized
 
-When satisfied, append an evidence report below and mark:
+### Gate 0 evidence report — 2026-09-08
 
-`GATE 0 COMPLETE`
+**Completed scope:** Tasks 0.1–0.4 only: audited/ratified the constitution, defined the normalized domain contract, specified deterministic synthetic scenarios, and planned the first executable core proof. Local Git was initialized and the untouched import preserved in `4bbc312`; task commits are `d28fd89` (0.1), `b342b8d` (0.2), `8a8124b` (0.3), and `309767d` (0.4). The final evidence/handoff is a separate `docs: complete gate 0` commit.
+
+**Documents:** created `DOMAIN-CONTRACT.md` and `SCENARIOS.md`. Updated root README, AGENTS, ASTRA, and FILE-STRUCTURE; updated `ARCHITECTURE.md`, `BUILD-GATES.md`, `HORIZON.md`, `PRODUCT.md`, `TEMPORAL-MODEL.md`, and `TRACE-CONTRACT.md`. `DECISIONS.md` and `PRIVACY.md` remain unchanged from the baseline.
+
+**Verification performed:**
+
+- Read the complete foundation in README order and reviewed the documents as one system against D-001–D-013 and the user's invariants. Reconciled independent read-only constitution, contract, scenario, plan, and fresh cross-document audits. Reviewed the full change from baseline `4bbc312`, including the new documents and final historical-Suggestion clarification.
+- `git diff --check 4bbc312` and per-task staged whitespace checks passed. Git history/author/body review confirms the untouched baseline, separate task commits, configured user identity, and no attribution trailers. No remote is configured.
+- Read-order/file-inventory checks found 14 repository documents, all 10 `docs/` files reachable in README's read order, no missing targets, and no non-document product files. S01–S16 are present, including all ten required Horizon cases. All ten Gate 1 tasks have the six required planning fields.
+- Independently checked opportunity/ratio arithmetic, exact threshold/equality cases, and the bounded recurrence dates. Local PowerShell/.NET timezone checks confirmed Toronto's 2026 spring gap/fall fold and 23/25-hour civil days. Synthetic identifiers, timestamps, source assumptions, and variant transitions were manually reviewed for determinism.
+- No production code, dependency installation, application scaffold, database, adapter, UI, real personal fixture, credential, or remote publication was introduced. Rust/type/build tests and visual/manual application verification were **not run** because no executable application/core exists yet.
+
+**Resolved ambiguities:**
+
+- Document authority and source rollout versus overwrite precedence; data flow versus code dependency direction.
+- Provenance versus confirmation/tentativeness; Milestone significance versus duplicate objects; explicit completion/satisfaction versus elapsed time or zero effort.
+- Stable Trace/source identities, due projection ownership/coverage, independent deadline work links, and conservative last-known-source handling.
+- Exact versus whole-date cutoffs, DST/zone resolution, bounded soft recurrence, and injected snapshot/evaluation time.
+- Raw Windows versus compatible opportunity, missing versus zero capacity, lower-bound effort, individual pressure limitations, and deterministic explanations/serialization.
+- Creation-time Suggestion eligibility versus retained historical records: a completed/removed target does not invalidate the fixture itself; basis/expiry/current eligibility determine the validity result, with no overdue obligation or factual mutation.
+- Gate 1 validation prerequisites and staged scenario evidence, so later algorithms are not claimed complete by an earlier parser test.
+
+**Remaining non-blocking questions:** O-001 name, O-002 exact Horizon compression, O-003 visual grammar, O-004 actual supported Trace transport/schema, O-005 effort calibration, O-006 travel provider, and O-007 local AI. They remain recorded in `DECISIONS.md`; Gate 1 requires none of them to be settled. Exact installed Rust/dependency/timezone-rule versions will be inspected and pinned during the responsible Gate 1 tasks.
+
+**Deviations and residual risks:** no product-direction deviation or scope expansion. Gate 0 proves documentation coherence, not engine behavior or visual usefulness. proof-v1 is an explicit initial policy, uses declared/possibly incomplete opportunity, and assesses individual work without allocating shared capacity. Its practical calibration, actual source normalization, and usefulness with personal-local data remain unproven and belong to later evidence. Implementation may reveal defects; resolve them against this authority order rather than weakening invariants.
+
+**Handoff:** Gate 1 is planned and unstarted. The exact next task is **1.1 Establish the minimal Rust core workspace**. This run stops here.
+
+GATE 0 COMPLETE
 
 ---
 

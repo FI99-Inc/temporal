@@ -8,13 +8,13 @@ It should remain concise. Detailed specifications live in `docs/`. Detailed impl
 
 **Project phase:** Foundation
 
-**Current gate:** Gate 0 — Constitution and implementation contract
+**Current gate:** Gate 1 — Temporal core proof (planned, not started)
 
-**Current task:** Gate 0 verification and durable evidence report
+**Current task:** 1.1 Establish the minimal Rust core workspace
 
-**Status:** Gate 0 in progress; documentation only
+**Status:** Gate 0 complete; Gate 1 not started
 
-No product source code has been authorized yet.
+The completed run authorized Gate 0 only and stops at this handoff. No production code, application scaffold, dependencies, database, or integrations were added.
 
 ## Settled posture
 
@@ -32,16 +32,23 @@ No product source code has been authorized yet.
 
 ## Immediate objective
 
-Complete fresh cross-document/Git verification and the Gate 0 evidence report. Advance the handoff to Task 1.1 only if every Gate 0 criterion is satisfied, then stop before Gate 1 implementation.
+The next implementation run starts with **1.1 Establish the minimal Rust core workspace** in `docs/BUILD-GATES.md`. First inspect the committed state and actual toolchain; follow the ten-task plan against `docs/DOMAIN-CONTRACT.md` version 1 and `docs/SCENARIOS.md`. Do not scaffold the eventual desktop stack as part of that minimal Rust proof.
 
 ## Latest evidence
 
 - Local Git repository initialized with no remote; untouched foundation preserved in `4bbc312` (`docs: establish temporal engine constitution`).
-- Task 0.1 audited all foundation documents and made surgical clarifications; evidence is recorded in `docs/BUILD-GATES.md`.
-- Task 0.2 defines `docs/DOMAIN-CONTRACT.md` version 1 and the bounded proof-v1 policy; independent semantic review is reconciled in its task evidence.
-- Task 0.3 defines S01–S16 in `docs/SCENARIOS.md`; semantic review and local arithmetic/timezone checks are recorded in its task evidence.
-- Task 0.4 defines Gate 1 tasks 1.1–1.10 with per-task acceptance, dependency, scope, and verification requirements. No application/core scaffold exists yet.
-- There is no unresolved product-direction blocker; O-001 through O-007 remain open. Fresh Gate 0 verification and the final evidence commit remain.
+- Task 0.1: `d28fd89`, constitution audit and surgical clarifications.
+- Task 0.2: `b342b8d`, normalized domain contract and bounded proof-v1 policy.
+- Task 0.3: `8a8124b`, S01–S16 synthetic scenarios with arithmetic/timezone checks.
+- Task 0.4: `309767d`, Gate 1 tasks 1.1–1.10 with acceptance and verification requirements.
+- Fresh cross-document/baseline-diff review is complete; the Gate 0 report and exact completion marker are in `docs/BUILD-GATES.md`. The final evidence commit also clarifies retained historical Suggestion validation.
+- Repository contents remain documentation only, with no remote. No Rust tests or visual application checks have run; they are later-gate evidence.
+
+## Open questions and residual limits
+
+No unresolved semantic blocker remains for Gate 1. O-001–O-007 in `docs/DECISIONS.md` remain open: naming, compression, visual grammar, Trace transport/schema, calibration, travel provider, and local AI. Actual toolchain/timezone-rule versions are selected and pinned in Gate 1.
+
+proof-v1 measures individual pressure against declared opportunity; it does not allocate shared capacity or establish real-world calibration. Source adapters, visual usability, and personal-local behavior are still unproven. Preserve those limits in later gate reports.
 
 ## Handoff rule
 
