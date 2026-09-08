@@ -32,9 +32,9 @@ Examples:
 
 Do not burden Trace's capture schema with Temporal Engine-only metadata in the first version.
 
-## Initial fields available from Trace
+## Expected conceptual fields from Trace
 
-The current Trace model provides the useful conceptual set:
+The intended mapping uses this conceptual set. This foundation does not include a verified Trace wire schema; the adapter gate must verify the actual supported contract before relying on field names or encodings:
 
 - stable task id
 - text/raw input
@@ -47,6 +47,8 @@ The current Trace model provides the useful conceptual set:
 - optional link
 
 The adapter must treat unknown future fields conservatively.
+
+Trace's Now / Later / Someday states are source task states, not timestamps or deadlines. A due value can become a normalized Deadline only when its meaning and time precision are established by the supported contract. Preserve unresolved source values without guessing a cutoff. Temporal Engine annotations must not overwrite Trace's priority, context, due value, or completion.
 
 ## Mutability
 

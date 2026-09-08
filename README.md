@@ -23,13 +23,15 @@ The architecture should preserve clean seams around the reusable temporal model 
 - **Network posture:** local-first; external integrations are adapters
 - **AI posture:** optional and subordinate; core scheduling behavior must remain deterministic and inspectable
 
-## Initial source hierarchy
+## Initial source rollout order
 
 1. Trace tasks
 2. Manually entered anchors, deadlines, intentions, and routines
 3. Quercus / Canvas
 4. Later: Google / Outlook read-only imports
 5. Later only if earned: travel/location services
+
+This is an integration order, not precedence for overwriting fields. Trace owns task-level state; other sources retain their own facts. Linking related objects must preserve each source's provenance.
 
 A companion mobile app is explicitly out of scope. Do not add phone synchronization.
 
@@ -49,3 +51,5 @@ Before implementing anything, read:
 10. `docs/BUILD-GATES.md`
 
 The documents are part of the product contract, not background notes.
+
+`AGENTS.md` defines authority and working discipline. `docs/DECISIONS.md` holds settled decisions; the product/spec documents elaborate them. Implementation contracts must refine those semantics, not override them. `docs/BUILD-GATES.md` controls work scope and evidence; `ASTRA.md` points to the first incomplete task. Neither progress document can settle a new product decision.

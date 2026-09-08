@@ -6,10 +6,13 @@ It should remain concise. Detailed specifications live in `docs/`. Detailed impl
 
 ## Current state
 
-**Project phase:** Foundation  
-**Current gate:** Gate 0 — Constitution and repository foundation  
-**Current task:** 0.1 — Review and ratify the initial constitution  
-**Status:** NOT STARTED IN CODE
+**Project phase:** Foundation
+
+**Current gate:** Gate 0 — Constitution and implementation contract
+
+**Current task:** 0.2 — Freeze initial normalized domain contract
+
+**Status:** Gate 0 in progress; documentation only
 
 No product source code has been authorized yet.
 
@@ -22,22 +25,20 @@ No product source code has been authorized yet.
 - Quercus is an early source
 - Google/Outlook are later read-only imports
 - a companion mobile app integration is excluded
-- Mobile is excluded from the initial product
+- Mobile is excluded
 - Deterministic temporal engine; AI is optional assistance only
 - Local-first
 - FI99 extraction is a future possibility that must be earned through real use
 
 ## Immediate objective
 
-Validate that the product constitution is coherent enough to support implementation without inventing missing semantics in code.
+Create `docs/DOMAIN-CONTRACT.md` under Task 0.2, then the virtual-time scenarios and executable Gate 1 plan. Complete Gate 0 verification and stop before Gate 1 implementation.
 
-The first Codex/Astra run should:
+## Latest evidence
 
-1. inspect these documents as a system
-2. identify contradictions, missing definitions, or implementation-blocking ambiguity
-3. make only surgical documentation corrections that preserve the agreed product
-4. produce the executable Gate 1 implementation plan
-5. stop before scaffolding product code unless the user's prompt explicitly authorizes it
+- Local Git repository initialized with no remote; untouched foundation preserved in `4bbc312` (`docs: establish temporal engine constitution`).
+- Task 0.1 audited all foundation documents and made surgical clarifications; evidence is recorded in `docs/BUILD-GATES.md`.
+- Exact domain/time/source/pressure rules remain Task 0.2 work. There is no unresolved product-direction blocker; O-001 through O-007 remain open.
 
 ## Handoff rule
 

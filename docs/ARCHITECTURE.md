@@ -62,9 +62,9 @@ This is an architectural direction, not authorization to scaffold all modules im
 
 Follow `docs/BUILD-GATES.md`.
 
-## Dependency direction
+## Data flow and dependency direction
 
-Preferred:
+Normalized data flows toward presentation:
 
 ```text
 source adapters
@@ -79,6 +79,8 @@ application query/view model
       ↓
 Horizon UI
 ```
+
+The arrows describe data flow, not code dependencies. The temporal core must not depend on adapters, persistence, the application shell, or UI. Ranking consumes core types; adapters and presentation consume the core's contracts. These can begin as modules in one internal crate, without scaffolding the eventual tree.
 
 UI must not contain hidden business rules that should live in the core.
 
@@ -148,6 +150,8 @@ Source failure is not absence.
 If an import source fails, preserve last-known data with source health metadata.
 
 Do not tell the user they are free/caught up based on an incomplete source refresh.
+
+Only an explicit deletion or a successful authoritative reconciliation may remove an imported object. An error, partial result, or filtered query is not such evidence. Source health qualifies what is known; it does not rewrite the object's provenance or temporal species.
 
 ## FI99 boundary
 

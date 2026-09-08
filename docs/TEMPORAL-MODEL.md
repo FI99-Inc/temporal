@@ -97,7 +97,7 @@ A Window must not be equated with genuinely usable opportunity until context, lo
 
 ### Milestone
 
-An event/deadline with elevated personal significance.
+An Anchor or Deadline with elevated personal significance.
 
 Examples:
 
@@ -106,7 +106,7 @@ Examples:
 - trip departure
 - important application decision
 
-Milestone is an elevation of significance, not a substitute for the object's underlying temporal semantics.
+Milestone is an elevation of significance, not a substitute for the object's underlying temporal semantics. It does not create a second occurrence, deadline, or workload.
 
 ### Suggestion
 
@@ -146,6 +146,8 @@ Suggested initial vocabulary:
 - tentative
 
 Do not invent certainty.
+
+These labels are not a single mutually exclusive scale: a source can report a tentative event. Provenance, user confirmation, and tentativeness must remain distinguishable in the implementation contract. None is a numerical probability that the event will happen.
 
 ### Rigidity
 
@@ -218,6 +220,8 @@ Examples:
 
 Inferences may reference facts, but must not overwrite them.
 
+Windows, pressure, and recommended start zones are also derived outputs. They must retain input references and explanations, and must not be presented as sourced availability or user commitments.
+
 ## Completion and overdue semantics
 
 A real deadline can become overdue.
@@ -226,7 +230,9 @@ A fixed event can pass.
 
 A flexible plan or suggestion does not become overdue merely because its suggested time passed.
 
-If flexible work was not completed, it returns to the scheduling/ranking candidate pool.
+If flexible work is still active and eligible, it returns to the scheduling/ranking candidate pool. Completed or explicitly removed work does not return merely because a suggestion expired.
+
+Passing time is not evidence of completion, cancellation, or failure to attend. Deadline satisfaction needs explicit authoritative state; merely associating a task with a deadline must not silently make completing that task satisfy the deadline. Source unavailability is not evidence of deletion or completion.
 
 ## Pressure
 
@@ -247,6 +253,8 @@ modified by factors such as:
 - dependencies
 - user calibration
 - known upcoming load
+
+These are possible factors, not a requirement to implement every factor in the first proof. The implementation contract and gate plan must specify the initial subset and how missing inputs are reported. A calendar gap alone is not proof of usable opportunity; unknown effort or availability must not be silently treated as zero work or unlimited free time.
 
 The initial engine should prefer transparent deterministic formulas over ML.
 

@@ -94,7 +94,7 @@ A strong v1 should be useful with:
 - a correct Horizon
 - a small Today editorial layer
 
-Google/Outlook sync, travel calculations, effort learning, advanced analytics, AI parsing, and mobile are not required to prove the core product.
+Google/Outlook imports, travel calculations, effort learning, advanced analytics, and AI parsing are not required to prove the core product. Mobile application work is out of scope.
 
 ## Explicit non-goals
 
@@ -108,7 +108,7 @@ Initial versions must not become:
 - a social calendar
 - a team scheduling product
 - a productivity analytics dashboard
-- a mobile-first application
+- a mobile application
 - a cloud SaaS product
 - a companion mobile app
 - an FI99 platform

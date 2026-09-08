@@ -43,7 +43,7 @@ If a contradiction cannot be resolved safely, stop that branch of work and recor
 - Temporal Engine may consume Trace through a narrow contract. Do not turn Temporal Engine into a replacement task manager.
 - Do not make Temporal Engine depend on Astra, Codex, or any agent at runtime.
 - Companion mobile-app integration is out of scope.
-- No mobile app in the initial product.
+- No mobile app.
 - No cloud database.
 - No telemetry by default.
 - No public account system, plugin marketplace, generic SDK, or enterprise abstractions.
