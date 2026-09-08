@@ -217,6 +217,32 @@ Use the task order below, one task per commit. Record actual files/check results
 
 ### 1.7 Derive Windows and the complete work-fit matrix
 
+**Status: COMPLETE — 2026-09-08.** Added deterministic declared-opportunity
+derivation and work-fit evaluation. Availability declarations are clipped to
+the injected evaluation range; present Busy/Unknown Anchors are unioned and
+subtracted once, transparent/removed Anchors remain non-blocking, and positive
+Anchor conflicts are reported independently. Windows retain declaration
+context/energy and source-health/coverage qualifications with stable keys.
+Added the complete eligible target × Window matrix for Tasks, standalone
+unresolved Deadlines, active Intentions, and current/future Routine
+occurrences, including empty clipping rows, routine-date bounds, earliest
+starts, context/energy compatibility, minimum chunks, definite mismatch versus
+unknown, and mathematical zero precedence. Added deterministic individual
+opportunity aggregation with known qualifying subtotals; shared capacity is
+never allocated.
+
+**Evidence:** `opportunity_contract` has 4 tests covering S02 raw opportunity,
+S05 union/conflict/transparency, S11 civil-day blocking/removal, S12 stale
+source qualification, and input-order invariance. `fit_contract` has 6 tests
+covering S02 short fragments and single-work ownership, S03/S04 endpoint and
+tie clipping, S05/S06/S15 compatibility and chunk boundaries, S07 soft
+intentions, S09 overdue empty clipping, S12 +1ms chunk loss, S14 occurrence
+dates, and known/unknown opportunity aggregation. The complete locked/offline
+workspace check, clippy with warnings denied, all tests/doctests (52
+substantive integration tests plus 3 compile-fail doctests), format check, and
+diff check pass. No pressure, evaluation assembly, adapters, persistence, or
+UI behavior is claimed.
+
 - **Purpose:** prove primitive usable opportunity from declared willingness, fixed blockers, and explicit compatibility.
 - **Dependencies:** 1.6; Domain Contract Section 7; S01–S08/S11–S16.
 - **Expected files:** `crates/temporal-core/src/opportunity.rs`, `fit.rs`; `tests/opportunity_contract.rs`, `tests/fit_contract.rs`; fixture-stage assertions/coverage.

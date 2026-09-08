@@ -2,8 +2,8 @@
 
 use crate::{
     domain::{
-        Deadline, EvaluationInput, Fulfillment, Presence, Projection, SourceKind, SourceRole,
-        SourceState,
+        Deadline, EvaluationInput, Fulfillment, Occupancy, Presence, Projection, SourceKind,
+        SourceRole, SourceState,
     },
     fulfillment,
     reasons::{Reason, SourceCoveragePayload, SourceHealthPayload},
@@ -252,6 +252,50 @@ pub fn dependencies_for_deadline(
     }
 
     Ok(merge_needs(needs))
+}
+
+/// Build the factual dependency set for one opportunity interval. Explicit
+/// requirements are retained, and every present blocking Anchor intersecting
+/// the interval is included even when its source was omitted by the caller.
+/// Deadline-role requirements do not need additional coverage for a Window;
+/// their source health is still qualified.
+pub fn dependencies_for_interval(
+    input: &EvaluationInput,
+    interval: &TimedSpan,
+) -> Vec<DependencyNeed> {
+    let mut needs = Vec::new();
+    for required in &input.required_sources {
+        let coverage = match required.role {
+            SourceRole::Anchors => CoverageNeed::AnchorInterval {
+                interval: interval.clone(),
+            },
+            SourceRole::Tasks => CoverageNeed::TasksCatalog,
+            SourceRole::Deadlines => CoverageNeed::NoAdditionalCoverage,
+        };
+        needs.push(DependencyNeed {
+            source_id: required.source_id,
+            role: required.role,
+            coverage,
+        });
+    }
+
+    for anchor in input.anchors.iter().filter(|anchor| {
+        anchor.presence == Presence::Present
+            && matches!(anchor.occupancy, Occupancy::Busy | Occupancy::Unknown)
+            && anchor
+                .span
+                .resolve(&crate::time::TimezoneRules::bundled())
+                .is_ok_and(|span| span.overlaps(interval))
+    }) {
+        needs.push(DependencyNeed {
+            source_id: anchor.provenance.source_id(),
+            role: SourceRole::Anchors,
+            coverage: CoverageNeed::AnchorInterval {
+                interval: interval.clone(),
+            },
+        });
+    }
+    merge_needs(needs)
 }
 
 fn add_need(needs: &mut Vec<DependencyNeed>, need: DependencyNeed) {

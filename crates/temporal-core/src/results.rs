@@ -281,6 +281,16 @@ pub struct AnchorConflict {
     pub intersection: TimedSpan,
     pub reasons: Vec<Reason>,
 }
+
+/// Primitive opportunity derived from declared availability and present
+/// blocking Anchors. Windows are conditional inputs, never reservations.
+#[derive(Clone, Debug, Eq, PartialEq, serde::Serialize, serde::Deserialize)]
+#[serde(deny_unknown_fields)]
+pub struct OpportunityOutput {
+    pub windows: Vec<Window>,
+    pub conflicts: Vec<AnchorConflict>,
+}
+
 #[derive(Clone, Copy, Debug, Eq, PartialEq, serde::Serialize, serde::Deserialize)]
 #[serde(rename_all = "snake_case")]
 pub enum FitStatus {
