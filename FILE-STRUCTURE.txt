@@ -20,11 +20,15 @@ temporal-engine-foundation/
 │       │   ├── results.rs
 │       │   ├── codec.rs
 │       │   ├── fulfillment.rs
+│       │   ├── lifecycle.rs
+│       │   ├── recurrence.rs
 │       │   └── validation/ # graph, relationship, and advice checks
 │       └── tests/
 │           ├── time_contract.rs
 │           ├── domain_types.rs
 │           ├── fixture_contract.rs
+│           ├── lifecycle_contract.rs
+│           ├── recurrence_contract.rs
 │           ├── validation_contract.rs
 │           ├── support/ # deterministic S01–S16 builders, variants, rejects
 │           └── fixtures/README.md # executable coverage manifest

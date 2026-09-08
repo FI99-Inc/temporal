@@ -240,6 +240,17 @@ pub struct RoutineOccurrence {
     pub reasons: Vec<Reason>,
 }
 
+/// The lifecycle-only portion of an evaluation. Capacity, source health,
+/// pressure, and suggestion validity are deliberately added by later tasks.
+#[derive(Clone, Debug, Eq, PartialEq, serde::Serialize, serde::Deserialize)]
+#[serde(deny_unknown_fields)]
+pub struct LifecycleOutput {
+    pub anchor_states: Vec<AnchorStateRow>,
+    pub deadline_states: Vec<DeadlineStateRow>,
+    pub intention_states: Vec<IntentionStateRow>,
+    pub routine_occurrences: Vec<RoutineOccurrence>,
+}
+
 #[derive(Clone, Debug, Eq, PartialEq, serde::Serialize, serde::Deserialize)]
 #[serde(deny_unknown_fields)]
 pub struct SourceQualification {
