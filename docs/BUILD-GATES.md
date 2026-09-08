@@ -165,6 +165,10 @@ Use the task order below, one task per commit. Record actual files/check results
 
 ### 1.3 Implement distinct domain types and field ownership
 
+**Status: COMPLETE — 2026-09-08.** Added typed canonical UUIDv4 IDs, narrow common audit metadata, separate stored species, local/imported/Trace-only provenance, keyed annotations/outcomes, finite source states/roles, work/context/energy types, and distinct evaluation/result/suggestion types. Structured reason variants fix each code's payload at compile time. Revisions/chunks/lower bounds use nonzero integer types where zero is invalid. No evaluator-side allocation, transport, persistence, or ranking was introduced.
+
+**Evidence:** the focused domain target first failed for missing modules, then all 8 domain tests passed. They cover identity/projection separation, opaque source keys, current/stale confirmation without fact mutation, unknown versus zero work/context, Trace due versus independent fulfillment, soft state/occurrence identity, non-clock evaluation basis, and typed derived evidence. Three compile-fail doc tests verify species-ID separation, no Suggestion completion field, and no insertion of inference into factual deadlines. All 20 integration tests and 3 doc tests pass; locked/offline workspace check, clippy with `-D warnings`, format, and diff whitespace checks pass. Cross-record validation, serialization, lifecycle, and pressure remain assigned to subsequent tasks.
+
 - **Purpose:** encode the species/provenance distinctions so later code cannot flatten them accidentally.
 - **Dependencies:** 1.2; Domain Contract Sections 1–6 and typed result definitions in Sections 7–10.
 - **Expected files:** `crates/temporal-core/src/domain/` (`ids.rs`, `objects.rs`, `work.rs`, `source.rs`, module exports), `results.rs`, `reasons.rs`; `tests/domain_types.rs`.

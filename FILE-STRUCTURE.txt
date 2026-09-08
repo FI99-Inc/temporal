@@ -14,8 +14,13 @@ temporal-engine-foundation/
 │       ├── src/
 │       │   ├── lib.rs
 │       │   ├── clock.rs
-│       │   └── time.rs
-│       └── tests/time_contract.rs
+│       │   ├── time.rs
+│       │   ├── domain/ # ids, objects, source, work
+│       │   ├── reasons.rs
+│       │   └── results.rs
+│       └── tests/
+│           ├── time_contract.rs
+│           └── domain_types.rs
 └── docs/
     ├── PRODUCT.md
     ├── TEMPORAL-MODEL.md

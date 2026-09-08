@@ -4,4 +4,7 @@
 //! the desktop shell, source adapters, persistence, or presentation.
 
 pub mod clock;
+pub mod domain;
+pub mod reasons;
+pub mod results;
 pub mod time;
