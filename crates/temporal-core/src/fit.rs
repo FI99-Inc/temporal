@@ -35,7 +35,7 @@ pub fn derive(input: &EvaluationInput, windows: &[Window]) -> Result<Vec<FitResu
     sorted_windows.sort_by_key(|window| window.key.clone());
     for target in targets {
         for window in &sorted_windows {
-            rows.push(fit_one(input, &target, window)?);
+            rows.push(fit_one(input, &target, window, None)?);
         }
     }
     rows.sort_by_key(|row| (row.target, row.window_key.clone()));
@@ -63,12 +63,25 @@ pub fn opportunities(
     windows: &[Window],
 ) -> Result<BTreeMap<WorkTarget, Opportunity>, TimeError> {
     let rows = derive(input, windows)?;
-    let targets = work_targets(input)?;
+    opportunities_from_rows(input, &rows)
+}
+
+pub(crate) fn opportunities_from_rows(
+    input: &EvaluationInput,
+    rows: &[FitResult],
+) -> Result<BTreeMap<WorkTarget, Opportunity>, TimeError> {
+    let targets = target_specs(input)?;
     let mut output = BTreeMap::new();
-    for target in targets {
+    for spec in targets {
+        let target = spec.target;
         let target_rows: Vec<&FitResult> = rows.iter().filter(|row| row.target == target).collect();
         let mut known_qualifying_ms = 0_u64;
-        let mut unknown = windows.is_empty();
+        let math_zero = input
+            .evaluation
+            .now
+            .max(spec.work.earliest_start.unwrap_or(input.evaluation.now))
+            >= spec.endpoint;
+        let mut unknown = input.availability.is_empty() && !math_zero;
         let mut window_keys = Vec::new();
         for row in target_rows {
             match row.status {
@@ -102,6 +115,27 @@ pub fn opportunities(
         output.insert(target, opportunity);
     }
     Ok(output)
+}
+
+/// Recheck advice against the current Window identities, clipping only the
+/// assessment span. A proposed span never creates a new availability Window.
+pub(crate) fn for_suggestion(
+    input: &EvaluationInput,
+    windows: &[Window],
+    target: WorkTarget,
+    proposed: Option<&TimedSpan>,
+) -> Result<Option<Vec<FitResult>>, TimeError> {
+    let Some(spec) = target_specs(input)?
+        .into_iter()
+        .find(|spec| spec.target == target)
+    else {
+        return Ok(None);
+    };
+    windows
+        .iter()
+        .map(|window| fit_one(input, &spec, window, proposed))
+        .collect::<Result<Vec<_>, _>>()
+        .map(Some)
 }
 
 /// Return the canonical eligible target inventory without deriving fit rows.
@@ -245,6 +279,7 @@ fn fit_one(
     input: &EvaluationInput,
     target: &TargetSpec,
     window: &Window,
+    proposed: Option<&TimedSpan>,
 ) -> Result<FitResult, TimeError> {
     let mut reasons = Vec::new();
     let target_reference = target_reference(target.target);
@@ -266,12 +301,19 @@ fn fit_one(
     if let Some(preferred) = &target.preferred_span {
         lower = lower.max(preferred.start());
     }
-    let upper = target.endpoint.min(window.span.end()).min(
-        target
-            .preferred_span
-            .as_ref()
-            .map_or(target.endpoint, TimedSpan::end),
-    );
+    if let Some(proposed) = proposed {
+        lower = lower.max(proposed.start());
+    }
+    let upper = target
+        .endpoint
+        .min(window.span.end())
+        .min(
+            target
+                .preferred_span
+                .as_ref()
+                .map_or(target.endpoint, TimedSpan::end),
+        )
+        .min(proposed.map_or(target.endpoint, TimedSpan::end));
 
     if lower >= target.endpoint || lower >= upper {
         reasons.push(Reason::ZeroOpportunity {

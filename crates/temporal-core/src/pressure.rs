@@ -33,8 +33,8 @@ struct WorkInfo {
 pub fn derive(input: &EvaluationInput) -> Result<Vec<PressureResult>, TimeError> {
     let primitive = opportunity::derive(input)?;
     let fits = fit::derive_from_opportunity(input, &primitive)?;
-    let opportunities = fit::opportunities(input, &primitive.windows)?;
-    derive_with_rows(input, &primitive.windows, &fits, &opportunities)
+    let opportunities = fit::opportunities_from_rows(input, &fits)?;
+    derive_with_rows(input, &fits, &opportunities)
 }
 
 /// Descriptive alias for callers assembling the core proof directly.
@@ -42,34 +42,25 @@ pub fn evaluate(input: &EvaluationInput) -> Result<Vec<PressureResult>, TimeErro
     derive(input)
 }
 
-fn derive_with_rows(
+pub(crate) fn derive_with_rows(
     input: &EvaluationInput,
-    windows: &[crate::results::Window],
     fits: &[FitResult],
     opportunities: &std::collections::BTreeMap<WorkTarget, Opportunity>,
 ) -> Result<Vec<PressureResult>, TimeError> {
     let rules = TimezoneRules::bundled();
-    let mut deadlines: Vec<&Deadline> = input
+    let mut deadlines = input
         .deadlines
         .iter()
         .filter(|deadline| deadline.presence == Presence::Present)
-        .collect();
-    deadlines.sort_by_key(|deadline| {
-        (
-            deadline
-                .cutoff
-                .endpoint(&rules)
-                .unwrap_or(input.evaluation.evaluation_end),
-            deadline.meta.id,
-        )
-    });
+        .map(|deadline| Ok((deadline.cutoff.endpoint(&rules)?, deadline)))
+        .collect::<Result<Vec<_>, TimeError>>()?;
+    deadlines.sort_by_key(|(endpoint, deadline)| (*endpoint, deadline.meta.id));
 
     let mut output = Vec::with_capacity(deadlines.len());
-    for deadline in deadlines {
+    for (_, deadline) in deadlines {
         output.push(pressure_for_deadline(
             input,
             deadline,
-            windows,
             fits,
             opportunities,
             &rules,
@@ -81,7 +72,6 @@ fn derive_with_rows(
 fn pressure_for_deadline(
     input: &EvaluationInput,
     deadline: &Deadline,
-    windows: &[crate::results::Window],
     fits: &[FitResult],
     opportunities: &std::collections::BTreeMap<WorkTarget, Opportunity>,
     rules: &TimezoneRules,
@@ -97,7 +87,7 @@ fn pressure_for_deadline(
     } else {
         None
     };
-    let anchor_interval = capacity_interval(input, &state, preliminary_work.as_ref());
+    let anchor_interval = capacity_interval(input, &state);
     let needs = source_health::dependencies_for_deadline(
         input,
         deadline,
@@ -215,7 +205,7 @@ fn pressure_for_deadline(
         }
     } else {
         opportunities.get(&target).cloned().unwrap_or_else(|| {
-            if windows.is_empty() {
+            if input.availability.is_empty() {
                 Opportunity::Unknown {
                     known_qualifying_ms: 0,
                     window_keys: Vec::new(),
@@ -238,13 +228,15 @@ fn pressure_for_deadline(
         payload: crate::reasons::EmptyPayload {},
     });
     append_fit_reasons(&mut result.reasons, fits, target);
+    if let Some(interval) = &anchor_interval {
+        result
+            .reasons
+            .extend(opportunity::reasons_for_interval(input, interval)?);
+    }
 
     match opportunity {
-        Opportunity::Unknown {
-            known_qualifying_ms,
-            ..
-        } => {
-            if windows.is_empty() {
+        Opportunity::Unknown { .. } => {
+            if input.availability.is_empty() {
                 result.reasons.push(Reason::AvailabilityUnknown {
                     references: work_references(deadline.meta.id, Some(target)),
                     payload: UnavailablePayload {
@@ -252,7 +244,6 @@ fn pressure_for_deadline(
                     },
                 });
             }
-            let _ = known_qualifying_ms;
             result.risk = Risk::Unknown;
         }
         Opportunity::Known {
@@ -429,9 +420,8 @@ fn work_info(input: &EvaluationInput, deadline: &Deadline) -> Result<WorkInfo, T
             (Workload::Unknown, None)
         }
         Effort::Estimate(minutes) => {
-            let work_ms = minutes
+            let work_ms = u64::from(minutes)
                 .checked_mul(60_000)
-                .map(u64::from)
                 .ok_or(TimeError::ArithmeticOverflow)?;
             let zero_basis = (minutes == 0).then_some(ZeroWorkBasis::UserEstimate);
             if let Some(basis) = zero_basis {
@@ -467,27 +457,11 @@ fn work_info(input: &EvaluationInput, deadline: &Deadline) -> Result<WorkInfo, T
 fn capacity_interval(
     input: &EvaluationInput,
     state: &crate::results::DeadlineStateRow,
-    work: Option<&WorkInfo>,
 ) -> Option<TimedSpan> {
     if state.resolution != Resolution::Unresolved
         || state.phase == DeadlinePhase::Overdue
         || state.endpoint <= input.evaluation.now
         || state.endpoint > input.evaluation.evaluation_end
-    {
-        return None;
-    }
-    let work = work?;
-    if !work.work_ms.is_some_and(|work_ms| work_ms > 0) {
-        return None;
-    }
-    if work
-        .metadata
-        .as_ref()
-        .and_then(|metadata| metadata.earliest_start)
-        .map_or(input.evaluation.now, |start| {
-            input.evaluation.now.max(start)
-        })
-        >= state.endpoint
     {
         return None;
     }
@@ -564,6 +538,5 @@ fn ratio_risk(work_ms: u64, opportunity_ms: u64) -> Risk {
 }
 
 fn finish_reasons(reasons: &mut Vec<Reason>) {
-    reasons.sort_by_key(|reason| reason.code().as_str());
-    reasons.dedup();
+    crate::reasons::normalize(reasons);
 }

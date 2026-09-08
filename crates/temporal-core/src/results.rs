@@ -143,6 +143,17 @@ pub enum Reference {
     Window(WindowKey),
 }
 
+impl From<WorkTarget> for Reference {
+    fn from(target: WorkTarget) -> Self {
+        match target {
+            WorkTarget::Deadline(id) => Self::Deadline(id),
+            WorkTarget::Intention(id) => Self::Intention(id),
+            WorkTarget::RoutineOccurrence(key) => Self::RoutineOccurrence(key),
+            WorkTarget::Task(id) => Self::Task(id),
+        }
+    }
+}
+
 #[derive(Clone, Copy, Debug, Eq, PartialEq, serde::Serialize, serde::Deserialize)]
 #[serde(rename_all = "snake_case")]
 pub enum AnchorPhase {

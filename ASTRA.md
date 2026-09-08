@@ -10,11 +10,11 @@ It should remain concise. Detailed specifications live in `docs/`. Detailed impl
 
 **Current gate:** Gate 1 — Temporal core proof (in progress)
 
-**Current task:** 1.9 Assemble deterministic evaluation and suggestion validity
+**Current task:** 1.10 Verify and report the temporal core proof
 
-**Status:** Gate 0 complete; Tasks 1.1–1.8 complete; Task 1.9 next
+**Status:** Gate 0 complete; Tasks 1.1–1.9 complete; Task 1.10 next
 
-The subsequent user instruction authorizes building the rest of the application using wayfinder. The local map is `.scratch/temporal-engine/map.md`; it carries execution through the existing gates. Gate 1 has a minimal internal Rust workspace, verified injected-time primitives, separate domain/result types, source qualification, declared Windows, conflicts, fit rows, and individual opportunity aggregation. No desktop shell, database, UI, or adapter has been implemented.
+The user has authorized building the application and emphasized prompt delivery of a highly personal app. Prioritize a usable Horizon and keep core work bounded by the committed contract. The local wayfinder map is `.scratch/temporal-engine/map.md`. One internal Rust crate now evaluates validated snapshots into lifecycle, source health, Windows, conflicts, fit, pressure, and suggestion-validity results. No desktop shell, database, UI, or adapter has been implemented.
 
 ## Settled posture
 
@@ -32,7 +32,7 @@ The subsequent user instruction authorizes building the rest of the application 
 
 ## Immediate objective
 
-Resume **1.9 Assemble deterministic evaluation and suggestion validity** in `docs/BUILD-GATES.md`, against `docs/DOMAIN-CONTRACT.md` version 1 and the validated S01–S16 fixture harness. Reuse lifecycle rows, source health, Windows, fit rows, and proof-v1 pressure from Tasks 1.5–1.8. Complete and verify each numbered task before committing and advancing; do not scaffold the eventual desktop stack as part of Gate 1.
+Resume **1.10 Verify and report the temporal core proof** in `docs/BUILD-GATES.md`. Review the complete Gate 1 change and coverage evidence, inspect representative synthetic results, and record the executable Gate 2 handoff. All 81 documented valid inputs now have explicit full-evaluation expectations; the desktop/integration work follows the gate report.
 
 ## Latest evidence
 
@@ -50,6 +50,8 @@ Resume **1.9 Assemble deterministic evaluation and suggestion validity** in `doc
 - Task 1.6: deterministic source health and dependency coverage are implemented, including precedence, exact freshness equality, checked expiry, retained last-known records, local health, implicit factual dependencies, Trace task-catalog inheritance, and no-future-Anchor coverage for overdue/inactive checks. Focused source-health tests plus locked/offline workspace check, clippy, all tests/doctests, format, and diff checks pass. Opportunity, pressure, adapters, and visual application behavior remain unimplemented and unverified.
 - Task 1.7: declared availability is clipped to the evaluation range; present Busy/Unknown Anchors are union-subtracted once, transparent/removed Anchors remain non-blocking, and positive conflicts are separate derived rows. Stable Windows carry declaration context/energy and source qualifications. Deterministic target × Window fit rows cover Task, standalone unresolved Deadline, active Intention, and current/future Routine targets with endpoint, routine-date, earliest-start, context, energy, chunk, definite-mismatch, unknown, and mathematical-zero semantics. Individual opportunity aggregation preserves known qualifying subtotals without shared allocation. `opportunity_contract` (4 tests) and `fit_contract` (6 tests) pass alongside the full locked/offline check, clippy, all tests/doctests (52 substantive integration tests plus 3 compile-fail doctests), format, and diff checks. Pressure, evaluation assembly, adapters, persistence, and UI remain unimplemented.
 - Task 1.8: proof-v1 individual pressure is derived deterministically for every present Deadline with authoritative fulfillment ordering, exact integer E/O ratios, threshold risks, explicit zero/unknown/lower-bound outcomes, source qualifications, structured reasons, and individual-capacity limitations. `pressure_contract` (14 tests) plus the full locked/offline check, clippy, all tests/doctests (66 substantive integration tests plus 3 compile-fail doctests), format, and diff checks pass. Complete evaluation assembly, suggestion validity, adapters, persistence, and UI remain unimplemented.
+
+- Task 1.9: `evaluate` validates the whole immutable input, shares the current fit/capacity results, and emits the complete ordered output. Advice checks basis, expiry, target eligibility, and current fit/risk without rewriting historical suggestions. Explicit expectations cover all 81 S01–S16 inputs; repeated/permuted evaluations and canonical typed/byte outputs agree. Integration exposed and corrected fully blocked declarations being treated as unknown, narrow effort multiplication, missing-effort coverage suppression, and incomplete/canonically unordered evidence. All 78 integration tests and 3 ownership doctests pass with locked/offline check, clippy, format, and diff checks. No new dependency or product-policy change.
 
 ## Open questions and residual limits
 

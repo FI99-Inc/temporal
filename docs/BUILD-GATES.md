@@ -284,6 +284,34 @@ is claimed.
 
 ### 1.9 Assemble deterministic evaluation and suggestion validity
 
+**Status: COMPLETE — 2026-09-08.** Added the validated `evaluate` entry point
+and deterministic suggestion revalidation. The complete output retains one
+evaluation basis, ordered typed arrays, and sorted/deduplicated reasons with
+resolvable input references. Old advice is checked in basis/expiry/eligibility/
+current-fit-or-risk order, preserving the producing record and its historical
+reasons. The evaluator reuses the existing fit matrix for opportunity and
+pressure; proposed spans clip assessments without creating Windows.
+
+**Evidence:** `scenarios` executes explicit acceptance values for all 81
+documented S01–S16 inputs: Window durations, complete fit inventory/statuses,
+lifecycle phases, recurrence dates/outcomes, conflicts, source health, pressure
+fields/ratios/qualifications, and advice status. A second check compares repeated
+and permuted inputs, typed canonical output, and unchanged input bytes. Seven
+`suggestion_contract` tests cover expiry/invalidation precedence, current span
+and risk revalidation, all four work species, implicit/stale/failed source
+evidence, and whole-input rejection. Full locked/offline check, clippy with
+warnings denied, 78 integration tests, 3 compile-fail doctests, format, and diff
+checks pass, with no ignored tests.
+
+**Integration corrections:** fully blocked nonempty declarations now yield
+known zero opportunity with blocking evidence; unsigned effort is widened
+before conversion to milliseconds; unknown effort cannot suppress missing
+Anchor coverage; health-only Window dependencies omit incomplete Deadline
+coverage payloads; reason ordering uses typed references. Three pressure
+regressions exercise the first three cases. These restore the existing contract;
+no threshold, scope, dependency, or settled product decision changed. Final
+gate review remains Task 1.10; visual and adapter behavior remain unverified.
+
 - **Purpose:** expose a complete pure evaluation result and prove that old advice cannot become current obligations.
 - **Dependencies:** 1.8; Domain Contract Sections 3/9/10; full S01–S16 expectations.
 - **Expected files:** `crates/temporal-core/src/evaluate.rs`, `suggestion.rs`; final exports; `tests/scenarios.rs`, `tests/suggestion_contract.rs`; complete fixture expected assertions/coverage manifest.

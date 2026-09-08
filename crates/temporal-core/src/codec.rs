@@ -275,6 +275,7 @@ impl From<TemporalSpan> for SpanOrder {
 
 #[derive(Eq, Ord, PartialEq, PartialOrd)]
 enum ArrayKey {
+    Reason(String, Vec<Reference>, String),
     Reference(Reference),
     Window(WindowKey),
     Fit(WorkTarget, WindowKey),
@@ -288,6 +289,13 @@ fn parsed<T: serde::de::DeserializeOwned>(value: Option<&Value>) -> Option<T> {
 
 fn array_key(field: &str, value: &Value) -> ArrayKey {
     let typed = match field {
+        "reasons" => parsed::<crate::reasons::Reason>(Some(value)).map(|reason| {
+            ArrayKey::Reason(
+                reason.code().as_str().into(),
+                reason.references().to_vec(),
+                value["payload"].to_string(),
+            )
+        }),
         "references" => parsed(Some(value)).map(ArrayKey::Reference),
         "window_keys" => parsed(Some(value)).map(ArrayKey::Window),
         "windows" => parsed(value.get("key")).map(ArrayKey::Window),
@@ -353,4 +361,19 @@ fn array_key(field: &str, value: &Value) -> ArrayKey {
                 .collect(),
         )
     }
+}
+
+pub(crate) fn compare_suggestion_keys(
+    left: &SuggestionKey,
+    right: &SuggestionKey,
+) -> std::cmp::Ordering {
+    let key = |value: &SuggestionKey| {
+        (
+            value.evaluation_key.clone(),
+            value.kind,
+            value.target,
+            value.proposed_span.clone().map(SpanOrder::from),
+        )
+    };
+    key(left).cmp(&key(right))
 }

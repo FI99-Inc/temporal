@@ -60,6 +60,12 @@ The documents are part of the product contract, not background notes.
 
 The initial executable proof is one internal Rust library in `crates/temporal-core`. The desktop shell and integrations follow later gates.
 
+`temporal_core::evaluate(&input)` validates a normalized snapshot and returns
+the complete deterministic `EvaluationOutput`, using the input's explicit time.
+`codec::decode_input` accepts strict synthetic JSON and `codec::canonical_bytes`
+encodes stable comparison bytes. `tests/scenarios.rs` runs the 81 documented
+inputs through this boundary with explicit semantic expectations.
+
 Use Rust **1.98.0**, pinned in `rust-toolchain.toml`, with rustfmt and clippy. On Windows, install the MSVC C++ build tools and Windows SDK (Visual Studio's Desktop development with C++ workload). The initial setup was checked with Visual Studio 2022 Community's MSVC toolchain. Rust dependencies are locked in `Cargo.lock`.
 
 From the repository root:

@@ -136,6 +136,57 @@ pub fn derive_windows(input: &EvaluationInput) -> Result<OpportunityOutput, Time
     derive(input)
 }
 
+/// Evidence for the complete declared envelope, including declarations fully
+/// consumed by Anchors (which produce no Window to carry their explanation).
+pub(crate) fn reasons_for_interval(
+    input: &EvaluationInput,
+    interval: &TimedSpan,
+) -> Result<Vec<Reason>, TimeError> {
+    let blockers = blocking_anchors(input, &TimezoneRules::bundled())?;
+    let mut reasons = Vec::new();
+    for declaration in &input.availability {
+        let clipped = declaration.span.intersection(interval);
+        reasons.push(Reason::DeclaredAvailability {
+            references: vec![Reference::Availability(declaration.meta.id)],
+            payload: AvailabilityPayload {
+                span: declaration.span.clone(),
+                clipped_span: clipped.clone(),
+            },
+        });
+        let Some(clipped) = clipped else { continue };
+        for anchor in &blockers {
+            let Some(intersection) = anchor.span.intersection(&clipped) else {
+                continue;
+            };
+            let references = vec![
+                Reference::Anchor(anchor.id),
+                Reference::Availability(declaration.meta.id),
+            ];
+            reasons.push(Reason::AnchorBlocked {
+                references: references.clone(),
+                payload: AnchorBlockedPayload {
+                    anchor_span: anchor.span.clone(),
+                    blocked_ms: intersection.duration_ms(),
+                    intersection,
+                },
+            });
+            if anchor.occupancy == Occupancy::Unknown
+                || anchor.certainty == crate::domain::ReportedCertainty::Tentative
+            {
+                reasons.push(Reason::ConservativeAnchor {
+                    references,
+                    payload: ConservativeAnchorPayload {
+                        reported_certainty: anchor.certainty,
+                        occupancy: anchor.occupancy,
+                    },
+                });
+            }
+        }
+    }
+    crate::reasons::normalize(&mut reasons);
+    Ok(reasons)
+}
+
 fn blocking_anchors(
     input: &EvaluationInput,
     rules: &TimezoneRules,

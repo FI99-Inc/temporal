@@ -144,7 +144,12 @@ pub fn qualify(
             },
         ));
     }
-    reasons.push(coverage_reason(need, state));
+    // Window-only Deadline dependencies check health without asserting a
+    // Deadline endpoint. Do not fabricate an incomplete coverage payload.
+    if !(need.role == SourceRole::Deadlines && need.coverage == CoverageNeed::NoAdditionalCoverage)
+    {
+        reasons.push(coverage_reason(need, state));
+    }
     reasons.sort_by_key(|reason| reason.code().as_str());
 
     Ok(SourceQualification {

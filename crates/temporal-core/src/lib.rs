@@ -23,6 +23,7 @@ pub(crate) use string_serde;
 pub mod clock;
 pub mod codec;
 pub mod domain;
+pub mod evaluate;
 pub mod fit;
 pub mod fulfillment;
 pub mod lifecycle;
@@ -32,5 +33,8 @@ pub mod reasons;
 pub mod recurrence;
 pub mod results;
 pub mod source_health;
+mod suggestion;
 pub mod time;
 pub mod validation;
+
+pub use evaluate::{EvaluationError, evaluate};

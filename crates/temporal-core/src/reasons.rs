@@ -220,3 +220,21 @@ reasons! {
     ZeroOpportunity => ("zero_opportunity", ZeroOpportunityPayload),
     ZeroWorkUnresolved => ("zero_work_unresolved", ZeroWorkPayload),
 }
+
+/// Canonical typed reason order is also used before serialization so callers
+/// inspecting Rust results see the same evidence as the JSON consumer.
+pub(crate) fn normalize(reasons: &mut Vec<Reason>) {
+    for reason in reasons.iter_mut() {
+        reason.references_mut().sort();
+        reason.references_mut().dedup();
+    }
+    reasons.sort_by_cached_key(|reason| {
+        (
+            reason.code().as_str(),
+            reason.references().to_vec(),
+            // All reason payloads are bounded integers, strings and typed records.
+            crate::codec::canonical_bytes(reason).expect("typed reason is JSON serializable"),
+        )
+    });
+    reasons.dedup();
+}

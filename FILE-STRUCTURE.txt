@@ -26,6 +26,8 @@ temporal-engine-foundation/
 │       │   ├── opportunity.rs
 │       │   ├── fit.rs
 │       │   ├── pressure.rs
+│       │   ├── evaluate.rs
+│       │   ├── suggestion.rs
 │       │   └── validation/ # graph, relationship, and advice checks
 │       └── tests/
 │           ├── time_contract.rs
@@ -37,8 +39,10 @@ temporal-engine-foundation/
 │           ├── opportunity_contract.rs
 │           ├── fit_contract.rs
 │           ├── pressure_contract.rs
+│           ├── suggestion_contract.rs
+│           ├── scenarios.rs
 │           ├── validation_contract.rs
-│           ├── support/ # deterministic S01–S16 builders, variants, rejects
+│           ├── support/ # S01–S16 builders, variants, rejects, explicit expectations
 │           └── fixtures/README.md # executable coverage manifest
 └── docs/
     ├── PRODUCT.md

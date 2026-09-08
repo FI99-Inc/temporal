@@ -341,3 +341,58 @@ fn every_valid_synthetic_snapshot_produces_deterministic_pressure_rows() {
         }));
     }
 }
+
+#[test]
+fn fully_blocked_declarations_have_zero_capacity_and_retain_blocking_evidence() {
+    let case = support::case("S11/base");
+    let output = temporal_core::evaluate(&case.input).unwrap();
+    assert!(output.windows.is_empty());
+    let pressure = &output.pressures[0];
+    assert_eq!(pressure.risk, Risk::Insufficient);
+    assert!(pressure.reasons.iter().any(|reason| matches!(reason,
+        temporal_core::reasons::Reason::AnchorBlocked { payload, .. } if payload.blocked_ms == 1500 * 60_000)));
+    assert!(
+        !pressure
+            .reasons
+            .iter()
+            .any(|reason| reason.code().as_str() == "availability_unknown")
+    );
+}
+
+#[test]
+fn the_full_unsigned_minute_range_converts_to_duration_before_multiplication() {
+    let mut input = support::case("S16/base").input;
+    let temporal_core::domain::DeadlineWork::Standalone(work) =
+        &mut input.deadline_annotations[0].work
+    else {
+        unreachable!()
+    };
+    work.effort = temporal_core::domain::Effort::Estimate(u32::MAX);
+    let output = temporal_core::evaluate(&input).unwrap();
+    assert_eq!(
+        output.pressures[0].ratio.unwrap().work_ms,
+        257_698_037_700_000
+    );
+    assert_eq!(output.pressures[0].risk, Risk::Insufficient);
+}
+
+#[test]
+fn missing_effort_does_not_hide_incomplete_anchor_coverage() {
+    let mut input = support::case("S12/short_coverage").input;
+    let temporal_core::domain::DeadlineWork::Standalone(work) =
+        &mut input.deadline_annotations[0].work
+    else {
+        unreachable!()
+    };
+    work.effort = temporal_core::domain::Effort::Unknown;
+    let output = temporal_core::evaluate(&input).unwrap();
+    let row = &output.pressures[0];
+    assert_eq!(row.risk, Risk::Unknown);
+    assert_eq!(row.qualification, Qualification::Conditional);
+    assert!(row.opportunity.is_none());
+    assert!(
+        row.source_qualifications
+            .iter()
+            .any(|q| q.role == temporal_core::domain::SourceRole::Anchors && !q.covered)
+    );
+}
