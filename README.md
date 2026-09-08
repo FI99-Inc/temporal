@@ -43,12 +43,13 @@ Before implementing anything, read:
 2. `ASTRA.md`
 3. `docs/PRODUCT.md`
 4. `docs/TEMPORAL-MODEL.md`
-5. `docs/HORIZON.md`
-6. `docs/ARCHITECTURE.md`
-7. `docs/TRACE-CONTRACT.md`
-8. `docs/PRIVACY.md`
-9. `docs/DECISIONS.md`
-10. `docs/BUILD-GATES.md`
+5. `docs/DOMAIN-CONTRACT.md`
+6. `docs/HORIZON.md`
+7. `docs/ARCHITECTURE.md`
+8. `docs/TRACE-CONTRACT.md`
+9. `docs/PRIVACY.md`
+10. `docs/DECISIONS.md`
+11. `docs/BUILD-GATES.md`
 
 The documents are part of the product contract, not background notes.
 

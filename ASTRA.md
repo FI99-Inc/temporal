@@ -10,7 +10,7 @@ It should remain concise. Detailed specifications live in `docs/`. Detailed impl
 
 **Current gate:** Gate 0 — Constitution and implementation contract
 
-**Current task:** 0.2 — Freeze initial normalized domain contract
+**Current task:** 0.3 — Define virtual-time scenario suite
 
 **Status:** Gate 0 in progress; documentation only
 
@@ -32,13 +32,14 @@ No product source code has been authorized yet.
 
 ## Immediate objective
 
-Create `docs/DOMAIN-CONTRACT.md` under Task 0.2, then the virtual-time scenarios and executable Gate 1 plan. Complete Gate 0 verification and stop before Gate 1 implementation.
+Create `docs/SCENARIOS.md` under Task 0.3, then the executable Gate 1 plan. Complete Gate 0 verification and stop before Gate 1 implementation.
 
 ## Latest evidence
 
 - Local Git repository initialized with no remote; untouched foundation preserved in `4bbc312` (`docs: establish temporal engine constitution`).
 - Task 0.1 audited all foundation documents and made surgical clarifications; evidence is recorded in `docs/BUILD-GATES.md`.
-- Exact domain/time/source/pressure rules remain Task 0.2 work. There is no unresolved product-direction blocker; O-001 through O-007 remain open.
+- Task 0.2 defines `docs/DOMAIN-CONTRACT.md` version 1 and the bounded proof-v1 policy; independent semantic review is reconciled in its task evidence.
+- There is no unresolved product-direction blocker; O-001 through O-007 remain open. Synthetic scenarios and Gate 1 planning are the remaining Gate 0 tasks.
 
 ## Handoff rule
 

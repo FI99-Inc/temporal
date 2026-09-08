@@ -5,6 +5,7 @@ temporal-engine-foundation/
 └── docs/
     ├── PRODUCT.md
     ├── TEMPORAL-MODEL.md
+    ├── DOMAIN-CONTRACT.md
     ├── HORIZON.md
     ├── ARCHITECTURE.md
     ├── TRACE-CONTRACT.md

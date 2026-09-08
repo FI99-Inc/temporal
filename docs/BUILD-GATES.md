@@ -56,6 +56,10 @@ Produce an implementation-level schema/spec for:
 
 Do not write product code yet.
 
+**Status: COMPLETE.** `DOMAIN-CONTRACT.md` version 1 defines the separate species, typed identity/provenance, field ownership, civil/absolute time, lifecycle/fulfillment, bounded recurrence, source-health qualification, explicit availability, deterministic fit/pressure/reasons, suggestion validity, and strict synthetic serialization/validation. README and the file inventory point to it.
+
+Verification: checked every Task 0.2 requirement against the contract and reconciled two rounds of independent semantic review, including zero-time precedence, Trace due-projection coverage, stale completion, complete fit inventories, and expired/invalidated suggestions. `git diff --cached --check` passed before commit. proof-v1 assesses individual capacity only; visual compression, editorial ranking, real transports, and calibration remain later work.
+
 ### 0.3 Define virtual-time scenario suite
 
 Specify synthetic scenarios and expected semantic outcomes.

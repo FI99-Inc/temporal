@@ -4,6 +4,8 @@ The temporal model is the semantic core of the product.
 
 The model must represent different kinds of temporal claims without flattening them into a generic "event."
 
+`DOMAIN-CONTRACT.md` defines the implementation-level types, ownership, invariants, and proof-v1 calculation policy for this ontology. The conceptual examples and possible later factors below do not override that bounded contract or the settled decisions.
+
 ## Core object classes
 
 ### Anchor
