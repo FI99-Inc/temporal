@@ -27,6 +27,7 @@ pub mod fit;
 pub mod fulfillment;
 pub mod lifecycle;
 pub mod opportunity;
+pub mod pressure;
 pub mod reasons;
 pub mod recurrence;
 pub mod results;

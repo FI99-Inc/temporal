@@ -25,6 +25,7 @@ temporal-engine-foundation/
 │       │   ├── source_health.rs
 │       │   ├── opportunity.rs
 │       │   ├── fit.rs
+│       │   ├── pressure.rs
 │       │   └── validation/ # graph, relationship, and advice checks
 │       └── tests/
 │           ├── time_contract.rs
@@ -35,6 +36,7 @@ temporal-engine-foundation/
 │           ├── source_health_contract.rs
 │           ├── opportunity_contract.rs
 │           ├── fit_contract.rs
+│           ├── pressure_contract.rs
 │           ├── validation_contract.rs
 │           ├── support/ # deterministic S01–S16 builders, variants, rejects
 │           └── fixtures/README.md # executable coverage manifest

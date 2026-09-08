@@ -252,6 +252,29 @@ UI behavior is claimed.
 
 ### 1.8 Implement proof-v1 pressure with structured reasons
 
+**Status: COMPLETE — 2026-09-08.** Added deterministic proof-v1 pressure
+derivation over the Task 1.7 Windows and fit matrix. Each present Deadline is
+ordered by calculation endpoint and canonical ID; fulfillment and overdue/range
+short-circuits precede work and opportunity arithmetic. Known estimates and
+lower bounds use exact unreduced integer E/O pairs with room/tight/insufficient
+thresholds, while zero work, unknown work/opportunity, mathematical zero, and
+overdue outcomes preserve the contract's field omissions. Source health and
+coverage qualifications are retained independently, and every quantified result
+explains its individual-capacity limitation and contributing fit/source reasons.
+Importance and Trace priority do not affect arithmetic; no shared allocation or
+aggregate verdict is emitted.
+
+**Evidence:** `pressure_contract` has 14 tests covering S03 time escalation,
+S04 endpoint ties, S06 fragmented/zero opportunity, S09 overdue/resolution,
+S12 freshness equality and conditional known numbers, S13 completion/unknown/
+lower-bound/removal work, S15 unknown versus mathematical zero, S16 range and
+threshold behavior, and deterministic pressure over all 81 valid synthetic
+inputs. The complete locked/offline workspace check, clippy with warnings
+denied, all tests/doctests (66 substantive integration tests plus 3
+compile-fail doctests), format check, and diff check pass. No complete
+evaluation assembly, suggestion validity, adapter, persistence, or UI behavior
+is claimed.
+
 - **Purpose:** calculate the first transparent individual-work risk assessment from the contract's exact table.
 - **Dependencies:** 1.7; Domain Contract Sections 8–9; all scenario pressure expectations.
 - **Expected files:** `crates/temporal-core/src/pressure.rs`, reason construction in `reasons.rs`; `tests/pressure_contract.rs`; pressure-stage fixture assertions/coverage.
