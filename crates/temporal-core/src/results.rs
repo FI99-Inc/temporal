@@ -8,12 +8,17 @@ use std::{
     num::{NonZeroU32, NonZeroU64},
 };
 
-#[derive(Clone, Copy, Debug, Eq, Hash, Ord, PartialEq, PartialOrd)]
+#[derive(
+    Clone, Copy, Debug, Eq, Hash, Ord, PartialEq, PartialOrd, serde::Serialize, serde::Deserialize,
+)]
+#[serde(rename_all = "snake_case")]
 pub enum PolicyVersion {
+    #[serde(rename = "proof-v1")]
     ProofV1,
 }
 
-#[derive(Clone, Debug, Eq, PartialEq)]
+#[derive(Clone, Debug, Eq, PartialEq, serde::Serialize, serde::Deserialize)]
+#[serde(deny_unknown_fields)]
 pub struct EvaluationRequest {
     pub now: Instant,
     pub evaluation_end: Instant,
@@ -22,7 +27,10 @@ pub struct EvaluationRequest {
     pub policy_version: PolicyVersion,
 }
 
-#[derive(Clone, Debug, Eq, Hash, Ord, PartialEq, PartialOrd)]
+#[derive(
+    Clone, Debug, Eq, Hash, Ord, PartialEq, PartialOrd, serde::Serialize, serde::Deserialize,
+)]
+#[serde(deny_unknown_fields)]
 pub struct EvaluationKey {
     pub snapshot_revision: NonZeroU64,
     pub now: Instant,
@@ -32,7 +40,10 @@ pub struct EvaluationKey {
     pub policy_version: PolicyVersion,
 }
 
-#[derive(Clone, Debug, Eq, Hash, Ord, PartialEq, PartialOrd)]
+#[derive(
+    Clone, Debug, Eq, Hash, Ord, PartialEq, PartialOrd, serde::Serialize, serde::Deserialize,
+)]
+#[serde(deny_unknown_fields)]
 pub struct EvaluationBasis {
     pub snapshot_revision: NonZeroU64,
     pub evaluation_end: Instant,
@@ -65,13 +76,19 @@ impl EvaluationKey {
     }
 }
 
-#[derive(Clone, Copy, Debug, Eq, Hash, Ord, PartialEq, PartialOrd)]
+#[derive(
+    Clone, Copy, Debug, Eq, Hash, Ord, PartialEq, PartialOrd, serde::Serialize, serde::Deserialize,
+)]
+#[serde(deny_unknown_fields)]
 pub struct OccurrenceKey {
     pub routine_id: RoutineId,
     pub date: LocalDate,
 }
 
-#[derive(Clone, Debug, Eq, Hash, Ord, PartialEq, PartialOrd)]
+#[derive(
+    Clone, Debug, Eq, Hash, Ord, PartialEq, PartialOrd, serde::Serialize, serde::Deserialize,
+)]
+#[serde(deny_unknown_fields)]
 pub struct WindowKey {
     pub evaluation_key: EvaluationKey,
     pub availability_id: AvailabilityId,
@@ -79,13 +96,24 @@ pub struct WindowKey {
     pub end: Instant,
 }
 
-#[derive(Clone, Debug, Eq, Hash, Ord, PartialEq, PartialOrd)]
+#[derive(
+    Clone, Debug, Eq, Hash, Ord, PartialEq, PartialOrd, serde::Serialize, serde::Deserialize,
+)]
+#[serde(deny_unknown_fields)]
 pub struct PressureKey {
     pub evaluation_key: EvaluationKey,
     pub deadline_id: DeadlineId,
 }
 
-#[derive(Clone, Copy, Debug, Eq, Hash, Ord, PartialEq, PartialOrd)]
+#[derive(
+    Clone, Copy, Debug, Eq, Hash, Ord, PartialEq, PartialOrd, serde::Serialize, serde::Deserialize,
+)]
+#[serde(
+    tag = "kind",
+    content = "value",
+    rename_all = "snake_case",
+    deny_unknown_fields
+)]
 pub enum WorkTarget {
     Deadline(DeadlineId),
     Intention(IntentionId),
@@ -93,7 +121,15 @@ pub enum WorkTarget {
     Task(TaskRefId),
 }
 
-#[derive(Clone, Debug, Eq, Hash, Ord, PartialEq, PartialOrd)]
+#[derive(
+    Clone, Debug, Eq, Hash, Ord, PartialEq, PartialOrd, serde::Serialize, serde::Deserialize,
+)]
+#[serde(
+    tag = "kind",
+    content = "value",
+    rename_all = "snake_case",
+    deny_unknown_fields
+)]
 pub enum Reference {
     Anchor(AnchorId),
     Availability(AvailabilityId),
@@ -107,14 +143,16 @@ pub enum Reference {
     Window(WindowKey),
 }
 
-#[derive(Clone, Copy, Debug, Eq, PartialEq)]
+#[derive(Clone, Copy, Debug, Eq, PartialEq, serde::Serialize, serde::Deserialize)]
+#[serde(rename_all = "snake_case")]
 pub enum AnchorPhase {
     Upcoming,
     Ongoing,
     Passed,
     Inactive,
 }
-#[derive(Clone, Copy, Debug, Eq, PartialEq)]
+#[derive(Clone, Copy, Debug, Eq, PartialEq, serde::Serialize, serde::Deserialize)]
+#[serde(rename_all = "snake_case")]
 pub enum DeadlinePhase {
     Upcoming,
     DueNow,
@@ -123,14 +161,16 @@ pub enum DeadlinePhase {
     Inactive,
     Unknown,
 }
-#[derive(Clone, Copy, Debug, Eq, PartialEq)]
+#[derive(Clone, Copy, Debug, Eq, PartialEq, serde::Serialize, serde::Deserialize)]
+#[serde(rename_all = "snake_case")]
 pub enum Resolution {
     Unresolved,
     Satisfied,
     Cancelled,
     Unknown,
 }
-#[derive(Clone, Copy, Debug, Eq, PartialEq)]
+#[derive(Clone, Copy, Debug, Eq, PartialEq, serde::Serialize, serde::Deserialize)]
+#[serde(rename_all = "snake_case")]
 pub enum IntentionPhase {
     Inactive,
     NoPreference,
@@ -138,7 +178,8 @@ pub enum IntentionPhase {
     PreferredNow,
     PreferencePassed,
 }
-#[derive(Clone, Copy, Debug, Eq, PartialEq)]
+#[derive(Clone, Copy, Debug, Eq, PartialEq, serde::Serialize, serde::Deserialize)]
+#[serde(rename_all = "snake_case")]
 pub enum OccurrencePhase {
     Inactive,
     Done,
@@ -147,7 +188,8 @@ pub enum OccurrencePhase {
     Current,
     PastUnrecorded,
 }
-#[derive(Clone, Copy, Debug, Eq, PartialEq)]
+#[derive(Clone, Copy, Debug, Eq, PartialEq, serde::Serialize, serde::Deserialize)]
+#[serde(rename_all = "snake_case")]
 pub enum Health {
     Incompatible,
     Unavailable,
@@ -157,19 +199,22 @@ pub enum Health {
     Healthy,
 }
 
-#[derive(Clone, Debug, Eq, PartialEq)]
+#[derive(Clone, Debug, Eq, PartialEq, serde::Serialize, serde::Deserialize)]
+#[serde(deny_unknown_fields)]
 pub struct SourceHealthRow {
     pub source_id: SourceId,
     pub health: Health,
     pub reasons: Vec<Reason>,
 }
-#[derive(Clone, Debug, Eq, PartialEq)]
+#[derive(Clone, Debug, Eq, PartialEq, serde::Serialize, serde::Deserialize)]
+#[serde(deny_unknown_fields)]
 pub struct AnchorStateRow {
     pub id: AnchorId,
     pub phase: AnchorPhase,
     pub reasons: Vec<Reason>,
 }
-#[derive(Clone, Debug, Eq, PartialEq)]
+#[derive(Clone, Debug, Eq, PartialEq, serde::Serialize, serde::Deserialize)]
+#[serde(deny_unknown_fields)]
 pub struct DeadlineStateRow {
     pub id: DeadlineId,
     pub presence: Presence,
@@ -179,13 +224,15 @@ pub struct DeadlineStateRow {
     pub endpoint: Instant,
     pub reasons: Vec<Reason>,
 }
-#[derive(Clone, Debug, Eq, PartialEq)]
+#[derive(Clone, Debug, Eq, PartialEq, serde::Serialize, serde::Deserialize)]
+#[serde(deny_unknown_fields)]
 pub struct IntentionStateRow {
     pub id: IntentionId,
     pub phase: IntentionPhase,
     pub reasons: Vec<Reason>,
 }
-#[derive(Clone, Debug, Eq, PartialEq)]
+#[derive(Clone, Debug, Eq, PartialEq, serde::Serialize, serde::Deserialize)]
+#[serde(deny_unknown_fields)]
 pub struct RoutineOccurrence {
     pub key: OccurrenceKey,
     pub span: DateSpan,
@@ -193,7 +240,8 @@ pub struct RoutineOccurrence {
     pub reasons: Vec<Reason>,
 }
 
-#[derive(Clone, Debug, Eq, PartialEq)]
+#[derive(Clone, Debug, Eq, PartialEq, serde::Serialize, serde::Deserialize)]
+#[serde(deny_unknown_fields)]
 pub struct SourceQualification {
     pub source_id: SourceId,
     pub role: SourceRole,
@@ -202,7 +250,8 @@ pub struct SourceQualification {
     pub reasons: Vec<Reason>,
 }
 
-#[derive(Clone, Debug, Eq, PartialEq)]
+#[derive(Clone, Debug, Eq, PartialEq, serde::Serialize, serde::Deserialize)]
+#[serde(deny_unknown_fields)]
 pub struct Window {
     pub key: WindowKey,
     pub span: TimedSpan,
@@ -214,22 +263,26 @@ pub struct Window {
     pub reasons: Vec<Reason>,
 }
 
-#[derive(Clone, Debug, Eq, PartialEq)]
+#[derive(Clone, Debug, Eq, PartialEq, serde::Serialize, serde::Deserialize)]
+#[serde(deny_unknown_fields)]
 pub struct AnchorConflict {
     pub anchor_ids: [AnchorId; 2],
     pub intersection: TimedSpan,
     pub reasons: Vec<Reason>,
 }
-#[derive(Clone, Copy, Debug, Eq, PartialEq)]
+#[derive(Clone, Copy, Debug, Eq, PartialEq, serde::Serialize, serde::Deserialize)]
+#[serde(rename_all = "snake_case")]
 pub enum FitStatus {
     Fits,
     DoesNotFit,
     Unknown,
 }
-#[derive(Clone, Debug, Eq, PartialEq)]
+#[derive(Clone, Debug, Eq, PartialEq, serde::Serialize, serde::Deserialize)]
+#[serde(deny_unknown_fields)]
 pub struct FitResult {
     pub target: WorkTarget,
     pub window_key: WindowKey,
+    #[serde(skip_serializing_if = "Option::is_none")]
     pub span: Option<TimedSpan>,
     pub status: FitStatus,
     pub reasons: Vec<Reason>,
@@ -237,14 +290,26 @@ pub struct FitResult {
 
 /// Effective work may differ from the stored annotation, for example when its
 /// linked source task is Done. That derivation must retain an explicit reason.
-#[derive(Clone, Copy, Debug, Eq, PartialEq)]
+#[derive(Clone, Copy, Debug, Eq, PartialEq, serde::Serialize, serde::Deserialize)]
+#[serde(
+    tag = "kind",
+    content = "value",
+    rename_all = "snake_case",
+    deny_unknown_fields
+)]
 pub enum Workload {
     Unknown,
     Estimate(u32),
     AtLeast(NonZeroU32),
 }
 
-#[derive(Clone, Debug, Eq, PartialEq)]
+#[derive(Clone, Debug, Eq, PartialEq, serde::Serialize, serde::Deserialize)]
+#[serde(
+    tag = "kind",
+    content = "value",
+    rename_all = "snake_case",
+    deny_unknown_fields
+)]
 pub enum Opportunity {
     Known {
         milliseconds: u64,
@@ -257,12 +322,14 @@ pub enum Opportunity {
     },
 }
 
-#[derive(Clone, Copy, Debug, Eq, PartialEq)]
+#[derive(Clone, Copy, Debug, Eq, PartialEq, serde::Serialize, serde::Deserialize)]
+#[serde(deny_unknown_fields)]
 pub struct PressureRatio {
     pub work_ms: u64,
     pub opportunity_ms: NonZeroU64,
 }
-#[derive(Clone, Copy, Debug, Eq, PartialEq)]
+#[derive(Clone, Copy, Debug, Eq, PartialEq, serde::Serialize, serde::Deserialize)]
+#[serde(rename_all = "snake_case")]
 pub enum Risk {
     NotApplicable,
     Unknown,
@@ -272,24 +339,30 @@ pub enum Risk {
     Room,
     Tight,
 }
-#[derive(Clone, Copy, Debug, Eq, PartialEq)]
+#[derive(Clone, Copy, Debug, Eq, PartialEq, serde::Serialize, serde::Deserialize)]
+#[serde(rename_all = "snake_case")]
 pub enum Qualification {
     DeclaredInputs,
     Conditional,
 }
 
-#[derive(Clone, Debug, Eq, PartialEq)]
+#[derive(Clone, Debug, Eq, PartialEq, serde::Serialize, serde::Deserialize)]
+#[serde(deny_unknown_fields)]
 pub struct PressureResult {
     pub evaluation_key: EvaluationKey,
     pub deadline_id: DeadlineId,
+    #[serde(skip_serializing_if = "Option::is_none")]
     pub work_target: Option<WorkTarget>,
     pub cutoff: Cutoff,
     pub endpoint: Instant,
     pub resolution: Resolution,
     pub presence: Presence,
     pub phase: DeadlinePhase,
+    #[serde(skip_serializing_if = "Option::is_none")]
     pub workload: Option<Workload>,
+    #[serde(skip_serializing_if = "Option::is_none")]
     pub opportunity: Option<Opportunity>,
+    #[serde(skip_serializing_if = "Option::is_none")]
     pub ratio: Option<PressureRatio>,
     pub risk: Risk,
     pub qualification: Qualification,
@@ -298,17 +371,22 @@ pub struct PressureResult {
     pub limitations: BTreeSet<ReasonCode>,
 }
 
-#[derive(Clone, Copy, Debug, Eq, Hash, Ord, PartialEq, PartialOrd)]
+#[derive(
+    Clone, Copy, Debug, Eq, Hash, Ord, PartialEq, PartialOrd, serde::Serialize, serde::Deserialize,
+)]
+#[serde(rename_all = "snake_case")]
 pub enum SuggestionKind {
     ConsiderWork,
     RiskNotice,
 }
 
-#[derive(Clone, Debug, Eq, PartialEq)]
+#[derive(Clone, Debug, Eq, PartialEq, serde::Serialize, serde::Deserialize)]
+#[serde(deny_unknown_fields)]
 pub struct SuggestionKey {
     pub evaluation_key: EvaluationKey,
     pub kind: SuggestionKind,
     pub target: WorkTarget,
+    #[serde(skip_serializing_if = "Option::is_none")]
     pub proposed_span: Option<TemporalSpan>,
 }
 
@@ -317,32 +395,37 @@ pub struct SuggestionKey {
 /// use temporal_core::results::Suggestion;
 /// fn mark_completed(suggestion: &mut Suggestion) { suggestion.completed = true; }
 /// ```
-#[derive(Clone, Debug, Eq, PartialEq)]
+#[derive(Clone, Debug, Eq, PartialEq, serde::Serialize, serde::Deserialize)]
+#[serde(deny_unknown_fields)]
 pub struct Suggestion {
     pub key: SuggestionKey,
     pub kind: SuggestionKind,
     pub target: WorkTarget,
+    #[serde(skip_serializing_if = "Option::is_none")]
     pub proposed_span: Option<TemporalSpan>,
     pub created_at: Instant,
     pub valid_until: Instant,
     pub reasons: Vec<Reason>,
 }
 
-#[derive(Clone, Copy, Debug, Eq, PartialEq)]
+#[derive(Clone, Copy, Debug, Eq, PartialEq, serde::Serialize, serde::Deserialize)]
+#[serde(rename_all = "snake_case")]
 pub enum SuggestionStatus {
     Current,
     Expired,
     Invalidated,
     Ineligible,
 }
-#[derive(Clone, Debug, Eq, PartialEq)]
+#[derive(Clone, Debug, Eq, PartialEq, serde::Serialize, serde::Deserialize)]
+#[serde(deny_unknown_fields)]
 pub struct SuggestionValidity {
     pub key: SuggestionKey,
     pub status: SuggestionStatus,
     pub reasons: Vec<Reason>,
 }
 
-#[derive(Clone, Debug, Eq, PartialEq)]
+#[derive(Clone, Debug, Eq, PartialEq, serde::Serialize, serde::Deserialize)]
+#[serde(deny_unknown_fields)]
 pub struct EvaluationOutput {
     pub evaluation_key: EvaluationKey,
     pub source_health: Vec<SourceHealthRow>,

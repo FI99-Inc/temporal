@@ -3,6 +3,7 @@ use std::{collections::BTreeSet, fmt, num::NonZeroU32, str::FromStr};
 
 #[derive(Clone, Debug, Eq, Hash, Ord, PartialEq, PartialOrd)]
 pub struct ContextTag(String);
+crate::string_serde!(ContextTag);
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
 pub struct InvalidContextTag;
 impl fmt::Display for InvalidContextTag {
@@ -36,7 +37,13 @@ impl fmt::Display for ContextTag {
 }
 pub type ContextTags = BTreeSet<ContextTag>;
 
-#[derive(Clone, Copy, Debug, Default, Eq, PartialEq)]
+#[derive(Clone, Copy, Debug, Default, Eq, PartialEq, serde::Serialize, serde::Deserialize)]
+#[serde(
+    tag = "kind",
+    content = "value",
+    rename_all = "snake_case",
+    deny_unknown_fields
+)]
 pub enum Effort {
     #[default]
     Unknown,
@@ -44,7 +51,8 @@ pub enum Effort {
     AtLeast(NonZeroU32),
 }
 
-#[derive(Clone, Copy, Debug, Default, Eq, PartialEq)]
+#[derive(Clone, Copy, Debug, Default, Eq, PartialEq, serde::Serialize, serde::Deserialize)]
+#[serde(rename_all = "snake_case")]
 pub enum Importance {
     #[default]
     Unspecified,
@@ -53,7 +61,8 @@ pub enum Importance {
     High,
 }
 
-#[derive(Clone, Copy, Debug, Default, Eq, PartialEq)]
+#[derive(Clone, Copy, Debug, Default, Eq, PartialEq, serde::Serialize, serde::Deserialize)]
+#[serde(rename_all = "snake_case")]
 pub enum EnergyRequirement {
     #[default]
     Unrestricted,
@@ -62,7 +71,8 @@ pub enum EnergyRequirement {
     Deep,
 }
 
-#[derive(Clone, Copy, Debug, Eq, PartialEq)]
+#[derive(Clone, Copy, Debug, Eq, PartialEq, serde::Serialize, serde::Deserialize)]
+#[serde(rename_all = "snake_case")]
 pub enum EnergyCapacity {
     Unknown,
     Light,
@@ -70,16 +80,25 @@ pub enum EnergyCapacity {
     Deep,
 }
 
-#[derive(Clone, Debug, Eq, PartialEq)]
+#[derive(Clone, Debug, Eq, PartialEq, serde::Serialize, serde::Deserialize)]
+#[serde(
+    tag = "kind",
+    content = "value",
+    rename_all = "snake_case",
+    deny_unknown_fields
+)]
 pub enum DeclaredContexts {
     Unknown,
     Known(ContextTags),
 }
 
-#[derive(Clone, Debug, Default, Eq, PartialEq)]
+#[derive(Clone, Debug, Default, Eq, PartialEq, serde::Serialize, serde::Deserialize)]
+#[serde(deny_unknown_fields)]
 pub struct WorkMetadata {
     pub effort: Effort,
+    #[serde(skip_serializing_if = "Option::is_none")]
     pub minimum_chunk_minutes: Option<NonZeroU32>,
+    #[serde(skip_serializing_if = "Option::is_none")]
     pub earliest_start: Option<Instant>,
     pub required_contexts: ContextTags,
     pub energy_requirement: EnergyRequirement,

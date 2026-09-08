@@ -65,6 +65,7 @@ macro_rules! ids {
     ($($name:ident),+ $(,)?) => {$ (
         #[derive(Clone, Copy, Debug, Eq, Hash, Ord, PartialEq, PartialOrd)]
         pub struct $name(CanonicalUuid);
+        crate::string_serde!($name);
         impl FromStr for $name {
             type Err = InvalidIdentity;
             fn from_str(value: &str) -> Result<Self, Self::Err> { value.parse().map(Self) }

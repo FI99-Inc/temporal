@@ -3,7 +3,8 @@ use crate::results::{EvaluationRequest, OccurrenceKey, Suggestion};
 use crate::time::{Cutoff, Instant, LocalDate, TemporalSpan, TimedSpan, ZoneId};
 use std::{collections::BTreeSet, num::NonZeroU64};
 
-#[derive(Clone, Debug, Eq, PartialEq)]
+#[derive(Clone, Debug, Eq, PartialEq, serde::Serialize, serde::Deserialize)]
+#[serde(deny_unknown_fields)]
 pub struct RecordMeta<I> {
     pub id: I,
     pub revision: NonZeroU64,
@@ -11,30 +12,35 @@ pub struct RecordMeta<I> {
     pub updated_at: Instant,
 }
 
-#[derive(Clone, Copy, Debug, Eq, PartialEq)]
+#[derive(Clone, Copy, Debug, Eq, PartialEq, serde::Serialize, serde::Deserialize)]
+#[serde(rename_all = "snake_case")]
 pub enum Presence {
     Present,
     Removed,
 }
-#[derive(Clone, Copy, Debug, Eq, PartialEq)]
+#[derive(Clone, Copy, Debug, Eq, PartialEq, serde::Serialize, serde::Deserialize)]
+#[serde(rename_all = "snake_case")]
 pub enum AnchorRigidity {
     Fixed,
     Constrained,
 }
-#[derive(Clone, Copy, Debug, Eq, PartialEq)]
+#[derive(Clone, Copy, Debug, Eq, PartialEq, serde::Serialize, serde::Deserialize)]
+#[serde(rename_all = "snake_case")]
 pub enum ReportedCertainty {
     Confirmed,
     Tentative,
     Unspecified,
 }
-#[derive(Clone, Copy, Debug, Eq, PartialEq)]
+#[derive(Clone, Copy, Debug, Eq, PartialEq, serde::Serialize, serde::Deserialize)]
+#[serde(rename_all = "snake_case")]
 pub enum Occupancy {
     Busy,
     Transparent,
     Unknown,
 }
 
-#[derive(Clone, Debug, Eq, PartialEq)]
+#[derive(Clone, Debug, Eq, PartialEq, serde::Serialize, serde::Deserialize)]
+#[serde(deny_unknown_fields)]
 pub struct Anchor {
     pub meta: RecordMeta<AnchorId>,
     pub title: String,
@@ -44,42 +50,61 @@ pub struct Anchor {
     pub rigidity: AnchorRigidity,
     pub reported_certainty: ReportedCertainty,
     pub occupancy: Occupancy,
+    #[serde(skip_serializing_if = "Option::is_none")]
     pub location: Option<ContextTag>,
 }
 
-#[derive(Clone, Copy, Debug, Eq, PartialEq)]
+#[derive(Clone, Copy, Debug, Eq, PartialEq, serde::Serialize, serde::Deserialize)]
+#[serde(rename_all = "snake_case")]
 pub enum EvidenceAuthority {
     LocalUser,
     Source,
 }
 
-#[derive(Clone, Debug, Eq, PartialEq)]
+#[derive(Clone, Debug, Eq, PartialEq, serde::Serialize, serde::Deserialize)]
+#[serde(deny_unknown_fields)]
 pub struct ResolutionEvidence {
     pub authority: EvidenceAuthority,
     pub recorded_at: Instant,
+    #[serde(skip_serializing_if = "Option::is_none")]
     pub effective_at: Option<Instant>,
 }
 
-#[derive(Clone, Debug, Eq, PartialEq)]
+#[derive(Clone, Debug, Eq, PartialEq, serde::Serialize, serde::Deserialize)]
+#[serde(deny_unknown_fields)]
 pub struct UserStateEvidence {
     pub recorded_at: Instant,
+    #[serde(skip_serializing_if = "Option::is_none")]
     pub effective_at: Option<Instant>,
 }
 
-#[derive(Clone, Debug, Eq, PartialEq)]
+#[derive(Clone, Debug, Eq, PartialEq, serde::Serialize, serde::Deserialize)]
+#[serde(
+    tag = "kind",
+    content = "value",
+    rename_all = "snake_case",
+    deny_unknown_fields
+)]
 pub enum RecordedResolution {
     Unresolved,
     Satisfied(ResolutionEvidence),
     Cancelled(ResolutionEvidence),
 }
 
-#[derive(Clone, Debug, Eq, PartialEq)]
+#[derive(Clone, Debug, Eq, PartialEq, serde::Serialize, serde::Deserialize)]
+#[serde(
+    tag = "kind",
+    content = "value",
+    rename_all = "snake_case",
+    deny_unknown_fields
+)]
 pub enum Fulfillment {
     Recorded(RecordedResolution),
     TraceTask(TaskRefId),
 }
 
-#[derive(Clone, Debug, Eq, PartialEq)]
+#[derive(Clone, Debug, Eq, PartialEq, serde::Serialize, serde::Deserialize)]
+#[serde(deny_unknown_fields)]
 pub struct Deadline {
     pub meta: RecordMeta<DeadlineId>,
     pub title: String,
@@ -89,7 +114,13 @@ pub struct Deadline {
     pub fulfillment: Fulfillment,
 }
 
-#[derive(Clone, Debug, Default, Eq, PartialEq)]
+#[derive(Clone, Debug, Default, Eq, PartialEq, serde::Serialize, serde::Deserialize)]
+#[serde(
+    tag = "kind",
+    content = "value",
+    rename_all = "snake_case",
+    deny_unknown_fields
+)]
 pub enum DeadlineWork {
     #[default]
     Unspecified,
@@ -97,7 +128,8 @@ pub enum DeadlineWork {
     Task(TaskRefId),
 }
 
-#[derive(Clone, Copy, Debug, Eq, PartialEq)]
+#[derive(Clone, Copy, Debug, Eq, PartialEq, serde::Serialize, serde::Deserialize)]
+#[serde(rename_all = "snake_case")]
 pub enum TaskStatus {
     Now,
     Later,
@@ -106,14 +138,21 @@ pub enum TaskStatus {
     Unknown,
 }
 
-#[derive(Clone, Debug, Eq, PartialEq)]
+#[derive(Clone, Debug, Eq, PartialEq, serde::Serialize, serde::Deserialize)]
+#[serde(
+    tag = "kind",
+    content = "value",
+    rename_all = "snake_case",
+    deny_unknown_fields
+)]
 pub enum TaskDue {
     None,
     Unresolved { value: String, reason: String },
     Deadline(DeadlineId),
 }
 
-#[derive(Clone, Debug, Eq, PartialEq)]
+#[derive(Clone, Debug, Eq, PartialEq, serde::Serialize, serde::Deserialize)]
+#[serde(deny_unknown_fields)]
 pub struct TaskRef {
     pub meta: RecordMeta<TaskRefId>,
     pub title: String,
@@ -121,41 +160,57 @@ pub struct TaskRef {
     pub provenance: TaskProvenance,
     pub status: TaskStatus,
     pub due: TaskDue,
+    #[serde(skip_serializing_if = "Option::is_none")]
     pub raw_input: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
     pub unknown_status_label: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
     pub source_priority: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
     pub source_context: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
     pub source_sort_order: Option<i64>,
+    #[serde(skip_serializing_if = "Option::is_none")]
     pub source_link: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
     pub source_completed_at: Option<Instant>,
 }
 
-#[derive(Clone, Copy, Debug, Eq, PartialEq)]
+#[derive(Clone, Copy, Debug, Eq, PartialEq, serde::Serialize, serde::Deserialize)]
+#[serde(rename_all = "snake_case")]
 pub enum IntentionState {
     Active,
     Done,
     Dismissed,
 }
 
-#[derive(Clone, Debug, Eq, PartialEq)]
+#[derive(Clone, Debug, Eq, PartialEq, serde::Serialize, serde::Deserialize)]
+#[serde(deny_unknown_fields)]
 pub struct Intention {
     pub meta: RecordMeta<IntentionId>,
     pub title: String,
     pub presence: Presence,
     pub provenance: UserProvenance,
+    #[serde(skip_serializing_if = "Option::is_none")]
     pub preferred_span: Option<TemporalSpan>,
+    #[serde(skip_serializing_if = "Option::is_none")]
     pub work: Option<WorkMetadata>,
     pub state: IntentionState,
+    #[serde(skip_serializing_if = "Option::is_none")]
     pub state_evidence: Option<UserStateEvidence>,
 }
 
-#[derive(Clone, Copy, Debug, Eq, PartialEq)]
+#[derive(Clone, Copy, Debug, Eq, PartialEq, serde::Serialize, serde::Deserialize)]
+#[serde(rename_all = "snake_case")]
 pub enum RoutineState {
     Active,
     Paused,
 }
 
-#[derive(Clone, Copy, Debug, Eq, Hash, Ord, PartialEq, PartialOrd)]
+#[derive(
+    Clone, Copy, Debug, Eq, Hash, Ord, PartialEq, PartialOrd, serde::Serialize, serde::Deserialize,
+)]
+#[serde(rename_all = "snake_case")]
 pub enum Weekday {
     Mon,
     Tue,
@@ -179,20 +234,29 @@ impl Weekday {
     }
 }
 
-#[derive(Clone, Debug, Eq, PartialEq)]
+#[derive(Clone, Debug, Eq, PartialEq, serde::Serialize, serde::Deserialize)]
+#[serde(deny_unknown_fields)]
 pub struct WeeklyRule {
     pub weekdays: BTreeSet<Weekday>,
     pub start_date: LocalDate,
+    #[serde(skip_serializing_if = "Option::is_none")]
     pub until_date_exclusive: Option<LocalDate>,
     pub zone: ZoneId,
 }
 
-#[derive(Clone, Debug, Eq, PartialEq)]
+#[derive(Clone, Debug, Eq, PartialEq, serde::Serialize, serde::Deserialize)]
+#[serde(
+    tag = "kind",
+    content = "value",
+    rename_all = "snake_case",
+    deny_unknown_fields
+)]
 pub enum RoutineRule {
     Weekly(WeeklyRule),
 }
 
-#[derive(Clone, Debug, Eq, PartialEq)]
+#[derive(Clone, Debug, Eq, PartialEq, serde::Serialize, serde::Deserialize)]
+#[serde(deny_unknown_fields)]
 pub struct Routine {
     pub meta: RecordMeta<RoutineId>,
     pub title: String,
@@ -203,13 +267,15 @@ pub struct Routine {
     pub rule: RoutineRule,
 }
 
-#[derive(Clone, Copy, Debug, Eq, PartialEq)]
+#[derive(Clone, Copy, Debug, Eq, PartialEq, serde::Serialize, serde::Deserialize)]
+#[serde(rename_all = "snake_case")]
 pub enum Outcome {
     Done,
     Skipped,
 }
 
-#[derive(Clone, Debug, Eq, PartialEq)]
+#[derive(Clone, Debug, Eq, PartialEq, serde::Serialize, serde::Deserialize)]
+#[serde(deny_unknown_fields)]
 pub struct RoutineOutcome {
     pub routine_id: RoutineId,
     pub date: LocalDate,
@@ -226,7 +292,8 @@ impl RoutineOutcome {
     }
 }
 
-#[derive(Clone, Debug, Eq, PartialEq)]
+#[derive(Clone, Debug, Eq, PartialEq, serde::Serialize, serde::Deserialize)]
+#[serde(deny_unknown_fields)]
 pub struct Confirmation {
     pub confirmed_at: Instant,
     pub record_revision: NonZeroU64,
@@ -237,7 +304,8 @@ impl Confirmation {
     }
 }
 
-#[derive(Clone, Debug, Eq, PartialEq)]
+#[derive(Clone, Debug, Eq, PartialEq, serde::Serialize, serde::Deserialize)]
+#[serde(deny_unknown_fields)]
 pub struct AnchorAnnotation {
     pub target_id: AnchorId,
     pub revision: NonZeroU64,
@@ -245,10 +313,12 @@ pub struct AnchorAnnotation {
     pub updated_at: Instant,
     pub importance: Importance,
     pub milestone: bool,
+    #[serde(skip_serializing_if = "Option::is_none")]
     pub confirmation: Option<Confirmation>,
 }
 
-#[derive(Clone, Debug, Eq, PartialEq)]
+#[derive(Clone, Debug, Eq, PartialEq, serde::Serialize, serde::Deserialize)]
+#[serde(deny_unknown_fields)]
 pub struct DeadlineAnnotation {
     pub target_id: DeadlineId,
     pub revision: NonZeroU64,
@@ -257,10 +327,12 @@ pub struct DeadlineAnnotation {
     pub importance: Importance,
     pub milestone: bool,
     pub work: DeadlineWork,
+    #[serde(skip_serializing_if = "Option::is_none")]
     pub confirmation: Option<Confirmation>,
 }
 
-#[derive(Clone, Debug, Eq, PartialEq)]
+#[derive(Clone, Debug, Eq, PartialEq, serde::Serialize, serde::Deserialize)]
+#[serde(deny_unknown_fields)]
 pub struct TaskAnnotation {
     pub target_id: TaskRefId,
     pub revision: NonZeroU64,
@@ -270,7 +342,8 @@ pub struct TaskAnnotation {
     pub work: WorkMetadata,
 }
 
-#[derive(Clone, Debug, Eq, PartialEq)]
+#[derive(Clone, Debug, Eq, PartialEq, serde::Serialize, serde::Deserialize)]
+#[serde(deny_unknown_fields)]
 pub struct AvailabilityDeclaration {
     pub meta: RecordMeta<AvailabilityId>,
     pub span: TimedSpan,
@@ -286,7 +359,8 @@ pub struct AvailabilityDeclaration {
 ///     input.deadlines.push(advice);
 /// }
 /// ```
-#[derive(Clone, Debug, Eq, PartialEq)]
+#[derive(Clone, Debug, Eq, PartialEq, serde::Serialize, serde::Deserialize)]
+#[serde(deny_unknown_fields)]
 pub struct EvaluationInput {
     pub schema_version: u32,
     pub snapshot_revision: NonZeroU64,

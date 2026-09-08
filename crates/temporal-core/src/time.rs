@@ -7,6 +7,8 @@ use chrono::{
 use chrono_tz::Tz;
 use std::{cmp::Ordering, fmt, str::FromStr};
 
+crate::string_serde!(Instant, LocalDate, ZoneId);
+
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
 pub enum TimeError {
     InvalidFormat,
@@ -333,7 +335,8 @@ impl TimezoneRules {
     }
 }
 
-#[derive(Clone, Debug, Eq, PartialEq)]
+#[derive(Clone, Debug, Eq, PartialEq, serde::Serialize, serde::Deserialize)]
+#[serde(try_from = "TimedSpanWire", into = "TimedSpanWire")]
 pub struct TimedSpan {
     start: Instant,
     end: Instant,
@@ -381,7 +384,8 @@ impl TimedSpan {
     }
 }
 
-#[derive(Clone, Debug, Eq, PartialEq)]
+#[derive(Clone, Debug, Eq, PartialEq, serde::Serialize, serde::Deserialize)]
+#[serde(try_from = "DateSpanWire", into = "DateSpanWire")]
 pub struct DateSpan {
     start_date: LocalDate,
     end_date_exclusive: LocalDate,
@@ -421,7 +425,13 @@ impl DateSpan {
     }
 }
 
-#[derive(Clone, Debug, Eq, PartialEq)]
+#[derive(Clone, Debug, Eq, PartialEq, serde::Serialize, serde::Deserialize)]
+#[serde(
+    tag = "kind",
+    content = "value",
+    rename_all = "snake_case",
+    deny_unknown_fields
+)]
 pub enum TemporalSpan {
     Timed(TimedSpan),
     Dates(DateSpan),
@@ -436,10 +446,17 @@ impl TemporalSpan {
     }
 }
 
-#[derive(Clone, Debug, Eq, PartialEq)]
+#[derive(Clone, Debug, Eq, PartialEq, serde::Serialize, serde::Deserialize)]
+#[serde(
+    tag = "kind",
+    content = "value",
+    rename_all = "snake_case",
+    deny_unknown_fields
+)]
 pub enum Cutoff {
     At {
         instant: Instant,
+        #[serde(skip_serializing_if = "Option::is_none")]
         original_zone: Option<ZoneId>,
     },
     OnDate {
@@ -485,6 +502,55 @@ impl Cutoff {
             } else {
                 CutoffPosition::Upcoming
             }),
+        }
+    }
+}
+
+#[derive(serde::Serialize, serde::Deserialize)]
+#[serde(deny_unknown_fields)]
+struct TimedSpanWire {
+    start: Instant,
+    end: Instant,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    original_zone: Option<ZoneId>,
+}
+impl TryFrom<TimedSpanWire> for TimedSpan {
+    type Error = TimeError;
+    fn try_from(value: TimedSpanWire) -> Result<Self, Self::Error> {
+        let mut span = Self::new(value.start, value.end)?;
+        span.original_zone = value.original_zone;
+        Ok(span)
+    }
+}
+impl From<TimedSpan> for TimedSpanWire {
+    fn from(value: TimedSpan) -> Self {
+        Self {
+            start: value.start,
+            end: value.end,
+            original_zone: value.original_zone,
+        }
+    }
+}
+
+#[derive(serde::Serialize, serde::Deserialize)]
+#[serde(deny_unknown_fields)]
+struct DateSpanWire {
+    start_date: LocalDate,
+    end_date_exclusive: LocalDate,
+    zone: ZoneId,
+}
+impl TryFrom<DateSpanWire> for DateSpan {
+    type Error = TimeError;
+    fn try_from(value: DateSpanWire) -> Result<Self, Self::Error> {
+        Self::new(value.start_date, value.end_date_exclusive, value.zone)
+    }
+}
+impl From<DateSpan> for DateSpanWire {
+    fn from(value: DateSpan) -> Self {
+        Self {
+            start_date: value.start_date,
+            end_date_exclusive: value.end_date_exclusive,
+            zone: value.zone,
         }
     }
 }

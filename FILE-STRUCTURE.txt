@@ -17,10 +17,17 @@ temporal-engine-foundation/
 │       │   ├── time.rs
 │       │   ├── domain/ # ids, objects, source, work
 │       │   ├── reasons.rs
-│       │   └── results.rs
+│       │   ├── results.rs
+│       │   ├── codec.rs
+│       │   ├── fulfillment.rs
+│       │   └── validation/ # graph, relationship, and advice checks
 │       └── tests/
 │           ├── time_contract.rs
-│           └── domain_types.rs
+│           ├── domain_types.rs
+│           ├── fixture_contract.rs
+│           ├── validation_contract.rs
+│           ├── support/ # deterministic S01–S16 builders, variants, rejects
+│           └── fixtures/README.md # executable coverage manifest
 └── docs/
     ├── PRODUCT.md
     ├── TEMPORAL-MODEL.md

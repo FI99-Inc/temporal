@@ -2,7 +2,8 @@ use super::SourceId;
 use crate::time::{Instant, TimedSpan};
 use std::num::NonZeroU64;
 
-#[derive(Clone, Copy, Debug, Eq, PartialEq)]
+#[derive(Clone, Copy, Debug, Eq, PartialEq, serde::Serialize, serde::Deserialize)]
+#[serde(rename_all = "snake_case")]
 pub enum SourceKind {
     Local,
     Trace,
@@ -11,14 +12,18 @@ pub enum SourceKind {
     Outlook,
 }
 
-#[derive(Clone, Debug, Eq, PartialEq)]
+#[derive(Clone, Debug, Eq, PartialEq, serde::Serialize, serde::Deserialize)]
+#[serde(deny_unknown_fields)]
 pub struct Source {
     pub id: SourceId,
     pub kind: SourceKind,
     pub label: String,
 }
 
-#[derive(Clone, Copy, Debug, Eq, Hash, Ord, PartialEq, PartialOrd)]
+#[derive(
+    Clone, Copy, Debug, Eq, Hash, Ord, PartialEq, PartialOrd, serde::Serialize, serde::Deserialize,
+)]
+#[serde(rename_all = "snake_case")]
 pub enum Projection {
     Anchor,
     Deadline,
@@ -26,29 +31,39 @@ pub enum Projection {
     TaskDue,
 }
 
-#[derive(Clone, Debug, Eq, Hash, Ord, PartialEq, PartialOrd)]
+#[derive(
+    Clone, Debug, Eq, Hash, Ord, PartialEq, PartialOrd, serde::Serialize, serde::Deserialize,
+)]
+#[serde(deny_unknown_fields)]
 pub struct ImportedIdentity {
     pub source_id: SourceId,
     pub external_id: String,
+    #[serde(skip_serializing_if = "Option::is_none")]
     pub occurrence_key: Option<String>,
     pub projection: Projection,
 }
 
-#[derive(Clone, Debug, Eq, PartialEq)]
+#[derive(Clone, Debug, Eq, PartialEq, serde::Serialize, serde::Deserialize)]
+#[serde(deny_unknown_fields)]
 pub struct LocalAssertion {
     pub source_id: SourceId,
     pub asserted_at: Instant,
 }
 
-#[derive(Clone, Debug, Eq, PartialEq)]
+#[derive(Clone, Debug, Eq, PartialEq, serde::Serialize, serde::Deserialize)]
+#[serde(deny_unknown_fields)]
 pub struct ImportedProvenance {
     pub source_id: SourceId,
     pub external_id: String,
+    #[serde(skip_serializing_if = "Option::is_none")]
     pub occurrence_key: Option<String>,
     pub projection: Projection,
     pub observed_at: Instant,
+    #[serde(skip_serializing_if = "Option::is_none")]
     pub source_revision: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
     pub source_created_at: Option<Instant>,
+    #[serde(skip_serializing_if = "Option::is_none")]
     pub source_updated_at: Option<Instant>,
 }
 
@@ -63,23 +78,47 @@ impl ImportedProvenance {
     }
 }
 
-#[derive(Clone, Debug, Eq, PartialEq)]
+#[derive(Clone, Debug, Eq, PartialEq, serde::Serialize, serde::Deserialize)]
+#[serde(
+    tag = "kind",
+    content = "value",
+    rename_all = "snake_case",
+    deny_unknown_fields
+)]
 pub enum Provenance {
     LocalUser(LocalAssertion),
     Imported(ImportedProvenance),
 }
 /// Local soft state cannot carry source-owned provenance.
-#[derive(Clone, Debug, Eq, PartialEq)]
+#[derive(Clone, Debug, Eq, PartialEq, serde::Serialize, serde::Deserialize)]
+#[serde(
+    tag = "kind",
+    content = "value",
+    rename_all = "snake_case",
+    deny_unknown_fields
+)]
 pub enum UserProvenance {
     LocalUser(LocalAssertion),
 }
 /// A Trace task cannot be introduced as a local task-capture record.
-#[derive(Clone, Debug, Eq, PartialEq)]
+#[derive(Clone, Debug, Eq, PartialEq, serde::Serialize, serde::Deserialize)]
+#[serde(
+    tag = "kind",
+    content = "value",
+    rename_all = "snake_case",
+    deny_unknown_fields
+)]
 pub enum TaskProvenance {
     Imported(ImportedProvenance),
 }
 
-#[derive(Clone, Copy, Debug, Eq, PartialEq)]
+#[derive(Clone, Copy, Debug, Eq, PartialEq, serde::Serialize, serde::Deserialize)]
+#[serde(
+    tag = "kind",
+    content = "value",
+    rename_all = "snake_case",
+    deny_unknown_fields
+)]
 pub enum FactWriter {
     LocalUser,
     Source(SourceId),
@@ -120,7 +159,8 @@ impl TaskProvenance {
     }
 }
 
-#[derive(Clone, Copy, Debug, Eq, PartialEq)]
+#[derive(Clone, Copy, Debug, Eq, PartialEq, serde::Serialize, serde::Deserialize)]
+#[serde(rename_all = "snake_case")]
 pub enum AttemptOutcome {
     Never,
     Complete,
@@ -129,26 +169,37 @@ pub enum AttemptOutcome {
     Incompatible,
 }
 
-#[derive(Clone, Debug, Eq, PartialEq)]
+#[derive(Clone, Debug, Eq, PartialEq, serde::Serialize, serde::Deserialize)]
+#[serde(deny_unknown_fields)]
 pub struct SourceState {
     pub source_id: SourceId,
     pub last_attempt_outcome: AttemptOutcome,
     pub fresh_for_ms: NonZeroU64,
+    #[serde(skip_serializing_if = "Option::is_none")]
     pub last_attempt_at: Option<Instant>,
+    #[serde(skip_serializing_if = "Option::is_none")]
     pub last_success_at: Option<Instant>,
+    #[serde(skip_serializing_if = "Option::is_none")]
     pub anchor_coverage: Option<TimedSpan>,
+    #[serde(skip_serializing_if = "Option::is_none")]
     pub deadline_coverage: Option<TimedSpan>,
     pub tasks_complete: bool,
 }
 
-#[derive(Clone, Copy, Debug, Eq, Hash, Ord, PartialEq, PartialOrd)]
+#[derive(
+    Clone, Copy, Debug, Eq, Hash, Ord, PartialEq, PartialOrd, serde::Serialize, serde::Deserialize,
+)]
+#[serde(rename_all = "snake_case")]
 pub enum SourceRole {
     Anchors,
     Deadlines,
     Tasks,
 }
 
-#[derive(Clone, Copy, Debug, Eq, Ord, PartialEq, PartialOrd)]
+#[derive(
+    Clone, Copy, Debug, Eq, Ord, PartialEq, PartialOrd, serde::Serialize, serde::Deserialize,
+)]
+#[serde(deny_unknown_fields)]
 pub struct RequiredSource {
     pub source_id: SourceId,
     pub role: SourceRole,
