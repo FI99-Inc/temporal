@@ -10,9 +10,9 @@ It should remain concise. Detailed specifications live in `docs/`. Detailed impl
 
 **Current gate:** Gate 1 — Temporal core proof (in progress)
 
-**Current task:** 1.6 Derive source health and dependency coverage
+**Current task:** 1.7 Derive Windows and the complete work-fit matrix
 
-**Status:** Gate 0 complete; Tasks 1.1–1.5 complete; Task 1.6 next
+**Status:** Gate 0 complete; Tasks 1.1–1.6 complete; Task 1.7 next
 
 The subsequent user instruction authorizes building the rest of the application using wayfinder. The local map is `.scratch/temporal-engine/map.md`; it carries execution through the existing gates. Gate 1 has a minimal internal Rust workspace, verified injected-time primitives, and separate domain/result types. No desktop shell, database, UI, or adapter has been implemented.
 
@@ -32,7 +32,7 @@ The subsequent user instruction authorizes building the rest of the application 
 
 ## Immediate objective
 
-Resume **1.6 Derive source health and dependency coverage** in `docs/BUILD-GATES.md`, against `docs/DOMAIN-CONTRACT.md` version 1 and the validated S01–S16 fixture harness. Complete and verify each numbered task before committing and advancing. Preserve the lifecycle/recurrence boundaries from Task 1.5; do not scaffold the eventual desktop stack as part of Gate 1.
+Resume **1.7 Derive Windows and the complete work-fit matrix** in `docs/BUILD-GATES.md`, against `docs/DOMAIN-CONTRACT.md` version 1 and the validated S01–S16 fixture harness. Complete and verify each numbered task before committing and advancing. Reuse source-health qualifications and lifecycle rows from Tasks 1.5–1.6; do not scaffold the eventual desktop stack as part of Gate 1.
 
 ## Latest evidence
 
@@ -47,6 +47,7 @@ Resume **1.6 Derive source health and dependency coverage** in `docs/BUILD-GATES
 - Task 1.3: 8 domain tests plus 3 compile-fail ownership checks pass; all 20 integration tests remain green. Workspace check/clippy/format pass locked/offline. Stored facts/user annotations, derived results, and inferred suggestions have separate types and typed reason payloads.
 - Task 1.4: strict duplicate-key/schema parsing, canonical JSON, whole-snapshot graph/ownership/time/source validation, checked expiry preflight, and the clock-independent fulfillment resolver are implemented. 81 valid synthetic inputs and 51 rejection fixtures are covered by the executable manifest; locked/offline check, clippy, all tests/doctests, format, and diff checks pass. Lifecycle, pressure, adapters, and visual application behavior remain unimplemented and unverified.
 - Task 1.5: pure Anchor/Deadline/Intention lifecycle, exact/date-only boundary handling, authoritative fulfillment phases, bounded weekly Routine expansion, stable occurrence keys, explicit outcomes/pause/rule edits, and historical occurrence inspection are implemented. Focused lifecycle and recurrence tests plus locked/offline workspace check, clippy, all tests/doctests, format, and diff checks pass. Source health, opportunity, pressure, adapters, and visual application behavior remain unimplemented and unverified.
+- Task 1.6: deterministic source health and dependency coverage are implemented, including precedence, exact freshness equality, checked expiry, retained last-known records, local health, implicit factual dependencies, Trace task-catalog inheritance, and no-future-Anchor coverage for overdue/inactive checks. Focused source-health tests plus locked/offline workspace check, clippy, all tests/doctests, format, and diff checks pass. Opportunity, pressure, adapters, and visual application behavior remain unimplemented and unverified.
 
 ## Open questions and residual limits
 

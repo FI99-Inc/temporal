@@ -22,6 +22,7 @@ temporal-engine-foundation/
 │       │   ├── fulfillment.rs
 │       │   ├── lifecycle.rs
 │       │   ├── recurrence.rs
+│       │   ├── source_health.rs
 │       │   └── validation/ # graph, relationship, and advice checks
 │       └── tests/
 │           ├── time_contract.rs
@@ -29,6 +30,7 @@ temporal-engine-foundation/
 │           ├── fixture_contract.rs
 │           ├── lifecycle_contract.rs
 │           ├── recurrence_contract.rs
+│           ├── source_health_contract.rs
 │           ├── validation_contract.rs
 │           ├── support/ # deterministic S01–S16 builders, variants, rejects
 │           └── fixtures/README.md # executable coverage manifest

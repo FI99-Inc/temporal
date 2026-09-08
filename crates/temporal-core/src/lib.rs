@@ -28,5 +28,6 @@ pub mod lifecycle;
 pub mod reasons;
 pub mod recurrence;
 pub mod results;
+pub mod source_health;
 pub mod time;
 pub mod validation;

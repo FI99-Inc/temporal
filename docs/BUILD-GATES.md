@@ -204,6 +204,10 @@ Use the task order below, one task per commit. Record actual files/check results
 
 ### 1.6 Derive source health and dependency coverage
 
+**Status: COMPLETE — 2026-09-08.** Added deterministic source-health derivation with the contract’s incompatible/unavailable/partial/never-loaded/stale/healthy precedence and exact freshness equality. Added owned dependency/coverage requirements and qualifications that preserve health separately from query coverage, retain last-known records, qualify local input without fabricated refresh timestamps, and automatically include Deadline, linked Task, and blocking Anchor source dependencies. Trace due projections require Task catalog coverage rather than a separate Deadline interval; overdue/inactive assessments can retain source health without requiring future Anchor coverage.
+
+**Evidence:** `source_health_contract` has 4 tests covering all S12 health variants, empty successful catalogs, freshness equality and +1ms staleness, checked expiry overflow, half-open coverage, omitted Trace requirements, independent linked Deadline coverage, and Trace due Task catalog inheritance. The complete locked/offline workspace check, clippy with warnings denied, all tests/doctests (42 substantive integration tests plus 3 compile-fail doctests), format check, and diff check pass. No adapter refresh, deletion reconciliation, opportunity arithmetic, pressure, persistence, or UI behavior is claimed.
+
 - **Purpose:** prevent missing or stale sources from producing unqualified conclusions.
 - **Dependencies:** 1.5; Domain Contract Section 6; S06/S08/S12/S13.
 - **Expected files:** `crates/temporal-core/src/source_health.rs`; `tests/source_health_contract.rs`; harness stage/coverage updates.
