@@ -2,3 +2,6 @@
 //!
 //! The core receives normalized data and explicit time. It has no dependency on
 //! the desktop shell, source adapters, persistence, or presentation.
+
+pub mod clock;
+pub mod time;

@@ -11,7 +11,11 @@ temporal-engine-foundation/
 ├── crates/
 │   └── temporal-core/
 │       ├── Cargo.toml
-│       └── src/lib.rs
+│       ├── src/
+│       │   ├── lib.rs
+│       │   ├── clock.rs
+│       │   └── time.rs
+│       └── tests/time_contract.rs
 └── docs/
     ├── PRODUCT.md
     ├── TEMPORAL-MODEL.md

@@ -73,3 +73,5 @@ cargo test --workspace --locked
 ```
 
 Keep private local inputs under ignored `local-private/`; repository fixtures must be synthetic. The [local wayfinder map](.scratch/temporal-engine/map.md) tracks remaining decisions. `ASTRA.md` and the gate evidence remain the implementation handoff.
+
+Time calculations use pinned [Chrono 0.4.45](https://docs.rs/chrono/0.4.45/chrono/) with only its `std` feature and [Chrono-TZ 0.10.4](https://docs.rs/chrono-tz/0.10.4/chrono_tz/) with bundled IANA **2025b** rules. The core does not enable Chrono's system-clock or machine-local-zone features. Updating these pins is an explicit dependency change requiring the civil-time tests to pass. After initial dependency acquisition, the checks also run with Cargo's `--offline` flag.

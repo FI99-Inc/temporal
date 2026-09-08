@@ -152,6 +152,10 @@ Use the task order below, one task per commit. Record actual files/check results
 
 ### 1.2 Implement explicit time primitives and the injected clock
 
+**Status: COMPLETE — 2026-09-08.** Added validated UTC millisecond/civil date/IANA zone types, positive half-open spans, date-span resolution, exact/date-only cutoff boundaries, explicit offset/fold resolution, checked arithmetic, `Clock`/`FrozenClock`, and a once-captured evaluation interval. Direct time dependencies are pinned to Chrono 0.4.45 (std only) and Chrono-TZ 0.10.4, bundled IANA 2025b. No OS timezone or system-time feature is enabled.
+
+**Evidence:** the focused `time_contract` target first failed for missing time/clock modules, then all 12 substantive tests passed. Tests cover S11 Toronto 23/25-hour days, gaps/folds and offset disagreement, nonexistent/repeated civil midnights, exact/date-only equality, display-zone invariance, normalized precision/year bounds, span intersection, overflow, snapshot bounds, failed advance atomicity, and one clock read. Full workspace check, clippy with `-D warnings`, all tests, format, and diff whitespace checks passed; Cargo checks/tests ran locked and offline after dependency acquisition. Test executables linked and ran with the installed Windows MSVC toolchain. No lifecycle/source/opportunity behavior is claimed yet.
+
 - **Purpose:** make every later rule operate on a captured instant and explicit civil-time rules.
 - **Dependencies:** 1.1; Domain Contract Sections 2–3 and S11/S16 time cases.
 - **Expected files:** `crates/temporal-core/src/clock.rs`, `time.rs`, exports from `lib.rs`; focused `tests/time_contract.rs`; manifest/lockfile changes only for required time support.
