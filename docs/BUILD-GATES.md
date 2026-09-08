@@ -66,6 +66,10 @@ Specify synthetic scenarios and expected semantic outcomes.
 
 At minimum cover the ten Horizon cases in `HORIZON.md`.
 
+**Status: COMPLETE.** `SCENARIOS.md` defines S01–S10 in the required Horizon order and S11–S16 for civil-time boundaries, source health/coverage, completion ownership, routine rollover, unknown compatibility, deterministic output, and invalid input. Each case has frozen time, timezone, synthetic identity/source/work defaults, numerical/semantic expectations, recommendation constraints, Horizon meaning, and forbidden conclusions.
+
+Verification: independently reviewed every base case and variant against the domain contract; reconciled snapshot timing, work-owner, recurrence, range, and suggestion-basis findings. Checked minute/ratio arithmetic and Toronto DST resolutions with local PowerShell/.NET calculations (23-hour spring day, 25-hour fall day, gap/fold). Confirmed all ten required cases and all 16 scenario IDs are present. These are documentation checks; Rust tests and visual verification have not run.
+
 ### 0.4 Produce Gate 1 task plan
 
 Break Gate 1 into numbered, commit-sized tasks with:

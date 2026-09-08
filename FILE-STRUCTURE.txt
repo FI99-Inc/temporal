@@ -7,6 +7,7 @@ temporal-engine-foundation/
     ├── TEMPORAL-MODEL.md
     ├── DOMAIN-CONTRACT.md
     ├── HORIZON.md
+    ├── SCENARIOS.md
     ├── ARCHITECTURE.md
     ├── TRACE-CONTRACT.md
     ├── PRIVACY.md

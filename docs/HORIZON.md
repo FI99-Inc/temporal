@@ -166,3 +166,5 @@ Before polishing the visual system, test Horizon against synthetic weeks represe
 10. flexible suggestion whose proposed day has passed
 
 The last case must not be rendered as a moralized overdue item.
+
+`SCENARIOS.md` supplies the frozen inputs, semantic assertions, and boundary cases for these evaluations. Gate 1 proves their engine prerequisites; visual rendering and compression evaluation remain later-gate work.

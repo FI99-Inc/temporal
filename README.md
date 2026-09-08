@@ -45,11 +45,12 @@ Before implementing anything, read:
 4. `docs/TEMPORAL-MODEL.md`
 5. `docs/DOMAIN-CONTRACT.md`
 6. `docs/HORIZON.md`
-7. `docs/ARCHITECTURE.md`
-8. `docs/TRACE-CONTRACT.md`
-9. `docs/PRIVACY.md`
-10. `docs/DECISIONS.md`
-11. `docs/BUILD-GATES.md`
+7. `docs/SCENARIOS.md`
+8. `docs/ARCHITECTURE.md`
+9. `docs/TRACE-CONTRACT.md`
+10. `docs/PRIVACY.md`
+11. `docs/DECISIONS.md`
+12. `docs/BUILD-GATES.md`
 
 The documents are part of the product contract, not background notes.
 
