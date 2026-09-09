@@ -18,6 +18,39 @@ fn every_documented_scenario_has_complete_semantic_acceptance_values() {
         let output = evaluate(&case.input).unwrap_or_else(|e| panic!("{}: {e:?}", case.name));
         assert_semantics(&case.name, &output, &expected);
         assert_inventory(&case.input, &output);
+        if matches!(
+            case.name.as_str(),
+            "S03/base"
+                | "S05/base"
+                | "S09/base"
+                | "S10/base"
+                | "S10/tuesday"
+                | "S12/base"
+                | "S12/short_coverage"
+                | "S13/base"
+                | "S13/stale_trace_implicit_dependency"
+        ) {
+            // Visible with --nocapture for the gate's manual evidence review.
+            // These summaries are observations, never generated expectations.
+            println!(
+                "{} {}",
+                case.name,
+                serde_json::json!({
+                    "now": output.evaluation_key.now,
+                    "anchors": output.anchor_states.iter().map(|a| a.phase).collect::<Vec<_>>(),
+                    "conflicts": output.conflicts.len(),
+                    "windows_minutes": output.windows.iter().map(|w| w.span.duration_ms() / 60_000).collect::<Vec<_>>(),
+                    "fits": output.fits.iter().map(|f| f.status).collect::<Vec<_>>(),
+                    "pressure": output.pressures.iter().map(|p| serde_json::json!({
+                        "phase": p.phase, "resolution": p.resolution,
+                        "risk": p.risk, "ratio": p.ratio, "qualification": p.qualification,
+                        "sources": p.source_qualifications.iter().map(|q| (q.role, q.health, q.covered)).collect::<Vec<_>>(),
+                        "reasons": p.reasons.iter().map(Reason::code).collect::<Vec<_>>()
+                    })).collect::<Vec<_>>(),
+                    "suggestions": output.suggestion_validity.iter().map(|s| s.status).collect::<Vec<_>>()
+                })
+            );
+        }
     }
 }
 

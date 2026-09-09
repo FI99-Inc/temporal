@@ -58,7 +58,10 @@ The documents are part of the product contract, not background notes.
 
 ## Development
 
-The initial executable proof is one internal Rust library in `crates/temporal-core`. The desktop shell and integrations follow later gates.
+Gate 1 is complete: the executable proof is one internal Rust library in
+`crates/temporal-core`. The next task, **2.1 Run a synthetic Horizon in the
+Windows app**, begins the desktop shell. There is no app launch command yet;
+ASTRA and BUILD-GATES record the implementation handoff.
 
 `temporal_core::evaluate(&input)` validates a normalized snapshot and returns
 the complete deterministic `EvaluationOutput`, using the input's explicit time.

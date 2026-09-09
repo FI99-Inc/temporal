@@ -131,7 +131,7 @@ GATE 0 COMPLETE
 
 **Goal:** prove the domain model, virtual clock, deterministic pressure skeleton, and scenario harness before building the real UI.
 
-**Status: IN PROGRESS.** The subsequent user instruction authorizes building the application. Execute this plan against `DOMAIN-CONTRACT.md` version 1 and `SCENARIOS.md` S01–S16 before proceeding to the later gates.
+**Status: COMPLETE — 2026-09-08.** The subsequent user instruction authorizes building the application. Tasks 1.1–1.10 prove `DOMAIN-CONTRACT.md` version 1 and `SCENARIOS.md` S01–S16. The evidence report below distinguishes this synthetic core proof from the application work in Gate 2.
 
 Gate 1 builds one internal Rust library crate, `crates/temporal-core`, plus local synthetic tests. The eventual desktop stack is unchanged, but no Tauri/Svelte/TypeScript application, SQLite/persistence crate, source adapter, UI/renderer, compression formula, network service, background process, AI, travel, companion surfaces, mobile, FI99 package/SDK, packaging, public distribution, or remote publication belongs in this gate. Source kinds and health are normalized synthetic data only. No real Trace database/calendar/token is a test dependency.
 
@@ -321,6 +321,14 @@ gate review remains Task 1.10; visual and adapter behavior remain unverified.
 
 ### 1.10 Verify and report the temporal core proof
 
+**Status: COMPLETE — 2026-09-08.** All gate-wide checks passed after Task 1.9
+commit `9f27f14`. Reviewed the Gate 1 change from `f504182`, reconciled the
+scenario/invariant coverage, and inspected the representative evaluator results
+listed in the report below. The existing scenario test now prints bounded
+synthetic summaries with `--nocapture` so this inspection can be repeated.
+No further production-code correction was needed. Gate 2 has an executable
+five-task plan; none of its files or dependencies has been introduced.
+
 - **Purpose:** establish evidence for Gate 1 completion and an honest Gate 2 handoff.
 - **Dependencies:** 1.9 and every earlier task's recorded evidence.
 - **Expected files:** tests/coverage corrections only where verification exposes an existing-contract gap; `docs/BUILD-GATES.md`, `ASTRA.md`, and README commands if needed. No new product feature/module is planned in this task.
@@ -342,22 +350,206 @@ git diff --check
 
 Use focused tests after their responsible task and the relevant broader checks after each change; run this full set for 1.10. No UI/type build command is required because no frontend exists. Subsequent core test runs must need no source access, wall-clock waits, credentials, or personal dataset. Dependency acquisition during initial toolchain setup is distinct from runtime/test network access.
 
-Gate 1 is complete only when all ten task acceptances and these checks pass, every documented Gate 1 semantic scenario/variant is covered, canonical output is deterministic, the source/Trace/inference boundaries are preserved, and the scope review is clean. Evidence must distinguish synthetic algorithm proof from still-deferred visual, adapter, calibration, and personal-use validation. Append an actual gate report before adding a Gate 1 completion marker; this plan contains no such marker.
+Gate 1 is complete only when all ten task acceptances and these checks pass, every documented Gate 1 semantic scenario/variant is covered, canonical output is deterministic, the source/Trace/inference boundaries are preserved, and the scope review is clean. Evidence must distinguish synthetic algorithm proof from still-deferred visual, adapter, calibration, and personal-use validation.
+
+### Gate 1 evidence report — 2026-09-08
+
+- **Completed scope:** Tasks 1.1–1.10; one unpublished Rust library with explicit
+  time, separate domain/ownership types, strict validation/serialization,
+  lifecycle and finite weekly recurrence, source health/coverage, declared
+  Windows and conflicts, work fit, proof-v1 individual pressure, structured
+  explanations, and complete immutable evaluation with prior-advice validity.
+- **Files:** workspace/toolchain/lockfile; `crates/temporal-core/src/` and
+  `tests/` (including the fixture inventory and explicit expectations); README,
+  file inventory, this gate ledger, ASTRA, and local Markdown handoff tickets.
+  Tasks 1.1–1.9 are separate commits from `d6cb671` through `9f27f14`.
+- **Executed checks:** `cargo fmt --all -- --check`;
+  `cargo check --workspace --all-targets --locked --offline`;
+  `cargo clippy --workspace --all-targets --locked --offline -- -D warnings`;
+  `cargo test --workspace --locked --offline`; `git diff --check`. All passed.
+  **78 integration tests and 3 compile-fail ownership doctests; zero failed or
+  ignored.** The full suite evaluates 81 valid inputs (16 bases and 65 named
+  variants), rejects 51 invalid fixtures, and repeats/permutates full outputs
+  while checking canonical bytes and unchanged input bytes.
+- **Environment:** Windows `x86_64-pc-windows-msvc`; rustc 1.98.0
+  (`88d9e12ae`, 2026-08-18), cargo 1.98.0 (`797e8a9bc`, 2026-08-05);
+  Chrono 0.4.45 and Chrono-TZ 0.10.4 with IANA 2025b. No dependency changed
+  during final verification; checks needed no network, credentials, or clock waits.
+- **Coverage reconciliation:** the fixture inventory names every S01–S16
+  variant. Domain/fixture/validation tests cover contract invariants 1–4;
+  time/lifecycle/recurrence tests cover 3/5/8; opportunity/fit/source-health/
+  pressure tests cover 4/6/7; suggestion tests cover 2/3/8. Full-evaluation
+  tests cover 9, including typed evidence references and complete result
+  inventories. Dependency/source/scope review covers 10. No deferred assertion
+  or generated expectation is counted as a pass.
+- **Manual output inspection:** ran
+  `cargo test -p temporal-core --test scenarios every_documented_scenario --locked --offline -- --nocapture`.
+  S03 reports 8h work / 20h declared opportunity (`room`); S05 retains both
+  conflicting Anchors, subtracts their union once, and reports 90m / 120m
+  (`tight`). S09 is an overdue real Deadline, with no fictitious remaining
+  ratio. S10 changes from current to expired advice on Tuesday and has no
+  Deadline/pressure row. S12 short coverage preserves 90m / 120m but marks it
+  conditional despite healthy refresh status. S13 distinguishes Trace's own
+  satisfied due projection, independent unresolved zero-work obligations,
+  unknown effort, and lower-bound insufficient work; stale Trace qualifies
+  only the calculations that depend on it unless explicitly required.
+- **Four product questions:** fixed facts are available as Anchor records,
+  phases, and conflicts; candidate work before a fixed event is inspectable
+  through Window/fit rows; risk is available in Deadline pressure and reasons;
+  advice has its own type and validity. This supplies the semantic inputs to
+  Horizon. It does not claim visual usability or a completed Today selector.
+- **Diff/scope review:** reviewed the complete Gate 1 change against `f504182`,
+  including ownership/validation, civil-time boundaries, empty versus unknown
+  capacity, fulfillment, qualifiers, inference, fixtures, and dependency
+  direction. The settled product/spec documents are unchanged. No UI,
+  persistence, source adapter, personal data, runtime agent dependency, network
+  service, FI99 package, or remote publishing entered this gate. Git retains
+  the imported foundation and task commits; no remote is configured.
+- **Resolved integration defects:** Task 1.9 corrected fully blocked declared
+  time being reported as unknown, effort conversion overflow, source coverage
+  hidden by missing effort, and incomplete/unstably ordered explanation
+  payloads. These implement the existing contract; no new policy was adopted.
+- **Remaining questions/risks:** O-001–O-007 remain open. Compression/visual
+  grammar and the actual Trace read contract are Gate 2 work; they do not
+  block the synthetic shell in 2.1. proof-v1 is individual declared capacity,
+  not a shared allocation or empirical safety promise. Adapter reconciliation,
+  producer-managed revisions, Windows UI behavior, large personal datasets,
+  and real-use calibration remain unverified. The pinned timezone rules need
+  deliberate regression testing when updated. No personal-data trial occurred.
+
+GATE 1 COMPLETE
 
 ---
 
 ## Gate 2 — Trace-backed primitive Horizon
 
-Broad intent only. Do not implement until Gate 1 is complete.
+**Status: NOT STARTED.** Deliver a usable personal Windows application using the
+proven core. Keep one app backend plus the existing internal core; do not create
+the speculative crate tree in Architecture. Each numbered task is one reviewable
+commit. Build a visible synthetic app first, then integrate Trace before enabling
+manual local inputs, following README's source rollout order.
 
-Expected:
+### 2.1 Run a synthetic Horizon in the Windows app
 
-- safe Trace adapter
-- source health and conservative last-known-state behavior from the first adapter
-- local annotations
-- primitive Horizon renderer
-- finite Today edit
-- inspectable "why now?"
+- **Purpose:** put the verified temporal model on screen immediately.
+- **Dependencies:** Gate 1 complete; HORIZON and S01–S10; core `evaluate` output.
+- **Expected files:** minimal root Svelte 5/TypeScript/Vite setup and lockfile;
+  `src/`, `src-tauri/` with Tauri 2 configuration, narrow evaluation IPC, and
+  synthetic fixtures; README launch/check commands. Add only the app workspace
+  member and required dependencies. Keep fixture reuse internal.
+- **Acceptance:** launch on Windows; select the ten required synthetic weeks
+  and advance injected time. Render a bounded, continuous nonlinear Horizon
+  with NOW, distinguishable species/provenance, pressure/unknown state, and
+  selectable details. Near time has more space; distant time compresses;
+  temporal order is preserved. Expose source qualifications and expired advice
+  accurately. Keep the mapping deterministic and testable, and treat its exact
+  function/visual grammar as an O-002/O-003 prototype requiring user feedback.
+- **Focused verification:** core regression suite, frontend type/build checks,
+  native app check/launch, mapping order/boundary tests, and visual inspection
+  of S01–S10 including keyboard access, non-color semantics, and reduced motion.
+  Present the running prototype for feedback without claiming feedback occurred.
+- **Prohibited adjacent work:** SQLite, real sources, recommendation generation,
+  polished motion/design system, conventional-calendar Home, extra reusable
+  packages, public installers, or modifying the core model for renderer ease.
+
+### 2.2 Read Trace safely and retain last-known state
+
+- **Purpose:** replace synthetic Task References with a narrow, reliable local
+  read boundary while retaining safe offline behavior.
+- **Dependencies:** 2.1; verify O-004 against actual Trace source/documentation.
+  The interrupted research ticket is evidence to inspect, not a settled schema.
+- **Expected files:** `docs/TRACE-CONTRACT.md` verified mapping/transport notes;
+  `src-tauri/src/trace.rs`, `store.rs`, app-owned SQLite migration(s), IPC/source
+  status wiring, and synthetic adapter/store tests. Modules may be split only
+  when their implemented size warrants it.
+- **Acceptance:** establish the supported transport/version, stable IDs, status,
+  due precision, completion, and reconciliation semantics before coding their
+  mapping. Prefer supported export/query/IPC. Direct database read is eligible
+  only if no cleaner contract exists and must be isolated/read-only; never
+  write Trace's database. Persist canonical-ID mappings and cached source state
+  in Temporal Engine's own local SQLite file. Refresh is atomic; failed/partial/
+  incompatible loads retain prior facts and report health. Remove only on
+  explicit deletion or authoritative complete reconciliation. Unknown fields,
+  status, or due meaning cannot invent completion, deadlines, or free time.
+  If no usable read contract can be established, record the precise blocker
+  and retain synthetic mode; do not change Trace or guess its schema.
+- **Focused verification:** synthetic stable-ID edits, due changes/removal,
+  Done and unknown states, repeated import/restart, duplicates, empty complete
+  versus failed/partial refresh, schema mismatch, and source health in the app.
+  Inspect the adapter for write paths into Trace. Run app/core checks.
+- **Prohibited adjacent work:** bidirectional task edits/completion, replacement
+  task capture, real database fixtures, public adapter framework, cloud sync,
+  Quercus or external calendar adapters.
+
+### 2.3 Store local temporal input and scheduling annotations
+
+- **Purpose:** make the app useful with the user's own explicit temporal state.
+- **Dependencies:** 2.2; Domain Contract ownership, time, and work semantics.
+- **Expected files:** app store/migrations and narrow mutation commands; simple
+  local input/detail forms in `src/`; synthetic persistence/validation tests.
+- **Acceptance:** create/edit local Anchors, Deadlines, Intentions, weekly
+  Routines, explicit availability, and scheduling annotations on stable Trace
+  references. Persist revisions and user evidence across restart; source edits
+  retain annotations without overwriting sourced fields. Capture time once at
+  the app boundary, inject it into the core, and keep virtual time available
+  for scenarios. Require explicit timezone/precision and preserve all-day,
+  completion, unknown effort/chunk, and source-ownership semantics.
+- **Focused verification:** synthetic create/edit/restart and annotation
+  survival; invalid overlap/time/link rejection without partial writes;
+  source-owned field protection; local completion and Routine rollover; app
+  and core checks plus manual form/keyboard use.
+- **Prohibited adjacent work:** general task-manager CRUD, natural-language/AI
+  parsing, generic persistence abstractions, imported-event dragging, travel,
+  alternate recurrence systems, or broad settings infrastructure.
+
+### 2.4 Add the finite Today edit and inspectable advice
+
+- **Purpose:** make Fixed, Worth doing, On the radar, and Loose useful without
+  asking the user to inspect the full result inventory.
+- **Dependencies:** 2.3; existing fit/pressure/reasons/suggestion validity and
+  the prototype feedback. Resolve bounded selection details in the contract
+  before implementing them; a material product change needs a user decision.
+- **Expected files:** a small internal Rust selection module, its documented
+  deterministic policy and scenario tests; Today/details components in `src/`.
+- **Acceptance:** a finite Today view with normally 3–5 flexible candidates,
+  stable documented tie-breaking, and inspectable current fit/risk/source
+  reasons. Suggestions carry producing keys and expiry and pass existing
+  revalidation. Show uncertainty and individual-capacity limits; preserve
+  Trace status instead of silently treating Now/Later/Someday as commitments.
+  Do not fill a quota with ineligible work. User confirmation/selection is not
+  completion, a reservation, or a new Deadline.
+- **Focused verification:** fixed time/permutation tests for selection and
+  explanation, insufficient/unknown opportunity, completed/removed targets,
+  expiry and snapshot changes; S09 overdue versus S10 expired advice in the
+  UI; full app/core checks and accessible keyboard inspection.
+- **Prohibited adjacent work:** opaque ranking weights, learned calibration,
+  shared-capacity optimization, rigid automatic schedules, guilt rollover,
+  AI, or turning Today into another task manager.
+
+### 2.5 Verify the primitive app and report Gate 2
+
+- **Purpose:** establish an honest working-app handoff before Quercus and the
+  Gate 3 personal-local trial.
+- **Dependencies:** 2.1–2.4, supported Trace boundary evidence, and actual
+  prototype feedback; unresolved blockers preclude gate completion.
+- **Expected files:** focused corrections where verification exposes gaps;
+  README commands, `docs/BUILD-GATES.md`, ASTRA, and synthetic test evidence.
+- **Acceptance:** the Windows app answers the four home questions from
+  synthetic inputs and can consume the verified Trace contract while preserving
+  local annotations and last-known source state. Review all ten Horizon weeks,
+  virtual-time transitions, keyboard/reduced-motion behavior, restart/offline
+  behavior, and the full gate diff. Record actual user feedback, checks,
+  residual risks, and an executable Gate 3 plan before advancing ASTRA.
+- **Focused verification:** all core/app tests, frontend type/build checks,
+  native build/launch, synthetic adapter/store failure cases, and a manual
+  end-to-end Horizon/Today/details/restart walkthrough. Keep personal content
+  out of committed evidence. Mark completion only with all criteria satisfied.
+- **Prohibited adjacent work:** Quercus implementation or a personal-data
+  trial in this task, cosmetic expansion, public distribution, or declaring
+  unperformed usability/integration checks passed.
+
+Gate 2 excludes AI, travel, companion surfaces, mobile, cloud personal storage,
+accounts, telemetry by default, FI99 extraction, and public distribution.
 
 ---
 
