@@ -8,6 +8,32 @@ temporal-engine-foundation/
 ├── .gitattributes
 ├── .gitignore
 ├── .scratch/temporal-engine/ # local wayfinder map and decision tickets
+├── package.json
+├── package-lock.json
+├── index.html
+├── tsconfig.json
+├── svelte.config.js
+├── vite.config.ts # localhost-only synthetic preview during development
+├── scripts/build-icon.mjs
+├── src/
+│   ├── main.ts
+│   ├── App.svelte
+│   ├── Horizon.svelte
+│   ├── app.css
+│   └── lib/ # narrow app API types and deterministic time geometry
+├── tests/horizon.test.ts
+├── src-tauri/
+│   ├── Cargo.toml
+│   ├── build.rs
+│   ├── tauri.conf.json
+│   ├── capabilities/main.json
+│   ├── icons/ # source SVG and Windows build resources
+│   ├── src/
+│   │   ├── main.rs
+│   │   ├── lib.rs # synthetic catalog and evaluation IPC
+│   │   ├── presentation.rs # read-only projection of core results
+│   │   └── bin/scenario-preview.rs # development verification only
+│   └── tests/presentation_contract.rs
 ├── crates/
 │   └── temporal-core/
 │       ├── Cargo.toml

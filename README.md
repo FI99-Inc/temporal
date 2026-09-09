@@ -58,10 +58,39 @@ The documents are part of the product contract, not background notes.
 
 ## Development
 
-Gate 1 is complete: the executable proof is one internal Rust library in
-`crates/temporal-core`. The next task, **2.1 Run a synthetic Horizon in the
-Windows app**, begins the desktop shell. There is no app launch command yet;
-ASTRA and BUILD-GATES record the implementation handoff.
+Gates 0 and 1 are complete. Task 2.1 adds a runnable synthetic Horizon: choose
+an example week, advance virtual time, and select items for their provenance,
+work estimates, and explanations. The Windows app uses the existing internal
+Rust core. Trace, local input forms, persistence, and Today selection follow
+in the remaining Gate 2 tasks; no personal data is loaded by this prototype.
+
+Use Node **24.x** (verified with 24.15.0/npm 11.12.1), the Rust toolchain below,
+and the Windows WebView2 runtime. Dependencies are pinned in `package-lock.json`
+and `Cargo.lock`. From the repository root, install the locked frontend packages
+once, then launch the development app:
+
+```powershell
+npm ci
+npm run app
+```
+
+For a local executable with the frontend bundled, without a development server:
+
+```powershell
+npm run build
+cargo build -p temporal-app --bin temporal-app --features custom-protocol --locked
+.\target\debug\temporal-app.exe
+```
+
+This is a local debug prototype, not an installer. Run it in your normal Windows
+session so WebView2 can create its app-specific profile. The twelve synthetic
+examples include all ten required Horizon cases plus source freshness and a
+flexible Routine. Time controls change only the selected synthetic snapshot.
+
+`npm run preview` provides the same synthetic app boundary at
+`http://127.0.0.1:1420` for browser verification. Its development-only bridge
+executes the fixed `scenario-preview` binary; it is absent from the bundled app.
+Stop that server before starting `npm run app`, which uses the same port.
 
 `temporal_core::evaluate(&input)` validates a normalized snapshot and returns
 the complete deterministic `EvaluationOutput`, using the input's explicit time.
@@ -71,14 +100,16 @@ inputs through this boundary with explicit semantic expectations.
 
 Use Rust **1.98.0**, pinned in `rust-toolchain.toml`, with rustfmt and clippy. On Windows, install the MSVC C++ build tools and Windows SDK (Visual Studio's Desktop development with C++ workload). The initial setup was checked with Visual Studio 2022 Community's MSVC toolchain. Rust dependencies are locked in `Cargo.lock`.
 
-From the repository root:
+Run the frontend build before Rust's all-feature checks so bundled assets exist:
 
 ```text
+npm test
+npm run build
 cargo metadata --no-deps --format-version 1
 cargo check --workspace --all-targets --locked
 cargo fmt --all -- --check
-cargo clippy --workspace --all-targets --locked -- -D warnings
-cargo test --workspace --locked
+cargo clippy --workspace --all-targets --all-features --locked -- -D warnings
+cargo test --workspace --all-features --locked
 ```
 
 Keep private local inputs under ignored `local-private/`; repository fixtures must be synthetic. The [local wayfinder map](.scratch/temporal-engine/map.md) tracks remaining decisions. `ASTRA.md` and the gate evidence remain the implementation handoff.

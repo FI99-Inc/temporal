@@ -7,17 +7,19 @@ reports in `docs/BUILD-GATES.md` carry the detailed evidence.
 
 **Project phase:** Primitive Windows application
 
-**Current gate:** Gate 2 — Trace-backed primitive Horizon (not started)
+**Current gate:** Gate 2 — Trace-backed primitive Horizon (in progress)
 
-**Current task:** 2.1 Run a synthetic Horizon in the Windows app
+**Current task:** 2.2 Read Trace safely and retain last-known state
 
-**Status:** Gates 0 and 1 complete; Task 2.1 next
+**Status:** Gates 0 and 1 complete; Task 2.1 complete; Task 2.2 next
 
 The user has authorized building the application and emphasized prompt delivery
 of a highly personal app. Keep implementation focused on a usable Horizon. One
 internal Rust crate now evaluates validated snapshots into lifecycle, source
 health, Windows, conflicts, fit, pressure, and suggestion-validity results.
-The desktop shell, persistence, source adapters, and UI remain unimplemented.
+The Windows Tauri/Svelte shell now presents twelve synthetic weeks with virtual
+time, nonlinear geometry, separate temporal species, and inspectable evidence.
+Persistence, source adapters, local input forms, and Today selection remain next.
 
 ## Settled posture
 
@@ -33,15 +35,16 @@ The desktop shell, persistence, source adapters, and UI remain unimplemented.
 
 ## Immediate objective
 
-Execute **2.1 Run a synthetic Horizon in the Windows app** from
-`docs/BUILD-GATES.md`: a minimal runnable Tauri/Svelte app presenting the ten
-required synthetic weeks through the existing core, with virtual-time controls
-and selectable explanations. Show the prototype for user feedback. Do not
-reopen the completed core proof or delay the visible app for extra architecture.
+Execute **2.2 Read Trace safely and retain last-known state** from
+`docs/BUILD-GATES.md`. Inspect the actual Trace source/documentation and settle
+the supported read contract before implementing the adapter and app-owned
+SQLite cache. Never read a real task database for research or fixtures, write
+Trace's database, or infer its due/completion semantics from field names.
 
 Gate 2 contains five commit-sized tasks: synthetic app, safe Trace read/cache,
-local input/annotations, finite Today/advice, and app verification. Its Trace
-contract investigation is required before the adapter, not before Task 2.1.
+local input/annotations, finite Today/advice, and app verification. The prototype
+is available for feedback (README launch commands). Exact compression and visual
+grammar remain provisional; do not invent user feedback to close O-002/O-003.
 
 ## Latest evidence
 
@@ -57,16 +60,31 @@ contract investigation is required before the adapter, not before Task 2.1.
 - Format, all-target check, clippy with warnings denied, all tests, and diff
   checks pass. Cargo verification ran locked/offline. Rust/cargo 1.98.0,
   Chrono 0.4.45, Chrono-TZ 0.10.4, IANA 2025b; no new dependency in final review.
-- Both completion markers and their evidence are in `docs/BUILD-GATES.md`.
-  No Gate 2 implementation or dependency acquisition occurred during this handoff.
+- Task 2.1: root frontend, one internal app workspace member, narrow synthetic
+  IPC/projection, and deterministic geometry. All ten required Horizon weeks
+  plus S12/S14 use the existing core fixtures. No core source or spec changed.
+- App/frontend checks pass: 4 presentation tests, 4 geometry tests, all 78 core
+  integration tests and 3 doctests; format, all-target native check, all-feature
+  clippy with warnings denied, and frontend type/build checks. Final targeted
+  checks cover the added stale-source assertion and frontend selection fix.
+- All ten required weeks were inspected in the browser preview against the
+  same Rust boundary. Clock/risk, overdue versus expired advice, source health,
+  keyboard details controls, and desktop widths were checked; browser logs clean.
+  Native bundled debug executable launched on Windows with its titled window
+  and WebView content. Native launch required normal access for its WebView
+  profile; interaction verification used the browser preview.
+- Tauri 2.11.5, Svelte 5.57.0, TypeScript 6.0.3, Vite 8.2.2; Node 24.15.0.
+  No persistence, real source, recommendation generator, or network service is
+  included in the bundled app. No remote publishing occurred.
 
 ## Open questions and residual limits
 
 No unresolved blocker remains for Gate 1 or the synthetic app in Task 2.1.
 O-001–O-007 in `docs/DECISIONS.md` remain open: naming, compression, visual
 grammar, Trace transport/schema, calibration, travel provider, and local AI.
-Compression/visual grammar need prototype feedback. Interrupted Trace research
-has not established a durable supported transport; inspect and resolve it in 2.2.
+Compression/visual grammar need feedback on the now-running prototype; crowded
+weeks require vertical scrolling and fixture aliases are terse. Interrupted
+Trace research has not established a durable supported transport; resolve in 2.2.
 The local tracker is `.scratch/temporal-engine/map.md`.
 
 proof-v1 measures individual pressure against declared opportunity. It does not

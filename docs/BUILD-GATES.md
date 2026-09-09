@@ -423,13 +423,15 @@ GATE 1 COMPLETE
 
 ## Gate 2 — Trace-backed primitive Horizon
 
-**Status: NOT STARTED.** Deliver a usable personal Windows application using the
+**Status: IN PROGRESS — Task 2.1 complete; Task 2.2 next.** Deliver a usable personal Windows application using the
 proven core. Keep one app backend plus the existing internal core; do not create
 the speculative crate tree in Architecture. Each numbered task is one reviewable
 commit. Build a visible synthetic app first, then integrate Trace before enabling
 manual local inputs, following README's source rollout order.
 
 ### 2.1 Run a synthetic Horizon in the Windows app
+
+**Status: COMPLETE — 2026-09-09.** Exact visual policy remains a prototype.
 
 - **Purpose:** put the verified temporal model on screen immediately.
 - **Dependencies:** Gate 1 complete; HORIZON and S01–S10; core `evaluate` output.
@@ -451,6 +453,46 @@ manual local inputs, following README's source rollout order.
 - **Prohibited adjacent work:** SQLite, real sources, recommendation generation,
   polished motion/design system, conventional-calendar Home, extra reusable
   packages, public installers, or modifying the core model for renderer ease.
+
+**Task 2.1 evidence:**
+
+- Added the root Svelte/TypeScript/Vite setup, `src/`, `tests/horizon.test.ts`,
+  and one unpublished `src-tauri/` workspace member. Narrow commands return a
+  read-only presentation of existing S01–S10, S12, and S14 inputs and core output.
+  README documents development, browser-preview, and bundled local-exe launch.
+- Continuous logarithmic geometry preserves order and expands near time.
+  Collision lanes move labels only; time stems and durations keep their true
+  mapped positions. Facts, imported provenance, milestones, flexible preferences,
+  retained advice, pressure, and source qualifications remain distinguishable.
+- Passed: 4 app presentation tests, 4 Node geometry tests, all 78 core integration
+  tests and 3 compile-fail doctests. `cargo fmt --all -- --check`, workspace
+  all-target check, all-feature clippy with `-D warnings`, all-feature tests,
+  frontend check (zero errors/warnings), production frontend build, native
+  custom-protocol debug build, and diff checks. Cargo checks used locked/offline
+  dependencies after initial acquisition. Final focused checks cover source
+  freshness and the final frontend update.
+- Visually inspected S01–S10 in the browser preview, including conflicting
+  distinct Anchors, import/milestone identity, unknown availability, genuine
+  overdue state, and expired advice. S03 stays at 8h effort while advancing time
+  changes pressure from room to tight to insufficient. S10 remains a flexible
+  Trace task after its advice expires. S12 exposes stale-source qualifications;
+  S14 exposes flexible date-keyed occurrences. Keyboard Tab/Enter can inspect
+  and close details; shapes/text supplement color. Desktop 900px/1440px layouts
+  were inspected. No animations are introduced; reduced-motion CSS also disables
+  transitions. The preview reported no browser warnings/errors.
+- Launched `target/debug/temporal-app.exe` with bundled frontend on Windows;
+  verified the titled native window and its WebView content. Normal app access
+  was needed to create WebView2's own profile outside the workspace sandbox.
+  Interactive UI checks were performed in the browser preview using the same
+  Rust application boundary, not through native window automation.
+- Scope review: no core source/spec change, SQLite, real Trace/calendar data,
+  source adapter, recommendation generator, network service in the bundled app,
+  mobile project, public installer, or remote publication. The localhost preview
+  bridge is development-only and invokes a fixed synthetic binary.
+- Residual limits: no personal-local trial yet; dense weeks need vertical
+  scrolling, terse fixture names are not finished content, and native platform
+  interaction coverage is limited. The prototype was presented for feedback;
+  O-002/O-003 remain open pending an actual user response. Gate 2 is not complete.
 
 ### 2.2 Read Trace safely and retain last-known state
 

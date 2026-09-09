@@ -1,0 +1,37 @@
+[package]
+name = "temporal-app"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+publish.workspace = true
+default-run = "temporal-app"
+
+[features]
+default = ["desktop"]
+desktop = ["dep:tauri", "dep:tauri-build"]
+custom-protocol = ["desktop", "tauri/custom-protocol"]
+dev-tools = []
+
+[dependencies]
+temporal-core = { path = "../crates/temporal-core" }
+serde = { version = "=1.0.229", features = ["derive"] }
+serde_json = "=1.0.151"
+chrono = { version = "=0.4.45", default-features = false, features = ["std"] }
+chrono-tz = { version = "=0.10.4", default-features = false, features = ["std"] }
+tauri = { version = "=2.11.5", optional = true }
+
+[build-dependencies]
+tauri-build = { version = "=2.6.3", optional = true, features = [] }
+
+[[bin]]
+name = "temporal-app"
+path = "src/main.rs"
+required-features = ["desktop"]
+
+[[bin]]
+name = "scenario-preview"
+path = "src/bin/scenario-preview.rs"
+required-features = ["dev-tools"]
+
+[lints]
+workspace = true
