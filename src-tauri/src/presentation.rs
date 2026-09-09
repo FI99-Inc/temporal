@@ -76,7 +76,7 @@ fn date(at: Instant, zone: ZoneId, format: &str) -> String {
         .format(format)
         .to_string()
 }
-fn at(at: Instant, zone: ZoneId) -> String {
+pub(crate) fn at(at: Instant, zone: ZoneId) -> String {
     date(at, zone, "%a %b %-d, %-I:%M %p")
 }
 fn span_label(span: &TemporalSpan, zone: ZoneId) -> String {
@@ -440,7 +440,11 @@ pub fn project(
         }
         items.push(row);
     }
-    for task in &input.task_refs {
+    for task in input
+        .task_refs
+        .iter()
+        .filter(|t| t.presence == Presence::Present)
+    {
         let mut row = item(
             task.meta.id.to_string(),
             "task",
@@ -451,6 +455,21 @@ pub fn project(
         );
         fact(&mut row, "Trace status", name(&task.status));
         source_state(&mut row, task.provenance.source_id(), output);
+        if let Some(priority) = &task.source_priority {
+            fact(&mut row, "Trace priority", priority);
+        }
+        if let Some(context) = &task.source_context {
+            fact(&mut row, "Trace context", context);
+        }
+        if let Some(link) = &task.source_link {
+            fact(&mut row, "Trace link", link);
+        }
+        if let Some(completed) = task.source_completed_at {
+            fact(&mut row, "Trace completion time", at(completed, zone));
+        }
+        if let Some(updated) = task.provenance.imported().source_updated_at {
+            fact(&mut row, "Trace updated", at(updated, zone));
+        }
         fact(
             &mut row,
             "Due",

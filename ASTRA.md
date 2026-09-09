@@ -9,9 +9,9 @@ reports in `docs/BUILD-GATES.md` carry the detailed evidence.
 
 **Current gate:** Gate 2 — Trace-backed primitive Horizon (in progress)
 
-**Current task:** 2.2 Read Trace safely and retain last-known state
+**Current task:** 2.3 Store local temporal input and scheduling annotations
 
-**Status:** Gates 0 and 1 complete; Task 2.1 complete; Task 2.2 next
+**Status:** Gates 0 and 1 complete; Tasks 2.1 and 2.2 complete; Task 2.3 next
 
 The user has authorized building the application and emphasized prompt delivery
 of a highly personal app. Keep implementation focused on a usable Horizon. One
@@ -19,7 +19,9 @@ internal Rust crate now evaluates validated snapshots into lifecycle, source
 health, Windows, conflicts, fit, pressure, and suggestion-validity results.
 The Windows Tauri/Svelte shell now presents twelve synthetic weeks with virtual
 time, nonlinear geometry, separate temporal species, and inspectable evidence.
-Persistence, source adapters, local input forms, and Today selection remain next.
+Trace 1.0 JSON imports into an app-owned SQLite cache with stable mappings,
+atomic reconciliation, retained last-known state, and visible source health.
+Local input forms, annotations, and Today selection remain next.
 
 ## Settled posture
 
@@ -35,11 +37,11 @@ Persistence, source adapters, local input forms, and Today selection remain next
 
 ## Immediate objective
 
-Execute **2.2 Read Trace safely and retain last-known state** from
-`docs/BUILD-GATES.md`. Inspect the actual Trace source/documentation and settle
-the supported read contract before implementing the adapter and app-owned
-SQLite cache. Never read a real task database for research or fixtures, write
-Trace's database, or infer its due/completion semantics from field names.
+Execute **2.3 Store local temporal input and scheduling annotations** from
+`docs/BUILD-GATES.md`. Keep Trace facts read-only while adding the smallest
+personal local state needed for a useful Horizon. Never read a real task
+database for research or fixtures, write Trace's database, or infer its
+due/completion semantics from field names.
 
 Gate 2 contains five commit-sized tasks: synthetic app, safe Trace read/cache,
 local input/annotations, finite Today/advice, and app verification. The prototype
@@ -74,23 +76,32 @@ grammar remain provisional; do not invent user feedback to close O-002/O-003.
   and WebView content. Native launch required normal access for its WebView
   profile; interaction verification used the browser preview.
 - Tauri 2.11.5, Svelte 5.57.0, TypeScript 6.0.3, Vite 8.2.2; Node 24.15.0.
-  No persistence, real source, recommendation generator, or network service is
-  included in the bundled app. No remote publishing occurred.
+  Task 2.1's synthetic prototype had no persistence; Task 2.2 adds only the
+  app-owned SQLite Trace snapshot cache. There is no Trace database access,
+  recommendation generator, network service in the bundled app, or remote
+  publishing.
+- Task 2.2: the verified Trace 1.0 JSON export is imported through an explicit
+  file boundary into `temporal-engine.sqlite3` under app data. Stable opaque
+  external IDs map to UUIDv4 Task References; unresolved due values remain
+  source facts; failed, stale, incompatible, older, and partial imports keep
+  the prior cache. Eleven adapter/cache tests and package-level app/core checks
+  pass. The preview cache was populated only with the committed synthetic file.
 
 ## Open questions and residual limits
 
-No unresolved blocker remains for Gate 1 or the synthetic app in Task 2.1.
-O-001–O-007 in `docs/DECISIONS.md` remain open: naming, compression, visual
-grammar, Trace transport/schema, calibration, travel provider, and local AI.
+No unresolved blocker remains for Gate 1 or Tasks 2.1–2.2. O-001–O-003 and
+O-005–O-007 in `docs/DECISIONS.md` remain open: naming, compression, visual
+grammar, calibration, travel provider, and local AI. O-004 is settled for the
+initial JSON-export boundary; a future live contract remains optional.
 Compression/visual grammar need feedback on the now-running prototype; crowded
-weeks require vertical scrolling and fixture aliases are terse. Interrupted
-Trace research has not established a durable supported transport; resolve in 2.2.
-The local tracker is `.scratch/temporal-engine/map.md`.
+weeks require vertical scrolling and fixture aliases are terse. The local
+tracker is `.scratch/temporal-engine/map.md`.
 
 proof-v1 measures individual pressure against declared opportunity. It does not
 allocate shared capacity or establish real-world calibration. Source adapter
-reconciliation, snapshot revision production, visual usability, large personal
-datasets, and personal-local behavior remain unproven. Keep these limits visible.
+reconciliation is proven against synthetic exports; local input, visual
+usability, large personal datasets, and personal-local behavior remain next.
+Keep these limits visible.
 
 ## Handoff rule
 

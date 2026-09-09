@@ -1,5 +1,8 @@
-//! The local application boundary. Synthetic input is the only data source in 2.1.
+//! Local application boundary: synthetic examples and an app-owned Trace cache.
+pub mod personal;
 mod presentation;
+pub mod store;
+pub mod trace;
 
 // Reuse the exact Gate 1 inputs internally, without copying or inventing data.
 #[path = "../../crates/temporal-core/tests/support/bases.rs"]
@@ -125,11 +128,35 @@ fn evaluate_scenario(scenario_id: String, offset_minutes: u32) -> Result<Snapsho
 }
 
 #[cfg(feature = "desktop")]
+#[tauri::command]
+fn personal_snapshot(
+    app: tauri::AppHandle,
+    state: tauri::State<'_, personal::AppStore>,
+) -> Result<personal::PersonalView, String> {
+    let now = personal::system_instant()?;
+    state.with(&app, |store| personal::view(store, now))
+}
+
+#[cfg(feature = "desktop")]
+#[tauri::command]
+fn import_trace_json(
+    app: tauri::AppHandle,
+    state: tauri::State<'_, personal::AppStore>,
+    json: String,
+) -> Result<personal::ImportResult, String> {
+    let now = personal::system_instant()?;
+    state.with(&app, |store| personal::import(store, &json, now))
+}
+
+#[cfg(feature = "desktop")]
 pub fn run() {
     tauri::Builder::default()
+        .manage(personal::AppStore::default())
         .invoke_handler(tauri::generate_handler![
             scenario_catalog,
-            evaluate_scenario
+            evaluate_scenario,
+            personal_snapshot,
+            import_trace_json
         ])
         .run(tauri::generate_context!())
         .expect("unable to start Temporal Engine");

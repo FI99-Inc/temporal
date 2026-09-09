@@ -423,7 +423,7 @@ GATE 1 COMPLETE
 
 ## Gate 2 — Trace-backed primitive Horizon
 
-**Status: IN PROGRESS — Task 2.1 complete; Task 2.2 next.** Deliver a usable personal Windows application using the
+**Status: IN PROGRESS — Tasks 2.1 and 2.2 complete; Task 2.3 next.** Deliver a usable personal Windows application using the
 proven core. Keep one app backend plus the existing internal core; do not create
 the speculative crate tree in Architecture. Each numbered task is one reviewable
 commit. Build a visible synthetic app first, then integrate Trace before enabling
@@ -496,6 +496,10 @@ manual local inputs, following README's source rollout order.
 
 ### 2.2 Read Trace safely and retain last-known state
 
+**Status: COMPLETE — 2026-09-09.** The first supported personal read boundary is
+the versioned Trace 1.0 JSON export. The cache is app-owned and read-only with
+respect to Trace.
+
 - **Purpose:** replace synthetic Task References with a narrow, reliable local
   read boundary while retaining safe offline behavior.
 - **Dependencies:** 2.1; verify O-004 against actual Trace source/documentation.
@@ -522,6 +526,38 @@ manual local inputs, following README's source rollout order.
 - **Prohibited adjacent work:** bidirectional task edits/completion, replacement
   task capture, real database fixtures, public adapter framework, cloud sync,
   Quercus or external calendar adapters.
+
+**Task 2.2 evidence:**
+
+- Inspected a clean checkout of Trace's own source without reproducing its
+  internals. The verified export is the complete task catalog emitted after its
+  first successful refresh; no database path or task-read IPC exists. The
+  contract in `docs/TRACE-CONTRACT.md` records field ownership, missing
+  precision, limits, reconciliation, age, and failure semantics. The research
+  notes stay local and are not published.
+- Added `trace.rs`, `store.rs`, `personal.rs`, the app-owned migration, the
+  narrow native/preview commands, and a synthetic fixture. Import parses and
+  validates the whole export before writing. Unknown envelope/task fields,
+  unsupported versions, duplicate IDs, invalid timestamp/completion state,
+  malformed/partial/old/future/conflicting exports, foreign/future cache
+  schemas, and a deliberate mid-write SQLite failure retain prior facts. Empty
+  complete exports create removed tombstones; reappearance reuses the canonical
+  ID. Repeated imports retain record revisions and freshness expires at the
+  original export-time boundary.
+- Eleven `trace_contract` tests pass, including restart, stable UUID mappings,
+  fractional sort order, status/completion edits, unresolved due values,
+  source-health attempts, atomic rollback, and clock/schema boundaries. Four
+  presentation tests, all core tests and doctests, frontend tests, frontend
+  check/build, formatting, all-target/all-feature check, and all-feature clippy
+  with `-D warnings` pass. The browser preview imported the committed synthetic
+  export; the cache was read back through `scenario-preview` with two tasks,
+  one completed task, one unresolved date, and healthy source state.
+- The full all-feature workspace test command was attempted but Windows kept the
+  existing test-owned `temporal-app.exe` open, so Cargo could not replace it.
+  Package-level all-feature core tests and app presentation/Trace tests pass;
+  the remaining lock is an environment limitation. The native bundled build
+  is unchanged from Task 2.1 and awaits that process being closed. No real
+  Trace database, export, or personal data was used.
 
 ### 2.3 Store local temporal input and scheduling annotations
 

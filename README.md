@@ -58,11 +58,13 @@ The documents are part of the product contract, not background notes.
 
 ## Development
 
-Gates 0 and 1 are complete. Task 2.1 adds a runnable synthetic Horizon: choose
-an example week, advance virtual time, and select items for their provenance,
-work estimates, and explanations. The Windows app uses the existing internal
-Rust core. Trace, local input forms, persistence, and Today selection follow
-in the remaining Gate 2 tasks; no personal data is loaded by this prototype.
+Gates 0 and 1 are complete. Gate 2 now has a runnable synthetic Horizon and a
+read-only Trace 1.0 JSON import into Temporal Engine's own SQLite cache. Choose
+an example week, advance virtual time, or select My time to inspect the retained
+local snapshot. Trace still owns task text, status, completion, priority,
+context, and its exported due value; Temporal Engine does not write Trace's
+database. A non-null Trace due value remains visibly unresolved until a source
+contract preserves its precision and timezone.
 
 Use Node **24.x** (verified with 24.15.0/npm 11.12.1), the Rust toolchain below,
 and the Windows WebView2 runtime. Dependencies are pinned in `package-lock.json`
@@ -89,8 +91,18 @@ flexible Routine. Time controls change only the selected synthetic snapshot.
 
 `npm run preview` provides the same synthetic app boundary at
 `http://127.0.0.1:1420` for browser verification. Its development-only bridge
-executes the fixed `scenario-preview` binary; it is absent from the bundled app.
-Stop that server before starting `npm run app`, which uses the same port.
+executes the fixed `scenario-preview` binary and uses a synthetic cache under
+`.cache/browser-preview`; it is absent from the bundled app. The preview clock
+is frozen so imports and screenshots are repeatable. Stop that server before
+starting `npm run app`, which uses the same port.
+
+To import personal Trace data, use Trace's `Ctrl+K` → `Export as JSON`, then
+choose `Import Trace JSON` in My time. The export is read as bytes and copied
+only into Temporal Engine's own app-data cache. The first adapter has a 10 MiB
+input limit and a 24-hour source-freshness limit. Failed or stale imports leave
+the previous snapshot visible and expose the source health result. Re-export
+after changing tasks in Trace; this first boundary is intentionally a snapshot,
+not a live connection.
 
 `temporal_core::evaluate(&input)` validates a normalized snapshot and returns
 the complete deterministic `EvaluationOutput`, using the input's explicit time.
@@ -112,6 +124,6 @@ cargo clippy --workspace --all-targets --all-features --locked -- -D warnings
 cargo test --workspace --all-features --locked
 ```
 
-Keep private local inputs under ignored `local-private/`; repository fixtures must be synthetic. The [local wayfinder map](.scratch/temporal-engine/map.md) tracks remaining decisions. `ASTRA.md` and the gate evidence remain the implementation handoff.
+Keep private local inputs under ignored `local-private/`; repository fixtures must be synthetic. The [local wayfinder map](.scratch/temporal-engine/map.md) tracks remaining decisions. `ASTRA.md` and the gate evidence remain the implementation handoff. Do not place personal exports in the repository.
 
 Time calculations use pinned [Chrono 0.4.45](https://docs.rs/chrono/0.4.45/chrono/) with only its `std` feature and [Chrono-TZ 0.10.4](https://docs.rs/chrono-tz/0.10.4/chrono_tz/) with bundled IANA **2025b** rules. The core does not enable Chrono's system-clock or machine-local-zone features. Updating these pins is an explicit dependency change requiring the civil-time tests to pass. After initial dependency acquisition, the checks also run with Cargo's `--offline` flag.

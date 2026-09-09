@@ -96,7 +96,12 @@ Design after the model is stable.
 
 ### O-004 — Trace transport
 
-Preferred long-term transport is a narrow versioned local contract. Exact mechanism is not yet frozen.
+The initial personal transport is the supported Trace 1.0 JSON export imported
+through an explicit file choice. It is a complete last-known snapshot, not a
+live feed. The adapter keeps the app-owned cache when an export is partial,
+incompatible, stale, out of order, or otherwise rejected. A future live local
+contract may be considered after personal use demonstrates that a snapshot is
+insufficient.
 
 Do not directly mutate Trace's SQLite database.
 
