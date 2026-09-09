@@ -1,6 +1,9 @@
 //! The application's own SQLite cache. There is no Trace database connection.
-use crate::trace::{self, Export, ImportError, TraceTask};
-use rusqlite::{Connection, TransactionBehavior, params};
+use crate::{
+    local::{self, LocalMutation, LocalState},
+    trace::{self, Export, ImportError, TraceTask},
+};
+use rusqlite::{Connection, OptionalExtension, TransactionBehavior, params};
 use serde::{Deserialize, Serialize};
 use std::{collections::BTreeMap, num::NonZeroU64, path::Path};
 use temporal_core::{domain::*, results::*, time::*};
@@ -27,12 +30,14 @@ struct CachedTask {
 struct Cache {
     metadata: Metadata,
     tasks: BTreeMap<String, CachedTask>,
+    local: LocalState,
 }
 
 pub struct StoredView {
     pub input: EvaluationInput,
     pub exported_at: Option<Instant>,
     pub last_import_at: Option<Instant>,
+    pub local: LocalState,
 }
 
 impl Store {
@@ -62,6 +67,8 @@ impl Store {
                 }
                 tx.execute_batch(include_str!("../migrations/001_trace_cache.sql"))
                     .map_err(db_error)?;
+                tx.execute_batch(include_str!("../migrations/002_local_state.sql"))
+                    .map_err(db_error)?;
                 let id = uuid::Uuid::new_v4()
                     .to_string()
                     .parse()
@@ -86,8 +93,19 @@ impl Store {
                     exported_at: None,
                 };
                 save_metadata(&tx, &metadata)?;
+                let local_id = uuid::Uuid::new_v4()
+                    .to_string()
+                    .parse()
+                    .expect("UUIDv4 generator");
+                save_local(&tx, &LocalState::empty(local_id))?;
             }
             1 => {
+                tx.execute_batch(include_str!("../migrations/002_local_state.sql"))
+                    .map_err(db_error)?;
+                ensure_local_state(&tx)?;
+                load_cache(&tx)?;
+            }
+            2 => {
                 load_cache(&tx)?;
             }
             _ => return Err(
@@ -111,7 +129,44 @@ impl Store {
             input,
             exported_at: cache.metadata.exported_at,
             last_import_at: cache.metadata.state.last_success_at,
+            local: cache.local,
         })
+    }
+
+    pub fn mutate_local(&mut self, mutation: &LocalMutation, now: Instant) -> Result<(), String> {
+        let tx = self
+            .connection
+            .transaction_with_behavior(TransactionBehavior::Immediate)
+            .map_err(db_error)?;
+        let previous = load_cache(&tx)?;
+        check_clock(&previous, now)?;
+        let previous_input = build_input(&previous, now, "America/Toronto".parse().unwrap())?;
+        temporal_core::validation::validate(&previous_input).map_err(|_| {
+            "Cached temporal data failed validation; no local change was applied.".to_string()
+        })?;
+        let mut next = previous.clone();
+        let trace_tasks: Vec<_> = next
+            .tasks
+            .iter()
+            .map(|(external, cached)| (external.clone(), cached.task.meta.id))
+            .collect();
+        local::apply(&mut next.local, mutation, &trace_tasks, now)?;
+        next.local.updated_at = Some(now);
+        next.local.revision = next
+            .local
+            .revision
+            .get()
+            .checked_add(1)
+            .and_then(NonZeroU64::new)
+            .ok_or_else(|| "local snapshot revision limit reached".to_string())?;
+        next.metadata.revision = next_revision(next.metadata.revision)?;
+        let candidate = build_input(&next, now, "America/Toronto".parse().unwrap())?;
+        temporal_core::validation::validate(&candidate).map_err(|_| {
+            "Local temporal change failed validation; previous state kept.".to_string()
+        })?;
+        save_metadata(&tx, &next.metadata)?;
+        save_local(&tx, &next.local)?;
+        tx.commit().map_err(db_error)
     }
 
     pub fn import_json(&mut self, json: &str, now: Instant) -> Result<(), String> {
@@ -179,7 +234,8 @@ fn persist_cache(connection: &Connection, next: &Cache) -> Result<(), String> {
         connection.execute("INSERT INTO trace_tasks (external_id,canonical_id,source_row,normalized) VALUES (?1,?2,?3,?4) ON CONFLICT(external_id) DO UPDATE SET source_row=excluded.source_row,normalized=excluded.normalized",
             params![external_id,row.task.meta.id.to_string(),encode(&row.raw)?,encode(&row.task)?]).map_err(db_error)?;
     }
-    save_metadata(connection, &next.metadata)
+    save_metadata(connection, &next.metadata)?;
+    save_local(connection, &next.local)
 }
 
 fn reconcile(previous: &Cache, mut export: Export, now: Instant) -> Result<Cache, ImportError> {
@@ -295,6 +351,52 @@ fn check_clock(cache: &Cache, now: Instant) -> Result<(), String> {
         .last_attempt_at
         .is_some_and(|at| at > now)
         || cache.tasks.values().any(|r| r.task.meta.updated_at > now)
+        || cache.local.updated_at.is_some_and(|at| at > now)
+        || cache
+            .local
+            .anchors
+            .iter()
+            .any(|record| record.meta.created_at > now || record.meta.updated_at > now)
+        || cache
+            .local
+            .deadlines
+            .iter()
+            .any(|record| record.meta.created_at > now || record.meta.updated_at > now)
+        || cache
+            .local
+            .intentions
+            .iter()
+            .any(|record| record.meta.created_at > now || record.meta.updated_at > now)
+        || cache
+            .local
+            .routines
+            .iter()
+            .any(|record| record.meta.created_at > now || record.meta.updated_at > now)
+        || cache
+            .local
+            .availability
+            .iter()
+            .any(|record| record.meta.created_at > now || record.meta.updated_at > now)
+        || cache
+            .local
+            .anchor_annotations
+            .iter()
+            .any(|record| record.created_at > now || record.updated_at > now)
+        || cache
+            .local
+            .deadline_annotations
+            .iter()
+            .any(|record| record.created_at > now || record.updated_at > now)
+        || cache
+            .local
+            .task_annotations
+            .iter()
+            .any(|record| record.created_at > now || record.updated_at > now)
+        || cache
+            .local
+            .routine_outcomes
+            .iter()
+            .any(|record| record.recorded_at > now)
     {
         Err("System time is earlier than cached records. Check the clock; recorded timestamps were kept.".into())
     } else {
@@ -348,29 +450,45 @@ fn load_cache(connection: &Connection) -> Result<Cache, String> {
         }
         tasks.insert(id, CachedTask { raw, task });
     }
-    Ok(Cache { metadata, tasks })
+    let local_payload: String = connection
+        .query_row(
+            "SELECT payload FROM local_temporal_state WHERE singleton=1",
+            [],
+            |r| r.get(0),
+        )
+        .map_err(db_error)?;
+    let local: LocalState = serde_json::from_str(&local_payload)
+        .map_err(|_| "Invalid cached local temporal data.".to_string())?;
+    if local.source.kind != SourceKind::Local {
+        return Err("Cached local source has an invalid kind; no reset was attempted.".into());
+    }
+    Ok(Cache {
+        metadata,
+        tasks,
+        local,
+    })
 }
 fn build_input(cache: &Cache, now: Instant, zone: ZoneId) -> Result<EvaluationInput, String> {
     Ok(EvaluationInput {
         schema_version: 1,
         snapshot_revision: cache.metadata.revision,
         captured_now: now,
-        sources: vec![cache.metadata.source.clone()],
+        sources: vec![cache.metadata.source.clone(), cache.local.source.clone()],
         source_states: vec![cache.metadata.state.clone()],
         required_sources: vec![RequiredSource {
             source_id: cache.metadata.source.id,
             role: SourceRole::Tasks,
         }],
         task_refs: cache.tasks.values().map(|r| r.task.clone()).collect(),
-        anchors: vec![],
-        deadlines: vec![],
-        intentions: vec![],
-        routines: vec![],
-        anchor_annotations: vec![],
-        deadline_annotations: vec![],
-        task_annotations: vec![],
-        routine_outcomes: vec![],
-        availability: vec![],
+        anchors: cache.local.anchors.clone(),
+        deadlines: cache.local.deadlines.clone(),
+        intentions: cache.local.intentions.clone(),
+        routines: cache.local.routines.clone(),
+        anchor_annotations: cache.local.anchor_annotations.clone(),
+        deadline_annotations: cache.local.deadline_annotations.clone(),
+        task_annotations: cache.local.task_annotations.clone(),
+        routine_outcomes: cache.local.routine_outcomes.clone(),
+        availability: cache.local.availability.clone(),
         prior_suggestions: vec![],
         evaluation: EvaluationRequest {
             now,
@@ -382,4 +500,39 @@ fn build_input(cache: &Cache, now: Instant, zone: ZoneId) -> Result<EvaluationIn
             policy_version: PolicyVersion::ProofV1,
         },
     })
+}
+
+fn ensure_local_state(connection: &Connection) -> Result<(), String> {
+    let exists: Option<String> = connection
+        .query_row(
+            "SELECT payload FROM local_temporal_state WHERE singleton=1",
+            [],
+            |row| row.get(0),
+        )
+        .optional()
+        .map_err(db_error)?;
+    if let Some(payload) = exists {
+        let local: LocalState = serde_json::from_str(&payload)
+            .map_err(|_| "Invalid cached local temporal data.".to_string())?;
+        if local.source.kind != SourceKind::Local {
+            return Err("Cached local source has an invalid kind; no reset was attempted.".into());
+        }
+    } else {
+        let id = uuid::Uuid::new_v4()
+            .to_string()
+            .parse()
+            .expect("UUIDv4 generator");
+        save_local(connection, &LocalState::empty(id))?;
+    }
+    Ok(())
+}
+
+fn save_local(connection: &Connection, local: &LocalState) -> Result<(), String> {
+    connection
+        .execute(
+            "INSERT INTO local_temporal_state(singleton,payload) VALUES(1,?1) ON CONFLICT(singleton) DO UPDATE SET payload=excluded.payload",
+            [encode(local)?],
+        )
+        .map_err(db_error)?;
+    Ok(())
 }

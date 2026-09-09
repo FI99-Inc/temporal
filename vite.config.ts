@@ -14,15 +14,18 @@ function syntheticPreview(): Plugin {
       const cache = fileURLToPath(new URL('./.cache/browser-preview/temporal-engine.sqlite3', import.meta.url));
       const frozenTime = '2026-09-09T12:00:00.000Z';
       const importing = url.pathname === '/import_trace_json';
+      const mutating = url.pathname === '/mutate_local';
+      const writing = importing || mutating;
       const args = url.pathname === '/scenario_catalog' ? ['catalog']
         : url.pathname === '/evaluate_scenario' && /^S\d{2}$/.test(id) && /^\d{1,5}$/.test(minutes) ? [id, minutes]
         : url.pathname === '/personal_snapshot' ? ['personal', cache, frozenTime]
-        : importing ? ['import', cache, frozenTime] : null;
+        : importing ? ['import', cache, frozenTime]
+        : mutating ? ['mutate', cache, frozenTime] : null;
       if (req.headers.origin && !['http://127.0.0.1:1420','http://localhost:1420'].includes(req.headers.origin)) { res.statusCode=403; res.end('Same-origin preview requests only'); return; }
-      if (req.method !== (importing ? 'POST' : 'GET') || !args) { res.statusCode = 400; res.end('Invalid synthetic preview request'); return; }
+      if (req.method !== (writing ? 'POST' : 'GET') || !args) { res.statusCode = 400; res.end('Invalid synthetic preview request'); return; }
       try {
         let body = '';
-        if (importing) {
+        if (writing) {
           const parts: Buffer[] = []; let size = 0;
           for await (const chunk of req) {
             const part = Buffer.from(chunk); size += part.length;
@@ -33,12 +36,12 @@ function syntheticPreview(): Plugin {
         }
         const binary = fileURLToPath(new URL(`./target/debug/scenario-preview${process.platform === 'win32' ? '.exe' : ''}`, import.meta.url));
         const stdout = await new Promise<string>((resolve,reject) => {
-          const child = execFile(binary,args,{windowsHide:true,timeout:10_000,maxBuffer:20_000_000},(error,stdout) => error ? reject(error) : resolve(stdout));
+          const child = execFile(binary,args,{windowsHide:true,timeout:10_000,maxBuffer:20_000_000},(error,stdout,stderr) => error ? reject(new Error(stderr.trim() || 'Preview process unavailable. Run npm run preview.')) : resolve(stdout));
           child.stdin?.on('error',reject); child.stdin?.end(body);
         });
         res.setHeader('Content-Type', 'application/json'); res.setHeader('Cache-Control', 'no-store'); res.end(stdout);
-      } catch {
-        res.statusCode = 503; res.end('Synthetic preview unavailable. Run npm run preview, or launch the Windows app with npm run app.');
+      } catch (error) {
+        res.statusCode = 400; res.end(error instanceof Error ? error.message : 'Synthetic preview unavailable. Run npm run preview.');
       }
     });
   } };

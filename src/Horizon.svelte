@@ -24,6 +24,7 @@
     if (item.risk === 'not_applicable') return 'Resolved';
     if (item.risk) return item.risk === 'room' ? 'Room in declared time' : item.risk === 'tight' ? 'Tight' : 'Pressure unknown';
     if (item.species === 'suggestion') return item.phase === 'expired' ? 'Expired advice' : `${item.phase.replaceAll('_', ' ')} advice`;
+    if (['intention', 'routine'].includes(item.species) && ['done', 'dismissed', 'skipped', 'inactive'].includes(item.phase)) return item.phase;
     if (item.phase === 'preference_passed') return 'Still optional';
     if (item.species === 'intention') return 'Optional';
     if (item.species === 'routine') return 'Preferred day';

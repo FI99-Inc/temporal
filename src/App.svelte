@@ -1,8 +1,9 @@
 <script lang="ts">
   import { onMount } from 'svelte';
   import Horizon from './Horizon.svelte';
-  import { catalog, snapshot, desktop, personalSnapshot, importTrace, type Scenario, type Snapshot, type TraceInfo, type PersonalView } from './lib/api.ts';
-
+  import LocalEditor from './LocalEditor.svelte';
+  import type { LocalMutation } from './lib/local.ts';
+  import { catalog, snapshot, desktop, personalSnapshot, importTrace, mutateLocal, type Scenario, type Snapshot, type TraceInfo, type PersonalView, type LocalState } from './lib/api.ts';
   let scenarios = $state<Scenario[]>([]);
   let data = $state<Snapshot | null>(null);
   let selectedId = $state<string | null>(null);
@@ -11,11 +12,11 @@
   let error = $state('');
   let personal = $state(false);
   let trace = $state<TraceInfo | null>(null);
+  let local = $state<LocalState | null>(null);
   let filePicker = $state<HTMLInputElement>();
   let requestNumber = 0;
   let selected = $derived(data?.items.find(i => i.id === selectedId));
   let nextAnchor = $derived(data?.items.filter(i => i.species === 'anchor' && i.phase === 'upcoming').sort((a, b) => a.start! - b.start!)[0]);
-
   async function load(id: string, minutes = 0) {
     const request = ++requestNumber;
     busy = true; error = '';
@@ -23,14 +24,14 @@
       const next = await snapshot(id, minutes);
       if (request !== requestNumber) return;
       if (personal || id !== data?.scenario.id || !next.items.some(i => i.id === selectedId)) selectedId = null;
-      data = next; scenarioId = id; personal = false; trace = null;
+      data = next; scenarioId = id; personal = false; trace = null; local = null;
     } catch (e) {
       if (request === requestNumber) error = String(e instanceof Error ? e.message : e);
     } finally { if (request === requestNumber) busy = false; }
   }
   function showPersonal(next: PersonalView) {
     if (!personal || !next.view.items.some(i => i.id === selectedId)) selectedId = null;
-    data = next.view; trace = next.trace; personal = true;
+    data = next.view; trace = next.trace; local = next.local; personal = true;
   }
   async function loadPersonal() {
     const request = ++requestNumber;
@@ -50,6 +51,13 @@
       if (request === requestNumber) { showPersonal(result.personal); error = result.error ?? ''; }
     } catch (e) { if (request === requestNumber) error = String(e instanceof Error ? e.message : e); }
     finally { if (request === requestNumber) busy = false; if (filePicker) filePicker.value = ''; }
+  }
+  async function saveLocal(mutation: LocalMutation) {
+    if (busy) throw new Error('An update is already in progress.');
+    const request = ++requestNumber;
+    busy = true; error = '';
+    try { const next = await mutateLocal(mutation); if (request === requestNumber) showPersonal(next); }
+    finally { if (request === requestNumber) busy = false; }
   }
   onMount(() => {
     void (async () => {
@@ -108,6 +116,9 @@
         </div>
         <div class="trace-import-state"><span>Last import: {readable(trace.last_attempt)}</span><small>{desktop ? 'Snapshot only; later Trace edits need a new export.' : 'Browser preview: use synthetic exports only.'}</small></div>
       </section>{/if}
+      {#if personal && local && trace}
+        <LocalEditor {local} tasks={trace.tasks} now={data.now} zone={data.zone} {busy} onsave={saveLocal} />
+      {/if}
       <div class="workspace">
         <Horizon {data} {selectedId} onselect={(id) => { selectedId = id; }} />
         <aside class="inspector" aria-label="Selected item details">

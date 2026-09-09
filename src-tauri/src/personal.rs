@@ -1,5 +1,5 @@
 //! App boundary for the one local Trace cache. Time is captured outside the core.
-use crate::{Scenario, Snapshot, presentation, store::Store};
+use crate::{Scenario, Snapshot, local::LocalState, presentation, store::Store};
 use serde::Serialize;
 use temporal_core::{domain::*, time::*};
 
@@ -11,11 +11,21 @@ pub struct TraceInfo {
     completed_tasks: usize,
     unresolved_dates: usize,
     last_attempt: AttemptOutcome,
+    tasks: Vec<TraceChoice>,
+}
+#[derive(Serialize)]
+pub struct TraceChoice {
+    id: TaskRefId,
+    external_id: String,
+    title: String,
+    status: TaskStatus,
+    presence: Presence,
 }
 #[derive(Serialize)]
 pub struct PersonalView {
     pub view: Snapshot,
     trace: TraceInfo,
+    pub local: LocalState,
 }
 #[derive(Serialize)]
 pub struct ImportResult {
@@ -47,6 +57,17 @@ pub fn view(store: &Store, now: Instant) -> Result<PersonalView, String> {
             .filter(|t| matches!(t.due, TaskDue::Unresolved { .. }))
             .count(),
         last_attempt: input.source_states[0].last_attempt_outcome,
+        tasks: input
+            .task_refs
+            .iter()
+            .map(|task| TraceChoice {
+                id: task.meta.id,
+                external_id: task.provenance.imported().external_id.clone(),
+                title: task.title.clone(),
+                status: task.status,
+                presence: task.presence,
+            })
+            .collect(),
     };
     let scenario = Scenario {
         id: "personal".into(),
@@ -55,7 +76,11 @@ pub fn view(store: &Store, now: Instant) -> Result<PersonalView, String> {
             .into(),
     };
     let view = presentation::project(scenario, &input, &output, 0).map_err(|e| e.to_string())?;
-    Ok(PersonalView { view, trace })
+    Ok(PersonalView {
+        view,
+        trace,
+        local: stored.local,
+    })
 }
 
 pub fn import(store: &mut Store, json: &str, now: Instant) -> Result<ImportResult, String> {

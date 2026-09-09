@@ -423,7 +423,7 @@ GATE 1 COMPLETE
 
 ## Gate 2 — Trace-backed primitive Horizon
 
-**Status: IN PROGRESS — Tasks 2.1 and 2.2 complete; Task 2.3 next.** Deliver a usable personal Windows application using the
+**Status: IN PROGRESS — Tasks 2.1–2.3 complete; Task 2.4 next.** Deliver a usable personal Windows application using the
 proven core. Keep one app backend plus the existing internal core; do not create
 the speculative crate tree in Architecture. Each numbered task is one reviewable
 commit. Build a visible synthetic app first, then integrate Trace before enabling
@@ -561,6 +561,9 @@ respect to Trace.
 
 ### 2.3 Store local temporal input and scheduling annotations
 
+**Status: COMPLETE — 2026-09-09.** Local records and work annotations are stored
+in the application's own SQLite database and editable from My time.
+
 - **Purpose:** make the app useful with the user's own explicit temporal state.
 - **Dependencies:** 2.2; Domain Contract ownership, time, and work semantics.
 - **Expected files:** app store/migrations and narrow mutation commands; simple
@@ -579,6 +582,44 @@ respect to Trace.
 - **Prohibited adjacent work:** general task-manager CRUD, natural-language/AI
   parsing, generic persistence abstractions, imported-event dragging, travel,
   alternate recurrence systems, or broad settings infrastructure.
+
+**Task 2.3 evidence:**
+
+- Added `src-tauri/src/local.rs`, schema migration `002_local_state.sql`, and
+  transactional store/IPC support. Separate core types retain local facts,
+  user preferences, annotations, explicit completion evidence, and date-keyed
+  Routine outcomes. UUID identities, revisions, and audit times survive restart.
+  Source refresh cannot overwrite annotations or satisfy an independent local
+  Deadline. Removed Trace identities remain labelled in the annotation picker.
+- Added the collapsed `src/LocalEditor.svelte` manager and typed form mapping in
+  `src/lib/local.ts`. Create/edit/remove Anchors, Deadlines, Intentions, weekly
+  Routines, and bounded Availability; edit Trace work separately. Date-only
+  precision, zone, occupancy, certainty, importance/milestone, unknown/zero
+  effort, context/energy, pause, completion/reopen, and explicit outcomes remain
+  distinct. Completed flexible entries no longer display as active preferences.
+- Nine synthetic local-store tests cover create/edit/restart, v1 migration,
+  source refresh/completion/removal/restore, atomic write failures, invalid
+  overlaps/times/links, evidence retention, clock rewind, and Routine rollover.
+  The full workspace passed 102 integration tests and 3 ownership doctests.
+  After final display/picker fixes, all 24 app tests passed again. Nine frontend
+  tests, frontend type/build checks, format, all-target/all-feature clippy with
+  warnings denied, and the bundled Windows debug build passed. Cargo ran
+  locked/offline; no dependencies changed.
+- Browser walkthrough used synthetic data only: numeric Intention entry,
+  timed Anchor/Deadline, prefilled deadline work, weekly Routine and recorded
+  outcome, Availability split around an Anchor, Trace work picker, completion,
+  and reload. Tab/Enter reached and submitted an Intention form. The expanded
+  manager was inspected visually. Automated tests cover atomic rejection and
+  date-only/DST boundaries; this is not a personal-data usability trial.
+- Reviewed the task diff against ownership, time, soft-state, and gate scope.
+  README and file inventory describe the new boundary. No Trace database,
+  network integration, AI, mobile, or extraction work was added. The stale
+  wayfinder summary now matches its already-resolved Trace research ticket.
+- Residual limits: the first editor accepts exact or unknown effort, one weekly
+  rule form, and an explicit IANA zone. DST gaps/folds are rejected without an
+  offset-choice UI. Display zone remains America/Toronto. The finite Today edit,
+  actual prototype feedback, and gate-wide native/offline walkthrough remain
+  Tasks 2.4–2.5; Gate 2 is not complete.
 
 ### 2.4 Add the finite Today edit and inspectable advice
 

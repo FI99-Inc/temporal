@@ -9,9 +9,9 @@ reports in `docs/BUILD-GATES.md` carry the detailed evidence.
 
 **Current gate:** Gate 2 — Trace-backed primitive Horizon (in progress)
 
-**Current task:** 2.3 Store local temporal input and scheduling annotations
+**Current task:** 2.4 Add the finite Today edit and inspectable advice
 
-**Status:** Gates 0 and 1 complete; Tasks 2.1 and 2.2 complete; Task 2.3 next
+**Status:** Gates 0 and 1 complete; Tasks 2.1–2.3 complete; Task 2.4 next
 
 The user has authorized building the application and emphasized prompt delivery
 of a highly personal app. Keep implementation focused on a usable Horizon. One
@@ -21,7 +21,8 @@ The Windows Tauri/Svelte shell now presents twelve synthetic weeks with virtual
 time, nonlinear geometry, separate temporal species, and inspectable evidence.
 Trace 1.0 JSON imports into an app-owned SQLite cache with stable mappings,
 atomic reconciliation, retained last-known state, and visible source health.
-Local input forms, annotations, and Today selection remain next.
+Local temporal forms and work annotations now persist in the same app-owned
+store, with explicit completion and Routine outcomes. Today selection is next.
 
 ## Settled posture
 
@@ -37,11 +38,11 @@ Local input forms, annotations, and Today selection remain next.
 
 ## Immediate objective
 
-Execute **2.3 Store local temporal input and scheduling annotations** from
-`docs/BUILD-GATES.md`. Keep Trace facts read-only while adding the smallest
-personal local state needed for a useful Horizon. Never read a real task
-database for research or fixtures, write Trace's database, or infer its
-due/completion semantics from field names.
+Execute **2.4 Add the finite Today edit and inspectable advice** from
+`docs/BUILD-GATES.md`. Document the bounded deterministic selection policy
+before implementation, then show Fixed, Worth doing, On the radar, and Loose
+with inspectable current evidence. Keep source uncertainty visible; selection
+must never become completion, a reservation, or a new obligation.
 
 Gate 2 contains five commit-sized tasks: synthetic app, safe Trace read/cache,
 local input/annotations, finite Today/advice, and app verification. The prototype
@@ -86,10 +87,18 @@ grammar remain provisional; do not invent user feedback to close O-002/O-003.
   source facts; failed, stale, incompatible, older, and partial imports keep
   the prior cache. Eleven adapter/cache tests and package-level app/core checks
   pass. The preview cache was populated only with the committed synthetic file.
+- Task 2.3: typed local records, schema-v2 migration, transactional mutations,
+  collapsed forms, retained Trace work picker, and explicit completion/outcomes.
+  Nine local-store tests and nine frontend tests pass. Full workspace: 102
+  integration tests plus 3 doctests; final changes rechecked with all 24 app
+  tests, all-target/all-feature clippy, frontend type/build, format, and bundled
+  Windows build. Manual synthetic forms, Tab/Enter submission, prefilled edit,
+  completion/outcome display, and reload were checked in the browser preview.
+  Full evidence and remaining editor limits are in the Task 2.3 report.
 
 ## Open questions and residual limits
 
-No unresolved blocker remains for Gate 1 or Tasks 2.1–2.2. O-001–O-003 and
+No unresolved blocker remains for Gate 1 or Tasks 2.1–2.3. O-001–O-003 and
 O-005–O-007 in `docs/DECISIONS.md` remain open: naming, compression, visual
 grammar, calibration, travel provider, and local AI. O-004 is settled for the
 initial JSON-export boundary; a future live contract remains optional.
@@ -99,8 +108,10 @@ tracker is `.scratch/temporal-engine/map.md`.
 
 proof-v1 measures individual pressure against declared opportunity. It does not
 allocate shared capacity or establish real-world calibration. Source adapter
-reconciliation is proven against synthetic exports; local input, visual
-usability, large personal datasets, and personal-local behavior remain next.
+reconciliation and local persistence are proven against synthetic inputs.
+Today selection, visual usability feedback, large personal datasets, and the
+personal-local trial remain ahead. The local editor rejects ambiguous DST
+times, has no lower-bound effort input, and uses Toronto for display.
 Keep these limits visible.
 
 ## Handoff rule

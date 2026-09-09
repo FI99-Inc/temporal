@@ -19,9 +19,11 @@ temporal-engine-foundation/
 │   ├── main.ts
 │   ├── App.svelte
 │   ├── Horizon.svelte
+│   ├── LocalEditor.svelte
 │   ├── app.css
-│   └── lib/ # narrow app API types and deterministic time geometry
+│   └── lib/ # app API, local form mapping, deterministic time geometry
 ├── tests/horizon.test.ts
+├── tests/local.test.ts
 ├── src-tauri/
 │   ├── Cargo.toml
 │   ├── build.rs
@@ -33,12 +35,15 @@ temporal-engine-foundation/
 │   │   ├── lib.rs # synthetic catalog and app IPC
 │   │   ├── presentation.rs # read-only projection of core results
 │   │   ├── personal.rs # system-time boundary and personal cache IPC
+│   │   ├── local.rs # typed local facts, annotations, completion, and outcomes
 │   │   ├── store.rs # app-owned SQLite cache and reconciliation
 │   │   ├── trace.rs # verified Trace 1.0 JSON boundary
 │   │   └── bin/scenario-preview.rs # development verification only
 │   ├── migrations/001_trace_cache.sql
+│   ├── migrations/002_local_state.sql
 │   ├── tests/presentation_contract.rs
 │   ├── tests/trace_contract.rs
+│   ├── tests/local_contract.rs
 │   └── tests/fixtures/trace-export.json # synthetic browser import only
 ├── crates/
 │   └── temporal-core/

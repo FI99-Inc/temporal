@@ -218,7 +218,7 @@ fn cache_survives_restart_and_refuses_future_schema_without_reset() {
     drop(reopened);
     let connection = rusqlite::Connection::open(&path).unwrap();
     connection
-        .execute_batch("PRAGMA user_version = 2;")
+        .execute_batch("PRAGMA user_version = 3;")
         .unwrap();
     drop(connection);
     assert!(Store::open(&path).is_err());
@@ -227,7 +227,7 @@ fn cache_survives_restart_and_refuses_future_schema_without_reset() {
         connection
             .pragma_query_value(None, "user_version", |r| r.get::<_, i32>(0))
             .unwrap(),
-        2
+        3
     );
     drop(connection);
     std::fs::remove_file(path).unwrap();

@@ -104,6 +104,21 @@ the previous snapshot visible and expose the source health result. Re-export
 after changing tasks in Trace; this first boundary is intentionally a snapshot,
 not a live connection.
 
+Open **Manage local time** in My time to add and edit fixed Anchors,
+real Deadlines, soft Intentions, weekly Routines, declared Availability, and work
+annotations through the retained Trace task picker. Removed Trace references stay
+labelled and available for managing their local work links. Local edits stay in Temporal Engine's own
+SQLite cache, retain stable IDs and revisions across restart, and never write back to
+Trace. Use an IANA timezone and the date-only controls when the precision is civil-day
+based; leaving effort blank preserves an unknown estimate. Completion and routine
+pause/outcome actions are explicit user state, so passage alone does not close or
+overdue a flexible record.
+
+The first local editor accepts exact estimates or unknown effort and bounded
+weekly rules. Ambiguous or nonexistent daylight-saving wall times are rejected;
+it has no offset-choice control yet. The display zone is currently America/Toronto,
+while each dated record retains its explicit zone.
+
 `temporal_core::evaluate(&input)` validates a normalized snapshot and returns
 the complete deterministic `EvaluationOutput`, using the input's explicit time.
 `codec::decode_input` accepts strict synthetic JSON and `codec::canonical_bytes`

@@ -316,7 +316,11 @@ pub fn project(
 ) -> Result<Snapshot, TimeError> {
     let zone = input.evaluation.display_zone;
     let mut items = Vec::new();
-    for anchor in &input.anchors {
+    for anchor in input
+        .anchors
+        .iter()
+        .filter(|anchor| anchor.presence == Presence::Present)
+    {
         let state = output
             .anchor_states
             .iter()
@@ -379,7 +383,11 @@ pub fn project(
         }
         items.push(row);
     }
-    for deadline in &input.deadlines {
+    for deadline in input
+        .deadlines
+        .iter()
+        .filter(|deadline| deadline.presence == Presence::Present)
+    {
         let state = output
             .deadline_states
             .iter()
@@ -495,7 +503,11 @@ pub fn project(
         row.reasons.push("Trace owns task state and completion. Its Now/Later/Someday status does not assign a time here.".into());
         items.push(row);
     }
-    for intention in &input.intentions {
+    for intention in input
+        .intentions
+        .iter()
+        .filter(|intention| intention.presence == Presence::Present)
+    {
         let state = output
             .intention_states
             .iter()
@@ -507,7 +519,11 @@ pub fn project(
             intention.title.clone(),
             source_label(input, intention.provenance.source_id()),
             "User preference",
-            name(&state.phase),
+            if intention.state == IntentionState::Active {
+                name(&state.phase)
+            } else {
+                name(&intention.state)
+            },
         );
         if let Some(span) = &intention.preferred_span {
             row.when = span_label(span, zone);

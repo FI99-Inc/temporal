@@ -1,4 +1,5 @@
 //! Local application boundary: synthetic examples and an app-owned Trace cache.
+pub mod local;
 pub mod personal;
 mod presentation;
 pub mod store;
@@ -149,6 +150,20 @@ fn import_trace_json(
 }
 
 #[cfg(feature = "desktop")]
+#[tauri::command]
+fn mutate_local(
+    app: tauri::AppHandle,
+    state: tauri::State<'_, personal::AppStore>,
+    mutation: local::LocalMutation,
+) -> Result<personal::PersonalView, String> {
+    let now = personal::system_instant()?;
+    state.with(&app, |store| {
+        store.mutate_local(&mutation, now)?;
+        personal::view(store, now)
+    })
+}
+
+#[cfg(feature = "desktop")]
 pub fn run() {
     tauri::Builder::default()
         .manage(personal::AppStore::default())
@@ -156,7 +171,8 @@ pub fn run() {
             scenario_catalog,
             evaluate_scenario,
             personal_snapshot,
-            import_trace_json
+            import_trace_json,
+            mutate_local
         ])
         .run(tauri::generate_context!())
         .expect("unable to start Temporal Engine");
