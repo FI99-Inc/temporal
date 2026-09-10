@@ -55,9 +55,9 @@ where the model first meets real coursework; separate observation from change.
 
 ## Latest evidence
 
-- Foundation import: `4bbc312`; Gate 0 completion: `f504182`. History preserved;
+- Foundation import: `3333945`; Gate 0 completion: `8a59569`. History preserved;
   no remote is configured.
-- Gate 1 Tasks 1.1–1.8: `d6cb671` through `4063c6f`. Task 1.9: `9f27f14`.
+- Gate 1 Tasks 1.1–1.8: `d408bcb` through `6737e8a`. Task 1.9: `ef241e5`.
   Separate task commits implement the domain contract and complete evaluator.
 - Task 1.10: fresh Gate 1 diff/contract/scope review and manual synthetic output
   inspection are recorded in the Gate 1 report. All 78 integration tests and
@@ -129,7 +129,7 @@ boundary. O-003's composition is settled: asked on 2026-09-10, the user chose
 keeping both and refining from real use — and chose to mark Gate 2 complete.
 The colour/shape treatment and density stay open for the Gate 3 trial. Do not
 extend those two selections into preferences the user did not state. The local
-tracker is `.scratch/temporal-engine/map.md`.
+tracker is local Markdown kept outside this repository.
 
 proof-v1 measures individual pressure against declared opportunity. It does not
 allocate shared capacity or establish real-world calibration. today-v1 selects

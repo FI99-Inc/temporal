@@ -7,8 +7,6 @@ temporal-engine-foundation/
 ├── rust-toolchain.toml
 ├── .gitattributes
 ├── .gitignore
-├── .claude/launch.json # local preview launch configuration
-├── .scratch/temporal-engine/ # local wayfinder map and decision tickets
 ├── package.json
 ├── package-lock.json
 ├── index.html

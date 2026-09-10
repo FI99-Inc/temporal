@@ -3,7 +3,8 @@
 /dist/
 /.cache/
 /src-tauri/gen/
-/.scratch/research-worktrees/
+/.scratch/
+/.claude/
 /local-private/
 .env
 .env.*
