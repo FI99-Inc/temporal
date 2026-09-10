@@ -716,13 +716,17 @@ from one existing evaluation, explains itself, and writes nothing.
 
 ### 2.5 Verify the primitive app and report Gate 2
 
+**Status: COMPLETE — 2026-09-10.** Every Gate 2 criterion was checked against
+the running app; the user recorded their own prototype reaction.
+
+
 - **Purpose:** establish an honest working-app handoff before Quercus and the
   Gate 3 personal-local trial.
 - **Dependencies:** 2.1–2.4, supported Trace boundary evidence, and actual
   prototype feedback; unresolved blockers preclude gate completion.
 - **Expected files:** focused corrections where verification exposes gaps;
   README commands, `docs/BUILD-GATES.md`, ASTRA, and synthetic test evidence.
-- **Acceptance:** the Windows app answers the four home questions from
+- **Acceptance:** the Windows app answers the five home questions from
   synthetic inputs and can consume the verified Trace contract while preserving
   local annotations and last-known source state. Review all ten Horizon weeks,
   virtual-time transitions, keyboard/reduced-motion behavior, restart/offline
@@ -736,6 +740,85 @@ from one existing evaluation, explains itself, and writes nothing.
   trial in this task, cosmetic expansion, public distribution, or declaring
   unperformed usability/integration checks passed.
 
+**Task 2.5 evidence:**
+
+- Full suite: `cargo fmt --all -- --check`, all-target and all-feature
+  `cargo check`, `cargo clippy -- -D warnings`, and the whole `cargo test`
+  passed with 111 integration tests and 5 compile-fail ownership doctests; none
+  failed or ignored. Nine frontend tests, `svelte-check` with warnings denied,
+  and the Vite build passed. Cargo ran locked/offline; no dependency changed.
+- Native build and launch: the bundled `custom-protocol` executable started on
+  Windows with its titled window responding, showing the real system date, the
+  `Local data` badge, an empty local store, and a Today edit that said so
+  instead of inventing rows. Its app-data cache was deliberately left untouched,
+  so no synthetic or personal record was written to it; the personal-data trial
+  belongs to Gate 3.
+- Offline posture: the shipped bundle contains no occurrence of the development
+  bridge path, retains the guard that refuses a non-Tauri build, and the Tauri
+  capability set grants no filesystem, network, or shell permission. The app
+  reads only its own app-data SQLite file and bytes the user explicitly chooses.
+- All ten required Horizon weeks were reviewed at their base time and one
+  injected day later. S01 advises one item, then nothing when the day has no
+  declared availability. S02 keeps two fixed facts, two advisory ranges, and
+  three awareness rows with five more counted. S03 moves the same 8h estimate
+  from room to tight to insufficient. S04 shows six cutoffs today, three
+  advisory rows, then six overdue and no recommendation the next day, with the
+  three unshown counted rather than dropped. S05 keeps both seminars distinct.
+  S06 recommends the insufficient item and says so. S07 stays empty in every
+  group. S08 keeps an imported anchor, a local deadline, and a loose intention
+  distinct. S09 shows an overdue cutoff as awareness with nothing recommended.
+  S10 advanced one day keeps the task ordinary and flexible; its expired advice
+  is absent from Today and still inspectable in the Horizon, never moralized.
+- Adapter and store failure cases were exercised in the running app, not only in
+  tests. A partial export was rejected with an explicit message; both cached
+  Trace tasks, all seven local records, the retained work annotation, and the
+  original import time survived, and source health became `partial` while the
+  local source stayed healthy. Re-importing the valid export restored healthy
+  health, kept the annotation, and left the unresolved due value unresolved.
+- Restart: stopping and restarting the app boundary process left the cache with
+  two Trace tasks, one completed, seven local records, one work annotation, one
+  Routine outcome, and the original import timestamp.
+- Accessibility and motion: every important state is carried in text as well as
+  in shape and position — phase, risk wording, `· conditional`, source label,
+  and source health. No element encodes overdue by colour without the word. The
+  page has zero animated or transitioning elements, with the reduced-motion rule
+  kept as a guard. Thirty-nine tabbable controls follow document order, skip
+  link first, and Today rows are ordinary buttons with `aria-pressed` state.
+- The five home questions in `docs/HORIZON.md` are answered: Fixed and the
+  Anchor track answer what is fixed; the next-anchor panel and On the radar
+  answer what comes next; Worth doing with its before-next-commitment rationale
+  answers what can fit before it; risk wording and the Deadlines track answer
+  what is gaining pressure; Loose, the dashed suggestion grammar, and expiry
+  answer what is merely soft or inferred. The Gate 2 plan previously said "four
+  home questions"; that count was corrected to five.
+- Cross-document review of the full Gate 2 diff (`95b3d69..HEAD`, 57 files):
+  the temporal core crate is unchanged. Only four documents changed —
+  `DECISIONS.md` resolving O-004 to the verified export transport,
+  `TRACE-CONTRACT.md` recording that verified transport, the new
+  `TODAY-POLICY.md`, and this plan. No product decision was reinterpreted, no
+  Trace database is touched, and no AI, mobile, cloud, travel, telemetry, or
+  extraction work entered the gate.
+- **Recorded user feedback, 2026-09-10.** Asked how the prototype actually
+  reads now that a finite Today sits above the compressed surface, the user
+  chose "Direction holds": Today leading with the Horizon below works; keep
+  both and refine later from real use. Asked whether anything blocked the gate,
+  the user chose "Mark it complete". O-003's composition is settled on that
+  basis in `docs/DECISIONS.md`; the compression curve and the wider visual
+  grammar stay open for the Gate 3 trial. No preference was inferred beyond
+  those two selections.
+- Residual risks: the model has never met real coursework, so pressure has no
+  calibration evidence and effort remains an uncalibrated user estimate.
+  today-v1 orders by explicit typed signals only and allocates no shared
+  capacity, so overlapping advisory ranges certify nothing about a whole day. A
+  deadline due today can appear in both Fixed and Worth doing, which is two true
+  claims about one object but may read as repetition. The Trace boundary is a
+  manual snapshot, so a task changed in Trace is invisible until re-export. The
+  local editor rejects ambiguous daylight-saving times without an offset choice,
+  has no lower-bound effort input, and the display zone is fixed to
+  America/Toronto. Large personal datasets are unproven.
+
+GATE 2 COMPLETE
+
 Gate 2 excludes AI, travel, companion surfaces, mobile, cloud personal storage,
 accounts, telemetry by default, FI99 extraction, and public distribution.
 
@@ -743,15 +826,118 @@ accounts, telemetry by default, FI99 extraction, and public distribution.
 
 ## Gate 3 — Quercus and real personal trial
 
-Broad intent only.
+Gate 2 proved the app against synthetic inputs and one snapshot source. Gate 3
+adds the second real source and, for the first time, judges the model against
+actual coursework. Work through these tasks in order, one task per commit.
 
-Expected:
+### 3.1 Verify the Quercus source contract
 
-- Quercus adapter
-- source health
-- personal-local trial
-- pressure behavior against real coursework
-- no cloud personal datastore
+- **Purpose:** establish what Quercus/Canvas actually exposes before writing an
+  adapter, exactly as Task 2.2 did for Trace.
+- **Dependencies:** Gate 2 complete; the user's own institutional access.
+- **Expected files:** a verified-transport section in a source contract
+  document; no credential, payload, or personal record in the repository.
+- **Acceptance:** record the concrete read-only endpoints, authentication
+  method, pagination, rate limits, and error shapes. Document the precision and
+  timezone of every date field and which objects map to Deadline versus Anchor
+  versus nothing. State explicitly what the source does not guarantee. Do not
+  claim a field is reliable without evidence from the live API's own responses.
+- **Focused verification:** the documented shapes match observed responses;
+  synthetic fixtures are hand-written from the documented shape, never captured
+  from a personal course. No token appears in any file, log, or test.
+- **Prohibited adjacent work:** adapter implementation, write access, grade or
+  submission data, announcements, discussion content, or any endpoint beyond
+  what a deadline needs.
+
+### 3.2 Store source credentials in OS-backed secure storage
+
+- **Purpose:** hold one institutional token safely before any network call.
+- **Dependencies:** 3.1.
+- **Expected files:** a narrow credential module and its synthetic tests.
+- **Acceptance:** the token is written to and read from Windows Credential
+  Manager only. It never reaches the frontend, the SQLite cache, a
+  configuration file, a log line, an error message, or a test snapshot. Removing
+  the credential disables the source cleanly instead of failing obscurely.
+- **Focused verification:** synthetic vault tests for store, read, absent, and
+  removal; a repository scan proving no credential-shaped string is committed.
+- **Prohibited adjacent work:** OAuth flows, multiple accounts, Google/Outlook
+  credentials, sync services, or a general settings system.
+
+### 3.3 Add the read-only Quercus adapter and its cache
+
+- **Purpose:** bring real coursework deadlines into the same app-owned store.
+- **Dependencies:** 3.1, 3.2; the Gate 2 store and source-health machinery.
+- **Expected files:** a source adapter module, a schema migration, synthetic
+  fixtures, and adapter/store tests.
+- **Acceptance:** read-only fetch with minimum practical scope. Normalize into
+  the existing `quercus` source kind with stable external-ID mapping, atomic
+  reconciliation, tombstones, retained annotations, and last-known state on
+  failure. A partial, stale, unauthorized, rate-limited, or offline refresh
+  keeps the previous facts and exposes the source health. A date whose
+  precision or zone the source does not establish stays unresolved rather than
+  becoming a cutoff.
+- **Focused verification:** synthetic fixtures for success, partial, malformed,
+  unauthorized, rate-limited, empty, and out-of-order refreshes; restart
+  persistence; offline behavior with last-known state clearly identified.
+- **Prohibited adjacent work:** background polling loops, write-back, Google or
+  Outlook adapters, notification infrastructure, or a generic adapter framework.
+
+### 3.4 Present two real sources at once without merging them
+
+- **Purpose:** keep provenance, health, and identity distinct when the same
+  obligation appears in both Trace and Quercus.
+- **Dependencies:** 3.3.
+- **Expected files:** presentation and Today/Horizon adjustments; multi-source
+  synthetic scenarios.
+- **Acceptance:** each object keeps its own source identity and health. A
+  coursework deadline and a Trace task about the same work are relatable
+  without either overwriting the other, and the user can say which one owns the
+  work estimate. Pressure and Today qualification reflect the weaker of the
+  contributing sources. One failing source degrades its own rows, not the view.
+- **Focused verification:** synthetic scenarios with both sources healthy, one
+  stale, one unavailable, and the same assignment present in both; Today
+  ordering and the full core/app suites.
+- **Prohibited adjacent work:** automatic deduplication heuristics, fuzzy title
+  matching, AI linking, or a general entity-resolution layer.
+
+### 3.5 Run the personal-local trial
+
+- **Purpose:** find out whether the model is right, using real coursework
+  instead of synthetic inputs.
+- **Dependencies:** 3.4; the user's willingness to use the app for a defined
+  period.
+- **Expected files:** a trial-observation record with no personal content
+  committed; focused corrections where the trial exposes defects.
+- **Acceptance:** the app runs on the user's real Trace and Quercus data for an
+  agreed period. Record what the user actually reported: whether Today was
+  worth reading, whether pressure matched felt urgency, where effort estimates
+  were wrong, and any advice that felt like a fabricated obligation. Separate
+  observation from change: a correction to explanation or normalization is in
+  scope, a change to the temporal model is a new user decision.
+- **Focused verification:** the recorded observations are the user's own words,
+  not inferred; every corrective change carries a synthetic regression test.
+- **Prohibited adjacent work:** silently retuning pressure, adding learned
+  calibration, committing personal data, or expanding scope because the trial
+  surfaced an interesting idea.
+
+### 3.6 Verify Gate 3 and settle the visual decisions
+
+- **Purpose:** close the open prototype questions with real evidence and hand
+  off honestly.
+- **Dependencies:** 3.1–3.5.
+- **Expected files:** `docs/DECISIONS.md`, `docs/BUILD-GATES.md`, `ASTRA.md`,
+  and the local tracker.
+- **Acceptance:** O-002 and O-003 are decided from actual use, or explicitly
+  kept open with the reason. Record checks, residual risks, and the next gate's
+  plan. Mark completion only with every criterion satisfied.
+- **Focused verification:** full core/app/frontend suites, native build and
+  launch, offline and restart behavior, and a fresh gate diff review.
+- **Prohibited adjacent work:** external calendars, travel, companion surfaces,
+  mobile,
+  cloud storage, FI99 extraction, packaging, or public distribution.
+
+Gate 3 excludes a cloud personal datastore, always-running inference, telemetry
+by default, and any write back to Trace or Quercus.
 
 ---
 

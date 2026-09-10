@@ -88,11 +88,21 @@ Do not spend implementation time on branding yet.
 
 Needs prototyping and scenario testing.
 
+The Gate 2 prototype uses `log1p(elapsed / 6h) / log1p(extent / 6h)` over a
+14-day extent. The curve itself is still provisional; judge it during the Gate 3
+personal trial, not from synthetic weeks.
+
 ### O-003 — Exact visual grammar
 
 Rigidity, provenance, pressure, and object type need a distinctive but restrained visual system.
 
 Design after the model is stable.
+
+**Composition settled 2026-09-10.** Asked how the Gate 2 prototype reads, the
+user chose "Direction holds": a finite Today leads and the compressed time
+surface stays below it, keeping both and refining later from real use. Treat
+that composition as decided. The compression curve, colour/shape treatment, and
+density remain open pending the Gate 3 trial.
 
 ### O-004 — Trace transport
 

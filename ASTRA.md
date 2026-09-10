@@ -7,11 +7,11 @@ reports in `docs/BUILD-GATES.md` carry the detailed evidence.
 
 **Project phase:** Primitive Windows application
 
-**Current gate:** Gate 2 — Trace-backed primitive Horizon (in progress)
+**Current gate:** Gate 3 — Quercus and real personal trial (not started)
 
-**Current task:** 2.5 Verify the primitive app and report Gate 2
+**Current task:** 3.1 Verify the Quercus source contract
 
-**Status:** Gates 0 and 1 complete; Tasks 2.1–2.4 complete; Task 2.5 next
+**Status:** Gates 0, 1, and 2 complete; Task 3.1 next
 
 The user has authorized building the application and emphasized prompt delivery
 of a highly personal app. Keep implementation focused on a usable Horizon. One
@@ -24,7 +24,8 @@ atomic reconciliation, retained last-known state, and visible source health.
 Local temporal forms and work annotations now persist in the same app-owned
 store, with explicit completion and Routine outcomes. A bounded `today-v1` edit
 selects Fixed, Worth doing, Loose, and On the radar from one evaluation and
-explains itself without writing anything. Gate 2 verification is next.
+explains itself without writing anything. The app is verified against synthetic
+inputs and one snapshot source; it has never met real coursework.
 
 ## Settled posture
 
@@ -40,15 +41,17 @@ explains itself without writing anything. Gate 2 verification is next.
 
 ## Immediate objective
 
-Execute **2.5 Verify the primitive app and report Gate 2** from
-`docs/BUILD-GATES.md`: a fresh cross-document and diff review of Tasks 2.1–2.4,
-a native Windows walkthrough of the real app on personal data, offline and
-failure behavior, then the durable Gate 2 report and handoff.
+Execute **3.1 Verify the Quercus source contract** from `docs/BUILD-GATES.md`:
+read-only investigation of what Quercus/Canvas actually exposes, its
+authentication, pagination, rate limits, error shapes, and the precision and
+timezone of every date field, before any adapter code. Record what the source
+does not guarantee. No credential, payload, or personal course record may enter
+the repository.
 
-Gate 2 contains five commit-sized tasks: synthetic app, safe Trace read/cache,
-local input/annotations, finite Today/advice, and app verification. The prototype
-is available for feedback (README launch commands). Exact compression and visual
-grammar remain provisional; do not invent user feedback to close O-002/O-003.
+Gate 3 contains six commit-sized tasks: source contract, OS-backed credential
+storage, the read-only Quercus adapter and cache, two real sources presented
+without merging, the personal-local trial, and gate verification. The trial is
+where the model first meets real coursework; separate observation from change.
 
 ## Latest evidence
 
@@ -102,17 +105,30 @@ grammar remain provisional; do not invent user feedback to close O-002/O-003.
   evaluation, clips fit to the remainder of the civil day, and produces
   revalidating `consider_work` advice with producing keys and expiry. Nine new
   tests and two compile-fail doctests; full workspace 111 integration tests and
-  5 doctests, frontend tests/checks/build, and the bundled Windows build pass. Browser walkthrough covered S02, S03 over three days, S07, S09, and
-  S10. Local time now re-evaluates each minute while visible and on focus.
+  5 doctests, frontend tests/checks/build, and the bundled Windows build pass.
+  Browser walkthrough covered S02, S03 over three days, S07, S09, and S10.
+  Local time now re-evaluates each minute while visible and on focus.
+- Task 2.5: full suite passed (111 integration tests, 5 doctests, 9 frontend
+  tests, type/build checks, format, all-feature clippy with warnings denied),
+  the bundled Windows executable launched with a responding titled window on
+  real system time, and the shipped bundle has no development bridge and no
+  Tauri filesystem/network/shell permission. All ten required weeks were
+  reviewed at base time and one injected day later. A rejected partial import
+  kept both tasks, seven local records, the annotation, and the import time
+  while exposing `partial` health; re-import restored healthy state. A process
+  restart preserved the whole cache. Gate 2 is complete; its report carries the
+  full evidence.
 
 ## Open questions and residual limits
 
-No unresolved blocker remains for Gate 1 or Tasks 2.1–2.4. O-001–O-003 and
-O-005–O-007 in `docs/DECISIONS.md` remain open: naming, compression, visual
-grammar, calibration, travel provider, and local AI. O-004 is settled for the
-initial JSON-export boundary; a future live contract remains optional.
-Compression/visual grammar need feedback on the now-running prototype; crowded
-weeks require vertical scrolling and fixture aliases are terse. The local
+No unresolved blocker remains for Gates 0–2. O-001, O-002, and O-005–O-007 in
+`docs/DECISIONS.md` remain open: naming, the compression curve, calibration,
+travel provider, and local AI. O-004 is settled for the initial JSON-export
+boundary. O-003's composition is settled: asked on 2026-09-10, the user chose
+"Direction holds" — a finite Today leads with the compressed surface below,
+keeping both and refining from real use — and chose to mark Gate 2 complete.
+The colour/shape treatment and density stay open for the Gate 3 trial. Do not
+extend those two selections into preferences the user did not state. The local
 tracker is `.scratch/temporal-engine/map.md`.
 
 proof-v1 measures individual pressure against declared opportunity. It does not
@@ -120,10 +136,12 @@ allocate shared capacity or establish real-world calibration. today-v1 selects
 and orders by explicit typed signals only; overlapping advisory ranges certify
 nothing about combined capacity, and it holds no acceptance state. Source
 adapter reconciliation, local persistence, and Today selection are proven
-against synthetic inputs. Visual usability feedback, large personal datasets,
-and the personal-local trial remain ahead. The local editor rejects ambiguous
-DST times, has no lower-bound effort input, and uses Toronto for display.
-Keep these limits visible.
+against synthetic inputs and have never met real coursework. Large personal
+datasets and the personal-local trial remain ahead. A deadline due today can
+appear in both Fixed and Worth doing; the Trace boundary stays a manual
+snapshot, so a task changed in Trace is invisible until re-export. The local
+editor rejects ambiguous DST times, has no lower-bound effort input, and uses
+Toronto for display. Keep these limits visible.
 
 ## Handoff rule
 

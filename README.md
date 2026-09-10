@@ -59,14 +59,15 @@ The documents are part of the product contract, not background notes.
 
 ## Development
 
-Gates 0 and 1 are complete. Gate 2 now has a runnable synthetic Horizon, a
-read-only Trace 1.0 JSON import into Temporal Engine's own SQLite cache, and a
-bounded daily edit above it. Choose an example week, advance virtual time, or
-select My time to inspect the retained local snapshot. Trace still owns task
-text, status, completion, priority, context, and its exported due value;
-Temporal Engine does not write Trace's database. A non-null Trace due value
-remains visibly unresolved until a source contract preserves its precision and
-timezone.
+Gates 0, 1, and 2 are complete. The app runs on Windows with a bounded daily
+edit above a compressed Horizon, local temporal input, and a read-only Trace 1.0
+JSON import into Temporal Engine's own SQLite cache. It is verified against
+synthetic inputs; it has not yet met real coursework. Choose an example week,
+advance virtual time, or select My time to inspect the retained local snapshot.
+Trace still owns task text, status, completion, priority, context, and its
+exported due value; Temporal Engine does not write Trace's database. A non-null
+Trace due value remains visibly unresolved until a source contract preserves its
+precision and timezone.
 
 Use Node **24.x** (verified with 24.15.0/npm 11.12.1), the Rust toolchain below,
 and the Windows WebView2 runtime. Dependencies are pinned in `package-lock.json`
