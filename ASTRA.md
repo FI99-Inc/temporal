@@ -9,9 +9,9 @@ reports in `docs/BUILD-GATES.md` carry the detailed evidence.
 
 **Current gate:** Gate 2 — Trace-backed primitive Horizon (in progress)
 
-**Current task:** 2.4 Add the finite Today edit and inspectable advice
+**Current task:** 2.5 Verify the primitive app and report Gate 2
 
-**Status:** Gates 0 and 1 complete; Tasks 2.1–2.3 complete; Task 2.4 next
+**Status:** Gates 0 and 1 complete; Tasks 2.1–2.4 complete; Task 2.5 next
 
 The user has authorized building the application and emphasized prompt delivery
 of a highly personal app. Keep implementation focused on a usable Horizon. One
@@ -22,7 +22,9 @@ time, nonlinear geometry, separate temporal species, and inspectable evidence.
 Trace 1.0 JSON imports into an app-owned SQLite cache with stable mappings,
 atomic reconciliation, retained last-known state, and visible source health.
 Local temporal forms and work annotations now persist in the same app-owned
-store, with explicit completion and Routine outcomes. Today selection is next.
+store, with explicit completion and Routine outcomes. A bounded `today-v1` edit
+selects Fixed, Worth doing, Loose, and On the radar from one evaluation and
+explains itself without writing anything. Gate 2 verification is next.
 
 ## Settled posture
 
@@ -38,11 +40,10 @@ store, with explicit completion and Routine outcomes. Today selection is next.
 
 ## Immediate objective
 
-Execute **2.4 Add the finite Today edit and inspectable advice** from
-`docs/BUILD-GATES.md`. Document the bounded deterministic selection policy
-before implementation, then show Fixed, Worth doing, On the radar, and Loose
-with inspectable current evidence. Keep source uncertainty visible; selection
-must never become completion, a reservation, or a new obligation.
+Execute **2.5 Verify the primitive app and report Gate 2** from
+`docs/BUILD-GATES.md`: a fresh cross-document and diff review of Tasks 2.1–2.4,
+a native Windows walkthrough of the real app on personal data, offline and
+failure behavior, then the durable Gate 2 report and handoff.
 
 Gate 2 contains five commit-sized tasks: synthetic app, safe Trace read/cache,
 local input/annotations, finite Today/advice, and app verification. The prototype
@@ -95,10 +96,18 @@ grammar remain provisional; do not invent user feedback to close O-002/O-003.
   Windows build. Manual synthetic forms, Tab/Enter submission, prefilled edit,
   completion/outcome display, and reload were checked in the browser preview.
   Full evidence and remaining editor limits are in the Task 2.3 report.
+- Task 2.4: `docs/TODAY-POLICY.md` documents `today-v1` before its
+  implementation in `src-tauri/src/today.rs`, projected through
+  `presentation.rs` into `src/Today.svelte`. Selection reuses one core
+  evaluation, clips fit to the remainder of the civil day, and produces
+  revalidating `consider_work` advice with producing keys and expiry. Nine new
+  tests and two compile-fail doctests; full workspace 111 integration tests and
+  5 doctests, frontend tests/checks/build, and the bundled Windows build pass. Browser walkthrough covered S02, S03 over three days, S07, S09, and
+  S10. Local time now re-evaluates each minute while visible and on focus.
 
 ## Open questions and residual limits
 
-No unresolved blocker remains for Gate 1 or Tasks 2.1–2.3. O-001–O-003 and
+No unresolved blocker remains for Gate 1 or Tasks 2.1–2.4. O-001–O-003 and
 O-005–O-007 in `docs/DECISIONS.md` remain open: naming, compression, visual
 grammar, calibration, travel provider, and local AI. O-004 is settled for the
 initial JSON-export boundary; a future live contract remains optional.
@@ -107,11 +116,13 @@ weeks require vertical scrolling and fixture aliases are terse. The local
 tracker is `.scratch/temporal-engine/map.md`.
 
 proof-v1 measures individual pressure against declared opportunity. It does not
-allocate shared capacity or establish real-world calibration. Source adapter
-reconciliation and local persistence are proven against synthetic inputs.
-Today selection, visual usability feedback, large personal datasets, and the
-personal-local trial remain ahead. The local editor rejects ambiguous DST
-times, has no lower-bound effort input, and uses Toronto for display.
+allocate shared capacity or establish real-world calibration. today-v1 selects
+and orders by explicit typed signals only; overlapping advisory ranges certify
+nothing about combined capacity, and it holds no acceptance state. Source
+adapter reconciliation, local persistence, and Today selection are proven
+against synthetic inputs. Visual usability feedback, large personal datasets,
+and the personal-local trial remain ahead. The local editor rejects ambiguous
+DST times, has no lower-bound effort input, and uses Toronto for display.
 Keep these limits visible.
 
 ## Handoff rule

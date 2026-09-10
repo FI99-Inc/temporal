@@ -2,6 +2,7 @@
   import { onMount } from 'svelte';
   import Horizon from './Horizon.svelte';
   import LocalEditor from './LocalEditor.svelte';
+  import Today from './Today.svelte';
   import type { LocalMutation } from './lib/local.ts';
   import { catalog, snapshot, desktop, personalSnapshot, importTrace, mutateLocal, type Scenario, type Snapshot, type TraceInfo, type PersonalView, type LocalState } from './lib/api.ts';
   let scenarios = $state<Scenario[]>([]);
@@ -59,6 +60,15 @@
     try { const next = await mutateLocal(mutation); if (request === requestNumber) showPersonal(next); }
     finally { if (request === requestNumber) busy = false; }
   }
+  // A daily edit must not silently go stale. Local time re-evaluates the cache
+  // on a minute tick and on focus; the synthetic preview stays explicitly frozen.
+  $effect(() => {
+    if (!desktop || !personal) return;
+    const refresh = () => { if (!busy && document.visibilityState === 'visible') void loadPersonal(); };
+    const timer = setInterval(refresh, 60_000);
+    window.addEventListener('focus', refresh);
+    return () => { clearInterval(timer); window.removeEventListener('focus', refresh); };
+  });
   onMount(() => {
     void (async () => {
       try { scenarios = await catalog(); if (desktop) await loadPersonal(); else await load(scenarioId); }
@@ -119,6 +129,7 @@
       {#if personal && local && trace}
         <LocalEditor {local} tasks={trace.tasks} now={data.now} zone={data.zone} {busy} onsave={saveLocal} />
       {/if}
+      <Today today={data.today} {selectedId} onselect={(id) => { selectedId = id; }} />
       <div class="workspace">
         <Horizon {data} {selectedId} onselect={(id) => { selectedId = id; }} />
         <aside class="inspector" aria-label="Selected item details">

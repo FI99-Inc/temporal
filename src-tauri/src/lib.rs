@@ -3,6 +3,7 @@ pub mod local;
 pub mod personal;
 mod presentation;
 pub mod store;
+pub mod today;
 pub mod trace;
 
 // Reuse the exact Gate 1 inputs internally, without copying or inventing data.

@@ -623,6 +623,10 @@ in the application's own SQLite database and editable from My time.
 
 ### 2.4 Add the finite Today edit and inspectable advice
 
+**Status: COMPLETE — 2026-09-10.** A bounded deterministic daily edit selects
+from one existing evaluation, explains itself, and writes nothing.
+
+
 - **Purpose:** make Fixed, Worth doing, On the radar, and Loose useful without
   asking the user to inspect the full result inventory.
 - **Dependencies:** 2.3; existing fit/pressure/reasons/suggestion validity and
@@ -644,6 +648,71 @@ in the application's own SQLite database and editable from My time.
 - **Prohibited adjacent work:** opaque ranking weights, learned calibration,
   shared-capacity optimization, rigid automatic schedules, guilt rollover,
   AI, or turning Today into another task manager.
+
+**Task 2.4 evidence:**
+
+- Added `docs/TODAY-POLICY.md` (`today-v1`) before implementing it: bounds,
+  group definitions, caps, stable lexicographic ordering, advice shape, and the
+  explicit non-goals. It refines the Domain Contract and changes no lifecycle,
+  fit, pressure, or source rule. Implementation clarified two policy lines: the
+  before-next-Anchor test names the next present, nontransparent Anchor later
+  today, and awareness omits any cutoff the edit has already put in front of the
+  user rather than only those in Fixed.
+- Added `src-tauri/src/today.rs`. `today::evaluate` runs one core evaluation and
+  `today::select` chooses from that single result. Today is the civil date in
+  the display zone; advice is bounded by the earlier of civil midnight and the
+  evaluation end, so a 23- or 25-hour day needs no special case. Fit for the
+  remainder of today reuses the core calculation on Windows clipped to that
+  remainder, keeping each producing Window identity, so a shortened day
+  rechecks the declared useful-session length instead of assuming it still fits.
+- Each selected flexible row carries a `consider_work` Suggestion with the core
+  EvaluationKey, typed target, advisory range, `created_at = now`, and
+  `valid_until = range.end`. Its typed reasons retain the Window, the
+  today-clipped fit, source qualification, an explicit individual-capacity
+  limitation, and associated unresolved pressure evidence. Feeding the produced
+  advice back through `temporal_core::evaluate` returns Current for every row in
+  all sixteen scenarios; a completion or snapshot-revision change retires it
+  through the existing invalidated/expired rules instead of rewriting a target.
+- Added `src/Today.svelte`, its projection in `presentation.rs`, and the
+  `today` field on the app snapshot. Fixed shows four with a disclosure and
+  discards nothing; Worth doing, Loose, and On the radar stay capped at three,
+  two, and three with the omitted count visible. A row selects into the same
+  inspector the Horizon uses, and a collapsed disclosure lists ordering
+  rationale, conditional source basis, expiry, and typed evidence separately
+  from stored facts. Trace status renders as `Trace: now/later/someday`.
+- Nine new tests: seven in `src-tauri/tests/today_contract.rs` and two in
+  `presentation_contract.rs`. They cover repeatability and input-permutation
+  equality across all sixteen scenarios with the input left unchanged, caps and
+  ordering, cleared availability, unknown compatibility, conditional last-known
+  sources, civil-midnight clipping against the useful-session length, completed
+  and removed targets, snapshot-revision invalidation, and awareness that does
+  not repeat an advised cutoff. Two compile-fail doctests keep a selected row
+  from carrying completion or becoming a stored obligation.
+- Verification: `cargo fmt --all -- --check`, all-target/all-feature
+  `cargo check`, `cargo clippy -- -D warnings`, and `cargo test --workspace
+  --all-features` passed (111 integration tests, 5 ownership doctests, none
+  failed or ignored; 33 of those are app tests). Nine frontend tests, `svelte-check` with warnings denied,
+  the Vite build, and the bundled Windows debug build passed. Cargo ran
+  locked/offline; no dependency changed.
+- Browser walkthrough used synthetic data only. S02 showed today's two classes
+  in Fixed, two advisory ranges, and awareness that no longer repeated the
+  advised cutoff. S09 showed an empty Worth doing with the overdue cutoff on the
+  radar; S10 advanced one day showed the task still flexible with the expired
+  advice absent from Today and still inspectable in the Horizon. S07 with no
+  declared availability produced four empty groups. S03 across three injected
+  days moved the same estimate from room to tight to insufficient. Today rows
+  are real buttons with text names, `aria-pressed` state, and normal tab order;
+  activation was confirmed by click, since the harness could not deliver a
+  synthetic Return to any focused control, including pre-existing ones.
+- Local time now re-evaluates the cache each minute while visible and on window
+  focus so the edit cannot silently go stale; the synthetic preview stays
+  frozen and both surfaces state their evaluation time.
+- Residual limits: `today-v1` orders by explicit typed signals only. It performs
+  no shared-capacity allocation, no learned calibration, and no acceptance
+  state, so overlapping ranges certify nothing about combined capacity. Effort
+  and useful-session values remain uncalibrated user estimates. Compression and
+  visual grammar (O-002/O-003) still await real use. The gate-wide native and
+  offline walkthrough remains Task 2.5; Gate 2 is not complete.
 
 ### 2.5 Verify the primitive app and report Gate 2
 

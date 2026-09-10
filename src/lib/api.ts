@@ -11,12 +11,22 @@ export interface Item {
   milestone: boolean; risk: string | null; conditional: boolean;
   facts: Detail[]; reasons: string[];
 }
+export interface TodayRow {
+  id: string; species: Species; title: string; when: string; state: string;
+  risk: string | null; conditional: boolean; notes: string[];
+}
+export interface TodayView {
+  policy: string; date_label: string; day_end_label: string;
+  fixed: TodayRow[]; fixed_preview: number;
+  worth_doing: TodayRow[]; loose: TodayRow[];
+  radar: TodayRow[]; radar_omitted: number;
+}
 export interface Tick { at: number; label: string }
 export interface Snapshot {
   scenario: Scenario; now: number; end: number; offset_minutes: number; max_offset_minutes: number;
   zone: string; date_label: string; clock_label: string; ticks: Tick[];
   items: Item[]; sources: { label: string; health: string }[];
-  has_declarations: boolean;
+  has_declarations: boolean; today: TodayView;
 }
 export interface TraceInfo {
   exported_at: string | null; imported_at: string | null; present_tasks: number;

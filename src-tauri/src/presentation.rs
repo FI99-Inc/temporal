@@ -1,6 +1,9 @@
 //! Read-only projection for the first Horizon. It consumes core decisions;
 //! it never creates suggestions, changes facts, or calculates a second pressure.
-use crate::Scenario;
+use crate::{
+    Scenario,
+    today::{self, AdviceRow, FactRef},
+};
 use chrono::{DateTime, Utc};
 use chrono_tz::Tz;
 use serde::Serialize;
@@ -38,6 +41,31 @@ pub struct SourceSummary {
     label: String,
     health: Health,
 }
+/// One selected row of the bounded daily edit. Its full evidence stays in the
+/// shared evaluation; `id` opens the same inspector the Horizon uses.
+#[derive(Serialize)]
+pub struct TodayRow {
+    id: String,
+    species: &'static str,
+    title: String,
+    when: String,
+    state: String,
+    risk: Option<Risk>,
+    conditional: bool,
+    notes: Vec<String>,
+}
+#[derive(Serialize)]
+pub struct TodayView {
+    policy: &'static str,
+    date_label: String,
+    day_end_label: String,
+    fixed: Vec<TodayRow>,
+    fixed_preview: usize,
+    worth_doing: Vec<TodayRow>,
+    loose: Vec<TodayRow>,
+    radar: Vec<TodayRow>,
+    radar_omitted: usize,
+}
 #[derive(Serialize)]
 pub struct Snapshot {
     scenario: Scenario,
@@ -52,6 +80,7 @@ pub struct Snapshot {
     items: Vec<Item>,
     sources: Vec<SourceSummary>,
     has_declarations: bool,
+    today: TodayView,
 }
 
 fn name(value: &impl Serialize) -> String {
@@ -306,6 +335,121 @@ fn explain(reason: &Reason, zone: ZoneId) -> String {
             _ => "This result is derived from the current declared inputs.",
         }.into(),
     }
+}
+
+fn fact_item_id(fact: FactRef) -> String {
+    match fact {
+        FactRef::Anchor(id) => id.to_string(),
+        FactRef::Deadline(id) => id.to_string(),
+    }
+}
+fn target_item_id(target: WorkTarget) -> String {
+    match target {
+        WorkTarget::Task(id) => id.to_string(),
+        WorkTarget::Deadline(id) => id.to_string(),
+        WorkTarget::Intention(id) => id.to_string(),
+        WorkTarget::RoutineOccurrence(key) => format!("{}:{}", key.routine_id, key.date),
+    }
+}
+fn today_row(items: &[Item], id: &str) -> Option<TodayRow> {
+    let item = items.iter().find(|row| row.id == id)?;
+    Some(TodayRow {
+        id: item.id.clone(),
+        species: item.species,
+        title: item.title.clone(),
+        when: item.when.clone(),
+        state: item.phase.clone(),
+        risk: item.risk,
+        conditional: item.conditional,
+        notes: Vec::new(),
+    })
+}
+/// Ordering rationale, conditional basis, and expiry stay separate from the
+/// stored facts of the target. Nothing here asserts a reservation.
+fn advice_notes(row: &AdviceRow, zone: ZoneId) -> Vec<String> {
+    let mut notes = vec![format!(
+        "Advisory range {} – {}. No time is reserved and nothing is scheduled.",
+        at(row.range.start(), zone),
+        date(row.range.end(), zone, "%-I:%M %p")
+    )];
+    if row.basis.before_next_anchor {
+        notes.push("This fits before the next fixed commitment today.".into());
+    }
+    if row.basis.preferred_today {
+        notes.push(
+            "Today is a preferred day. A preferred day that passes creates no overdue state."
+                .into(),
+        );
+    }
+    if let Some(risk) = row.basis.risk {
+        notes.push(format!(
+            "Associated deadline risk: {}.",
+            name(&risk).replace('_', " ")
+        ));
+    }
+    if let Some(cutoff) = row.basis.cutoff {
+        notes.push(format!(
+            "Earliest associated real cutoff: {}.",
+            at(cutoff, zone)
+        ));
+    }
+    if row.basis.importance != Importance::Unspecified {
+        notes.push(format!(
+            "Recorded importance: {}.",
+            name(&row.basis.importance)
+        ));
+    }
+    if row.basis.qualification == Qualification::Conditional {
+        notes.push("Conditional: this rests on last-known source data.".into());
+    }
+    notes.push(format!(
+        "This advice expires at {}.",
+        at(row.suggestion.valid_until, zone)
+    ));
+    notes.extend(row.suggestion.reasons.iter().map(|r| explain(r, zone)));
+    let mut seen = std::collections::BTreeSet::new();
+    notes.retain(|note| seen.insert(note.clone()));
+    notes
+}
+fn advice_rows(rows: &[AdviceRow], items: &[Item], zone: ZoneId) -> Vec<TodayRow> {
+    rows.iter()
+        .filter_map(|row| {
+            let mut projected = today_row(items, &target_item_id(row.target))?;
+            projected.when = format!(
+                "{} – {}",
+                at(row.range.start(), zone),
+                date(row.range.end(), zone, "%-I:%M %p")
+            );
+            projected.conditional |= row.basis.qualification == Qualification::Conditional;
+            projected.risk = projected.risk.or(row.basis.risk);
+            projected.notes = advice_notes(row, zone);
+            Some(projected)
+        })
+        .collect()
+}
+fn today_view(
+    input: &EvaluationInput,
+    output: &EvaluationOutput,
+    items: &[Item],
+    zone: ZoneId,
+) -> Result<TodayView, TimeError> {
+    let edit = today::select(input, output)?;
+    let facts = |list: &[FactRef]| {
+        list.iter()
+            .filter_map(|fact| today_row(items, &fact_item_id(*fact)))
+            .collect::<Vec<_>>()
+    };
+    Ok(TodayView {
+        policy: edit.policy,
+        date_label: date(edit.now, zone, "%A, %B %-d"),
+        day_end_label: date(edit.bound, zone, "%-I:%M %p"),
+        fixed: facts(&edit.fixed),
+        fixed_preview: today::FIXED_PREVIEW,
+        worth_doing: advice_rows(&edit.worth_doing, items, zone),
+        loose: advice_rows(&edit.loose, items, zone),
+        radar: facts(&edit.radar),
+        radar_omitted: edit.radar_omitted,
+    })
 }
 
 pub fn project(
@@ -704,6 +848,7 @@ pub fn project(
         date_label: date(now, zone, "%A, %B %-d"),
         clock_label: date(now, zone, "%-I:%M %p"),
         ticks,
+        today: today_view(input, output, &items, zone)?,
         items,
         sources,
         has_declarations: !input.availability.is_empty(),

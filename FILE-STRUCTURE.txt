@@ -7,6 +7,7 @@ temporal-engine-foundation/
 ├── rust-toolchain.toml
 ├── .gitattributes
 ├── .gitignore
+├── .claude/launch.json # local preview launch configuration
 ├── .scratch/temporal-engine/ # local wayfinder map and decision tickets
 ├── package.json
 ├── package-lock.json
@@ -20,6 +21,7 @@ temporal-engine-foundation/
 │   ├── App.svelte
 │   ├── Horizon.svelte
 │   ├── LocalEditor.svelte
+│   ├── Today.svelte
 │   ├── app.css
 │   └── lib/ # app API, local form mapping, deterministic time geometry
 ├── tests/horizon.test.ts
@@ -36,6 +38,7 @@ temporal-engine-foundation/
 │   │   ├── presentation.rs # read-only projection of core results
 │   │   ├── personal.rs # system-time boundary and personal cache IPC
 │   │   ├── local.rs # typed local facts, annotations, completion, and outcomes
+│   │   ├── today.rs # bounded deterministic today-v1 selection
 │   │   ├── store.rs # app-owned SQLite cache and reconciliation
 │   │   ├── trace.rs # verified Trace 1.0 JSON boundary
 │   │   └── bin/scenario-preview.rs # development verification only
@@ -44,7 +47,8 @@ temporal-engine-foundation/
 │   ├── tests/presentation_contract.rs
 │   ├── tests/trace_contract.rs
 │   ├── tests/local_contract.rs
-│   └── tests/fixtures/trace-export.json # synthetic browser import only
+│   ├── tests/today_contract.rs
+│   └── tests/fixtures/ # synthetic Trace exports for browser import only
 ├── crates/
 │   └── temporal-core/
 │       ├── Cargo.toml
@@ -91,4 +95,5 @@ temporal-engine-foundation/
     ├── TRACE-CONTRACT.md
     ├── PRIVACY.md
     ├── DECISIONS.md
+    ├── TODAY-POLICY.md
     └── BUILD-GATES.md
