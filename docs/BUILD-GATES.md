@@ -23,7 +23,7 @@ Identify:
 
 Make only surgical documentation corrections consistent with settled decisions.
 
-**Status: COMPLETE.** All 12 imported files were inspected; the eight original `docs/` files were read in README order. The untouched import is preserved in baseline commit `3333945`.
+**Status: COMPLETE.** All 12 imported files were inspected; the eight original `docs/` files were read in README order. The untouched import is preserved in baseline commit `08b9d6b`.
 
 Audit evidence:
 
@@ -95,13 +95,13 @@ Verification: reviewed task dependency order and scenario coverage; reconciled i
 
 ### Gate 0 evidence report — 2026-09-08
 
-**Completed scope:** Tasks 0.1–0.4 only: audited/ratified the constitution, defined the normalized domain contract, specified deterministic synthetic scenarios, and planned the first executable core proof. Local Git was initialized and the untouched import preserved in `3333945`; task commits are `d2ec978` (0.1), `a31d21a` (0.2), `e8bb201` (0.3), and `74e144c` (0.4). The final evidence/handoff is a separate `docs: complete gate 0` commit.
+**Completed scope:** Tasks 0.1–0.4 only: audited/ratified the constitution, defined the normalized domain contract, specified deterministic synthetic scenarios, and planned the first executable core proof. Local Git was initialized and the untouched import preserved in `08b9d6b`; task commits are `a464ad5` (0.1), `4d84e45` (0.2), `f6aae19` (0.3), and `a3c57a6` (0.4). The final evidence/handoff is a separate `docs: complete gate 0` commit.
 
 **Documents:** created `DOMAIN-CONTRACT.md` and `SCENARIOS.md`. Updated root README, AGENTS, ASTRA, and FILE-STRUCTURE; updated `ARCHITECTURE.md`, `BUILD-GATES.md`, `HORIZON.md`, `PRODUCT.md`, `TEMPORAL-MODEL.md`, and `TRACE-CONTRACT.md`. `DECISIONS.md` and `PRIVACY.md` remain unchanged from the baseline.
 
 **Verification performed:**
 
-- Read the complete foundation in README order and reviewed the documents as one system against D-001–D-013 and the user's invariants. Reconciled independent read-only constitution, contract, scenario, plan, and fresh cross-document audits. Reviewed the full change from baseline `3333945`, including the new documents and final historical-Suggestion clarification.
+- Read the complete foundation in README order and reviewed the documents as one system against D-001–D-013 and the user's invariants. Reconciled independent read-only constitution, contract, scenario, plan, and fresh cross-document audits. Reviewed the full change from baseline `08b9d6b`, including the new documents and final historical-Suggestion clarification.
 - `git diff --check 4bbc312` and per-task staged whitespace checks passed. Git history/author/body review confirms the untouched baseline, separate task commits, configured user identity, and no attribution trailers. No remote is configured.
 - Read-order/file-inventory checks found 14 repository documents, all 10 `docs/` files reachable in README's read order, no missing targets, and no non-document product files. S01–S16 are present, including all ten required Horizon cases. All ten Gate 1 tasks have the six required planning fields.
 - Independently checked opportunity/ratio arithmetic, exact threshold/equality cases, and the bounded recurrence dates. Local PowerShell/.NET timezone checks confirmed Toronto's 2026 spring gap/fall fold and 23/25-hour civil days. Synthetic identifiers, timestamps, source assumptions, and variant transitions were manually reviewed for determinism.
@@ -322,7 +322,7 @@ gate review remains Task 1.10; visual and adapter behavior remain unverified.
 ### 1.10 Verify and report the temporal core proof
 
 **Status: COMPLETE — 2026-09-08.** All gate-wide checks passed after Task 1.9
-commit `ef241e5`. Reviewed the Gate 1 change from `8a59569`, reconciled the
+commit `32e989c`. Reviewed the Gate 1 change from `98d16af`, reconciled the
 scenario/invariant coverage, and inspected the representative evaluator results
 listed in the report below. The existing scenario test now prints bounded
 synthetic summaries with `--nocapture` so this inspection can be repeated.
@@ -362,7 +362,7 @@ Gate 1 is complete only when all ten task acceptances and these checks pass, eve
 - **Files:** workspace/toolchain/lockfile; `crates/temporal-core/src/` and
   `tests/` (including the fixture inventory and explicit expectations); README,
   file inventory, this gate ledger, ASTRA, and local Markdown handoff tickets.
-  Tasks 1.1–1.9 are separate commits from `d408bcb` through `ef241e5`.
+  Tasks 1.1–1.9 are separate commits from `1b3b296` through `32e989c`.
 - **Executed checks:** `cargo fmt --all -- --check`;
   `cargo check --workspace --all-targets --locked --offline`;
   `cargo clippy --workspace --all-targets --locked --offline -- -D warnings`;
@@ -398,7 +398,7 @@ Gate 1 is complete only when all ten task acceptances and these checks pass, eve
   through Window/fit rows; risk is available in Deadline pressure and reasons;
   advice has its own type and validity. This supplies the semantic inputs to
   Horizon. It does not claim visual usability or a completed Today selector.
-- **Diff/scope review:** reviewed the complete Gate 1 change against `8a59569`,
+- **Diff/scope review:** reviewed the complete Gate 1 change against `98d16af`,
   including ownership/validation, civil-time boundaries, empty versus unknown
   capacity, fulfillment, qualifiers, inference, fixtures, and dependency
   direction. The settled product/spec documents are unchanged. No UI,
@@ -791,7 +791,7 @@ the running app; the user recorded their own prototype reaction.
   what is gaining pressure; Loose, the dashed suggestion grammar, and expiry
   answer what is merely soft or inferred. The Gate 2 plan previously said "four
   home questions"; that count was corrected to five.
-- Cross-document review of the full Gate 2 diff (`7fbea00..HEAD`, 57 files):
+- Cross-document review of the full Gate 2 diff (`e15f6b0..HEAD`, 57 files):
   the temporal core crate is unchanged. Only four documents changed —
   `DECISIONS.md` resolving O-004 to the verified export transport,
   `TRACE-CONTRACT.md` recording that verified transport, the new

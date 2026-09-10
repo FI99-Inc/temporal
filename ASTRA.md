@@ -55,9 +55,9 @@ where the model first meets real coursework; separate observation from change.
 
 ## Latest evidence
 
-- Foundation import: `3333945`; Gate 0 completion: `8a59569`. History preserved;
+- Foundation import: `08b9d6b`; Gate 0 completion: `98d16af`. History preserved;
   no remote is configured.
-- Gate 1 Tasks 1.1–1.8: `d408bcb` through `6737e8a`. Task 1.9: `ef241e5`.
+- Gate 1 Tasks 1.1–1.8: `1b3b296` through `1154df2`. Task 1.9: `32e989c`.
   Separate task commits implement the domain contract and complete evaluator.
 - Task 1.10: fresh Gate 1 diff/contract/scope review and manual synthetic output
   inspection are recorded in the Gate 1 report. All 78 integration tests and
