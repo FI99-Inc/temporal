@@ -205,6 +205,9 @@ mod desktop {
             if let Some(key) = credential {
                 runtime.vault.remove(&key)?;
             }
+            if command == "update_settings" {
+                apply_autostart(&app, store.settings()?.open_at_login);
+            }
             Ok(result)
         })
     }
@@ -451,6 +454,20 @@ mod desktop {
         }
     }
 
+    /// Keep the OS sign-in entry in step with the setting. Failure leaves the
+    /// app usable; the setting simply has no effect on this machine.
+    fn apply_autostart(app: &tauri::AppHandle, enabled: bool) {
+        use tauri_plugin_autostart::ManagerExt;
+        let manager = app.autolaunch();
+        if manager.is_enabled().unwrap_or(false) != enabled {
+            let _ = if enabled {
+                manager.enable()
+            } else {
+                manager.disable()
+            };
+        }
+    }
+
     fn show_main(app: &tauri::AppHandle) {
         if let Some(window) = app.get_webview_window("main") {
             let _ = window.show();
@@ -461,6 +478,15 @@ mod desktop {
 
     pub fn run() {
         tauri::Builder::default()
+            // A second launch focuses the running app instead of starting
+            // another store owner, tray icon, and reminder loop.
+            .plugin(tauri_plugin_single_instance::init(|app, _args, _cwd| {
+                show_main(app);
+            }))
+            .plugin(tauri_plugin_autostart::init(
+                tauri_plugin_autostart::MacosLauncher::LaunchAgent,
+                Some(vec!["--background"]),
+            ))
             .plugin(tauri_plugin_dialog::init())
             .plugin(tauri_plugin_notification::init())
             .manage(personal::AppStore::default())
@@ -510,6 +536,19 @@ mod desktop {
                 // closes instead of hiding (see the close handler).
                 let tray_ready = tray.build(app).is_ok();
                 app.manage(TrayReady(tray_ready));
+                let handle = app.handle().clone();
+                let login = handle
+                    .state::<personal::AppStore>()
+                    .with(&handle, |store| Ok(store.settings()?.open_at_login))
+                    .unwrap_or(false);
+                apply_autostart(&handle, login);
+                // Started at sign-in: stay in the notification area until opened.
+                if tray_ready
+                    && std::env::args().any(|arg| arg == "--background")
+                    && let Some(window) = app.get_webview_window("main")
+                {
+                    let _ = window.hide();
+                }
                 background(app.handle().clone());
                 Ok(())
             })

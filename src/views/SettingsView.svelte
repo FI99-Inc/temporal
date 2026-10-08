@@ -85,6 +85,10 @@
     const box = event.currentTarget as HTMLInputElement;
     if (!(await onsettings({ keep_running_in_tray: box.checked }))) box.checked = settings.keep_running_in_tray;
   }
+  async function setLogin(event: Event) {
+    const box = event.currentTarget as HTMLInputElement;
+    if (!(await onsettings({ open_at_login: box.checked }))) box.checked = settings.open_at_login;
+  }
 
   // Usual availability: clock helpers. Minutes run 0..1440; an end of 00:00 always means midnight (1440).
   type TimeRange = { key: number; start: string; end: string };
@@ -334,6 +338,10 @@
         <label class="check">
           <input type="checkbox" checked={settings.keep_running_in_tray} disabled={busy} onchange={setTray} />
           <span>Keep running in the notification area when the window is closed, so reminders continue</span>
+        </label>
+        <label class="check">
+          <input type="checkbox" checked={settings.open_at_login} disabled={busy || !desktop} onchange={setLogin} />
+          <span>Open Temporal quietly in the notification area when I sign in</span>
         </label>
         {#if !desktop}<p class="note">Desktop app only.</p>{/if}
       </div>

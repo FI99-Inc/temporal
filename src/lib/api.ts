@@ -38,11 +38,12 @@ export type Theme = 'system' | 'light' | 'dark';
 export interface Settings {
   display_zone: string | null; week_starts_on: 'mon' | 'sun'; reminder_minutes: number | null;
   theme: Theme; default_event_minutes: number; keep_running_in_tray: boolean;
-  day_start_hour: number; trace_export_path: string | null;
+  day_start_hour: number; trace_export_path: string | null; open_at_login: boolean;
 }
 export interface SettingsPatch {
   display_zone?: string; week_starts_on?: 'mon' | 'sun'; reminder_minutes?: number; reminders_off?: boolean;
   theme?: Theme; default_event_minutes?: number; keep_running_in_tray?: boolean; day_start_hour?: number;
+  open_at_login?: boolean;
 }
 export type CalendarKind = 'quercus' | 'google' | 'outlook' | 'calendar';
 export type CalendarMode = 'events' | 'coursework';

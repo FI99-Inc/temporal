@@ -39,6 +39,8 @@ pub struct Settings {
     pub day_start_hour: u8,
     /// The Trace export file last chosen, re-read when it changes.
     pub trace_export_path: Option<String>,
+    /// Start quietly in the notification area at sign-in (desktop only).
+    pub open_at_login: bool,
 }
 
 impl Default for Settings {
@@ -52,6 +54,7 @@ impl Default for Settings {
             keep_running_in_tray: true,
             day_start_hour: 8,
             trace_export_path: None,
+            open_at_login: false,
         }
     }
 }
@@ -69,6 +72,7 @@ pub struct SettingsPatch {
     pub default_event_minutes: Option<u32>,
     pub keep_running_in_tray: Option<bool>,
     pub day_start_hour: Option<u8>,
+    pub open_at_login: Option<bool>,
 }
 
 impl Settings {
@@ -107,6 +111,9 @@ impl Settings {
         }
         if let Some(value) = patch.keep_running_in_tray {
             self.keep_running_in_tray = value;
+        }
+        if let Some(value) = patch.open_at_login {
+            self.open_at_login = value;
         }
         if let Some(hour) = patch.day_start_hour {
             if hour > 23 {
