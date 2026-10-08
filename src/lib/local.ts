@@ -26,9 +26,26 @@ export interface LocalState {
   deadline_annotations: (Significance & { work: DeadlineWork })[];
   task_annotations: { target_id: string; importance: Importance; work: Work }[];
   routine_outcomes: { routine_id: string; date: string; outcome: 'done' | 'skipped'; revision: number; recorded_at: string }[];
+  anchor_series: AnchorSeries[];
+  usual_availability: UsualAvailability | null;
+  event_details: { [id: string]: { place?: string; notes?: string } };
+  handled_imports: { [id: string]: { recorded_at: string; source_id: string } };
 }
+export type Frequency = 'daily' | 'weekly' | 'monthly';
+export interface AnchorSeries extends Record {
+  zone: string; first_date: string;
+  timing: { kind: 'timed'; start_minute: number; duration_minutes: number } | { kind: 'all_day'; days: number };
+  rule: { frequency: Frequency; interval: number; weekdays: Weekday[]; until_date_exclusive?: string; count?: number };
+  skipped: string[]; occupancy: Occupancy; reported_certainty: Certainty; location?: string;
+  details?: { place?: string; notes?: string };
+}
+export interface UsualAvailability {
+  meta: Meta; zone: string; blocks: { weekday: Weekday; start_minute: number; end_minute: number }[];
+  contexts: { kind: 'unknown' } | { kind: 'known'; value: string[] }; energy_capacity: Capacity;
+}
+export type MutationKind = LocalKind | 'routine_outcome' | 'anchor_series' | 'series_skip' | 'usual_availability' | 'imported_handled';
 export interface LocalMutation {
-  action: 'upsert' | 'remove'; kind: LocalKind | 'routine_outcome'; id?: string;
+  action: 'upsert' | 'remove'; kind: MutationKind; id?: string;
   title?: string; zone?: string; all_day?: boolean; start?: string; end?: string; due?: string;
   start_date?: string; end_date_exclusive?: string; until_date_exclusive?: string;
   weekdays?: Weekday[]; paused?: boolean; occupancy?: Occupancy; certainty?: Certainty;
@@ -38,6 +55,9 @@ export interface LocalMutation {
   clear_preference?: boolean; clear_work?: boolean;
   completion?: 'unresolved' | 'satisfied' | 'cancelled' | 'done' | 'dismissed';
   occurrence_date?: string; outcome?: 'done' | 'skipped';
+  frequency?: Frequency; interval?: number; count?: number;
+  place?: string; notes?: string;
+  blocks?: { weekday: Weekday; start: string; end: string }[];
 }
 export interface LocalForm {
   kind: LocalKind; id?: string; title: string; zone: string; precision: 'none' | 'timed' | 'dates';

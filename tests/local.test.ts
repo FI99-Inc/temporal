@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import { emptyForm, editForm, formMutation, wallTime, type LocalState, type TraceChoice } from '../src/lib/local.ts';
 
 const meta = { id: '00000000-0000-4000-8000-000000000001', revision: 1, created_at: '2026-09-09T12:00:00.000Z', updated_at: '2026-09-09T12:00:00.000Z' };
-const local = (): LocalState => ({ revision: 1, anchors: [], deadlines: [], intentions: [], routines: [], availability: [], anchor_annotations: [], deadline_annotations: [], task_annotations: [], routine_outcomes: [] });
+const local = (): LocalState => ({ revision: 1, anchors: [], deadlines: [], intentions: [], routines: [], availability: [], anchor_annotations: [], deadline_annotations: [], task_annotations: [], routine_outcomes: [], anchor_series: [], usual_availability: null, event_details: {}, handled_imports: {} });
 test('numeric input values and explicit unknown/zero effort reach the mutation without coercion', () => {
   const form = emptyForm('intention'); form.title = 'Synthetic reading'; form.effort = 90; form.chunk = 30;
   const mutation = formMutation(form);
