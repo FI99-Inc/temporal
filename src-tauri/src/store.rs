@@ -1090,7 +1090,13 @@ fn build_slice(
         sources.push(source.source.clone());
         source_states.push(source.state.clone());
         required_sources.extend(source.required());
-        let (rows, _) = calendars::normalize(source, calendar, lookback, end, zone);
+        // Only coursework can carry past unresolved deadlines worth keeping in view.
+        let from = if source.mode == CalendarMode::Coursework {
+            lookback
+        } else {
+            slice_start
+        };
+        let (rows, _) = calendars::normalize(source, calendar, from, end, zone);
         for row in rows {
             match row {
                 Imported::Anchor { anchor, .. } => {

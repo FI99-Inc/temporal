@@ -180,7 +180,13 @@ pub fn view(store: &Store, now: Instant) -> Result<PersonalView, String> {
     let horizon_end = input.evaluation.evaluation_end;
     let mut calendars = Vec::new();
     for (source, parsed) in &stored.calendars {
-        let (rows, _) = calendars::normalize(source, parsed, lookback, horizon_end, zone);
+        // Links must cover everything the Horizon shows, from the start of today.
+        let from = if source.mode == CalendarMode::Coursework {
+            lookback
+        } else {
+            now.checked_sub_ms(86_400_000).map_err(|e| e.to_string())?
+        };
+        let (rows, _) = calendars::normalize(source, parsed, from, horizon_end, zone);
         let mut past_unhandled = Vec::new();
         for row in &rows {
             match row {
