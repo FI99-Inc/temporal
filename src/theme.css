@@ -21,6 +21,7 @@
   --faint: #8b877f;
   --accent: #ff4f00;
   --accent-ink: #111111;
+  --invert-accent: var(--accent);
   --accent-soft: rgba(255, 79, 0, 0.14);
   --invert-bg: #111111;
   --invert-ink: #efede8;
@@ -120,6 +121,7 @@
   --faint: #4f7b73;
   --accent: #144d45;
   --accent-ink: #e2aaac;
+  --invert-accent: #f6cfd0;
   --accent-soft: rgba(20, 77, 69, 0.12);
   --invert-bg: #144d45;
   --invert-ink: #e6b5b6;

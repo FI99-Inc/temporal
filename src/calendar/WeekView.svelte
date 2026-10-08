@@ -331,7 +331,7 @@
   .day-head .number { font-family: var(--font-display); font-stretch: 125%; font-weight: 800; font-size: 30px; line-height: .9; letter-spacing: -.03em; font-variant-numeric: tabular-nums; order: 1; }
   .day-head.today { background: var(--invert-bg); color: var(--invert-ink); }
   .day-head.today .weekday { color: var(--invert-ink); opacity: .7; }
-  .day-head.today .number { color: var(--accent); }
+  .day-head.today .number { color: var(--invert-accent); }
 
   .allday-cell { position: relative; display: flex; flex-direction: column; gap: 2px; min-width: 0; min-height: 30px; padding: 3px; border-left: 1px solid var(--line); }
   .allday-add { position: absolute; inset: 0; z-index: 0; margin: 0; padding: 0; border: 0; background: transparent; }

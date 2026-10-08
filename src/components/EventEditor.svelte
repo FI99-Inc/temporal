@@ -247,9 +247,9 @@
   header .segmented { border: 0; border-left: 1px solid var(--invert-ink); }
   header .segmented button { color: var(--invert-ink); border: 0; border-right: 1px solid var(--invert-ink); padding: 0 14px; }
   header .segmented button:last-child { border-right: 0; }
-  header .segmented button[aria-pressed='true'] { background: var(--accent); color: var(--accent-ink); }
+  header .segmented button[aria-pressed='true'] { background: var(--invert-accent); color: var(--invert-bg); }
   .close { font-size: 18px; height: auto; line-height: 1; border: 0; border-left: 1px solid var(--invert-ink); color: var(--invert-ink); padding: 0 16px; }
-  .close:hover:not(:disabled) { background: var(--accent); color: var(--accent-ink); }
+  .close:hover:not(:disabled) { background: var(--invert-accent); color: var(--invert-bg); }
   fieldset { border: 0; margin: 0; padding: 18px; display: grid; gap: 14px; overflow-y: auto; min-width: 0; }
   label { display: grid; gap: 5px; font-family: var(--font-mono); font-size: 10.5px; letter-spacing: .06em; text-transform: uppercase; color: var(--muted); min-width: 0; }
   label input, label select, label textarea { color: var(--ink); text-transform: none; letter-spacing: 0; }

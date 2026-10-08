@@ -68,6 +68,7 @@ input[type='color'] { border: 1px solid var(--line-strong); padding: 0; width: 3
 .tab .index { color: inherit; opacity: .55; }
 .tab[aria-current='page'] { background: var(--invert-bg); color: var(--invert-ink); }
 .tab-badge { min-width: 18px; height: 18px; display: inline-grid; place-items: center; background: var(--accent); color: var(--accent-ink); font-size: 10px; font-weight: 600; padding: 0 4px; }
+.tab[aria-current='page'] .tab-badge { background: var(--invert-accent); color: var(--invert-bg); }
 .readout { display: grid; grid-template-columns: auto auto; align-items: center; gap: 0 14px; padding: 0 20px; border-left: var(--rule); }
 .readout-date { font-family: var(--font-mono); font-size: 11px; letter-spacing: 0.06em; text-transform: uppercase; line-height: 1.35; text-align: right; }
 .readout-date span { display: block; color: var(--muted); }

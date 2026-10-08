@@ -137,7 +137,7 @@
   .date { border: 0; padding: 0 2px; background: transparent; font-family: var(--font-display); font-stretch: 125%; font-weight: 800; font-size: 24px; line-height: .95; letter-spacing: -.03em; text-transform: none; color: var(--ink); font-variant-numeric: tabular-nums; }
   .date:hover:not(:disabled) { background: transparent; color: var(--accent); }
   .cell.today { background: var(--invert-bg); color: var(--invert-ink); }
-  .cell.today .date { color: var(--accent); }
+  .cell.today .date { color: var(--invert-accent); }
   .add { opacity: 0; border: 1px solid currentColor; padding: 0 6px; font-size: 12px; line-height: 16px; color: inherit; background: transparent; }
   .cell:hover .add, .cell:focus-within .add { opacity: 1; }
   .add:hover:not(:disabled) { background: var(--accent); border-color: var(--accent); color: var(--accent-ink); }
