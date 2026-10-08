@@ -124,101 +124,33 @@
 </div>
 
 <style>
-  .month {
-    display: flex;
-    flex-direction: column;
-    height: 100%;
-    min-height: 0;
-    font-family: var(--font);
-    color: var(--ink);
-    background: var(--surface);
-    border: 1px solid var(--line);
-    border-radius: var(--radius);
-    box-shadow: var(--shadow);
-    overflow: hidden;
-  }
-  .weekdays, .grid { display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); }
-  .weekdays { border-bottom: 1px solid var(--line); }
-  .weekdays span { padding: 7px 8px; font-size: 12px; color: var(--muted); }
-  .weekdays span + span { border-left: 1px solid var(--line); }
-  .grid { flex: 1; min-height: 0; grid-template-rows: repeat(6, minmax(0, 1fr)); }
-
-  .cell {
-    position: relative;
-    display: flex;
-    flex-direction: column;
-    gap: 2px;
-    min-width: 0;
-    min-height: 0;
-    padding: 4px 5px;
-    overflow: hidden;
-    border-right: 1px solid var(--line);
-    border-bottom: 1px solid var(--line);
-  }
-  .cell.outside { background-color: var(--surface-2); }
-  .cell-top { display: flex; align-items: center; justify-content: space-between; gap: 4px; min-width: 0; }
-
-  /* Global button rules in app.css paint hover states with fixed colours. Each
-     control keeps its token fill and edge on hover as well as at rest. */
-  .date, .add, .chip, .more {
-    --fill: transparent;
-    --edge: transparent;
-    margin: 0;
-    font: inherit;
-    color: var(--ink);
-    background-color: var(--fill);
-    border: 1px solid var(--edge);
-    border-radius: var(--radius-sm);
-  }
-  .date:hover:not(:disabled), .add:hover:not(:disabled), .chip:hover:not(:disabled), .more:hover:not(:disabled) {
-    background-color: var(--fill);
-    border-color: var(--edge);
-  }
-  .date:focus-visible, .add:focus-visible, .chip:focus-visible, .more:focus-visible {
-    outline: 2px solid var(--accent);
-    outline-offset: 1px;
-  }
-
-  .date { min-width: 26px; height: 26px; padding: 0 6px; border-radius: 50%; font-size: 12px; text-align: center; }
+  .month { display: flex; flex-direction: column; height: 100%; min-height: 0; font-family: var(--font); color: var(--ink); background: var(--bg); }
+  .weekdays { display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); border-bottom: var(--rule); }
+  .weekdays span { padding: 8px 10px; font-family: var(--font-mono); font-size: 10.5px; letter-spacing: .1em; text-transform: uppercase; color: var(--muted); border-left: 1px solid var(--line); }
+  .weekdays span:first-child { border-left: 0; }
+  .grid { flex: 1; min-height: 0; display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); grid-template-rows: repeat(6, minmax(0, 1fr)); }
+  .cell { position: relative; display: flex; flex-direction: column; gap: 2px; min-width: 0; min-height: 0; overflow: hidden; padding: 6px 6px 4px; border-left: 1px solid var(--line); border-bottom: 1px solid var(--line); }
+  .cell:nth-child(7n + 1) { border-left: 0; }
+  .cell.outside { background: var(--closed); }
   .cell.outside .date { color: var(--faint); }
-  .cell.today .date { --fill: var(--accent); --edge: var(--accent); color: var(--accent-ink); font-weight: 600; }
-
-  .add {
-    --fill: var(--surface);
-    --edge: var(--line-strong);
-    width: 22px;
-    height: 22px;
-    padding: 0;
-    border-radius: 50%;
-    font-size: 13px;
-    line-height: 1;
-    opacity: 0;
-  }
+  .cell-top { display: flex; align-items: flex-start; justify-content: space-between; margin-bottom: 2px; }
+  .date { border: 0; padding: 0 2px; background: transparent; font-family: var(--font-display); font-stretch: 125%; font-weight: 800; font-size: 24px; line-height: .95; letter-spacing: -.03em; text-transform: none; color: var(--ink); font-variant-numeric: tabular-nums; }
+  .date:hover:not(:disabled) { background: transparent; color: var(--accent); }
+  .cell.today { background: var(--invert-bg); color: var(--invert-ink); }
+  .cell.today .date { color: var(--accent); }
+  .add { opacity: 0; border: 1px solid currentColor; padding: 0 6px; font-size: 12px; line-height: 16px; color: inherit; background: transparent; }
   .cell:hover .add, .cell:focus-within .add { opacity: 1; }
-
-  .chip {
-    --fill: var(--anchor-soft);
-    --edge: var(--anchor);
-    display: flex;
-    align-items: center;
-    gap: 4px;
-    width: 100%;
-    min-width: 0;
-    padding: 1px 5px;
-    border-left-width: 3px;
-    font-size: 11px;
-    line-height: 1.35;
-    text-align: left;
-  }
-  .chip.bar { padding-block: 0; min-height: 17px; }
-  .chip.anchor { --fill: var(--anchor-soft); --edge: var(--anchor); }
-  .chip.deadline { --fill: var(--deadline-soft); --edge: var(--deadline); color: var(--deadline); }
-  .chip.intention, .chip.routine { --fill: var(--soft-bg); --edge: var(--soft); border: 1.5px dashed var(--soft); border-left-width: 1.5px; }
-  .chip.risk { --fill: var(--risk-soft); --edge: var(--risk); color: var(--risk); }
-  .chip[aria-pressed='true'] { outline: 2px solid var(--ink); outline-offset: 0; }
-  .chip .glyph { flex: none; font-size: 9px; }
+  .add:hover:not(:disabled) { background: var(--accent); border-color: var(--accent); color: var(--accent-ink); }
+  .chip { display: flex; align-items: center; gap: 5px; width: 100%; min-width: 0; padding: 1px 4px; border: 0; background: transparent; color: inherit; font-family: var(--font-mono); font-size: 10.5px; letter-spacing: 0; text-transform: none; line-height: 1.45; text-align: left; }
   .chip .text { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-
-  .more { --edge: transparent; padding: 0 4px; font-size: 11px; color: var(--muted); text-align: left; }
-  .more:hover:not(:disabled) { color: var(--ink); }
+  .chip .glyph { flex: none; font-size: 8px; }
+  .chip:hover:not(:disabled) { background: var(--invert-bg); color: var(--invert-ink); }
+  .cell.today .chip:hover:not(:disabled) { background: var(--bg); color: var(--ink); }
+  .chip.bar { background: var(--invert-bg); color: var(--invert-ink); font-family: var(--font); font-weight: 600; font-size: 11px; }
+  .cell.today .chip.bar { background: var(--bg); color: var(--ink); }
+  .chip.intention, .chip.routine, .chip.bar.intention, .chip.bar.routine { background: transparent; color: inherit; outline: 1px dashed currentColor; outline-offset: -1px; font-family: var(--font-mono); font-weight: 400; font-size: 10.5px; }
+  .chip.risk { background: var(--risk); color: var(--bg); }
+  .chip[aria-pressed='true'] { outline: 2px solid var(--accent); outline-offset: 0; }
+  .more { align-self: flex-start; border: 0; padding: 0 4px; background: transparent; color: inherit; opacity: .7; font-size: 10px; }
+  .more:hover:not(:disabled) { opacity: 1; background: transparent; color: var(--accent); }
 </style>

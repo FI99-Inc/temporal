@@ -233,46 +233,55 @@
       <span class="spacer"></span>
       <span class="hint">Ctrl+Enter saves</span>
       <button type="button" onclick={close}>Cancel</button>
-      <button type="submit" class="primary" disabled={busy}>Save</button>
+      <button type="submit" class="primary" disabled={busy}>Save →</button>
     </footer>
   </form>
 </dialog>
 
 <style>
-  .editor { width: min(560px, calc(100vw - 32px)); max-height: calc(100vh - 48px); padding: 0; border: 1px solid var(--line-strong); border-radius: 12px; background: var(--surface); color: var(--ink); box-shadow: var(--shadow-lg); }
-  .editor::backdrop { background: rgba(10, 20, 30, .35); }
+  .editor { width: min(600px, calc(100vw - 32px)); max-height: calc(100vh - 48px); padding: 0; border: var(--rule); border-radius: 0; background: var(--bg); color: var(--ink); box-shadow: var(--shadow-lg); }
+  .editor::backdrop { background: rgba(0, 0, 0, .45); }
   form { display: flex; flex-direction: column; max-height: calc(100vh - 50px); }
-  header { display: flex; align-items: center; gap: 12px; padding: 16px 18px 12px; border-bottom: 1px solid var(--line); }
-  header h2 { font-size: 16px; margin-right: auto; }
-  .close { font-size: 20px; border: 0; background: transparent; padding: 0 6px; }
-  fieldset { border: 0; margin: 0; padding: 14px 18px; display: grid; gap: 12px; overflow-y: auto; min-width: 0; }
-  label { display: grid; gap: 4px; font-size: 12px; color: var(--muted); min-width: 0; }
-  label input, label select, label textarea { color: var(--ink); font-size: 13px; }
-  .title-field input { font-size: 18px; font-weight: 600; border: 0; border-bottom: 2px solid var(--line-strong); border-radius: 0; padding: 4px 2px 6px; background: transparent; }
-  .title-field input:focus-visible { outline: none; border-bottom-color: var(--accent); }
-  .kind-hint { font-size: 12px; color: var(--faint); margin-top: -6px; }
+  header { display: flex; align-items: stretch; gap: 0; background: var(--invert-bg); color: var(--invert-ink); }
+  header h2 { font-size: 20px; margin-right: auto; padding: 14px 18px; align-self: center; }
+  header .segmented { border: 0; border-left: 1px solid var(--invert-ink); }
+  header .segmented button { color: var(--invert-ink); border: 0; border-right: 1px solid var(--invert-ink); padding: 0 14px; }
+  header .segmented button:last-child { border-right: 0; }
+  header .segmented button[aria-pressed='true'] { background: var(--accent); color: var(--accent-ink); }
+  .close { font-size: 18px; height: auto; line-height: 1; border: 0; border-left: 1px solid var(--invert-ink); color: var(--invert-ink); padding: 0 16px; }
+  .close:hover:not(:disabled) { background: var(--accent); color: var(--accent-ink); }
+  fieldset { border: 0; margin: 0; padding: 18px; display: grid; gap: 14px; overflow-y: auto; min-width: 0; }
+  label { display: grid; gap: 5px; font-family: var(--font-mono); font-size: 10.5px; letter-spacing: .06em; text-transform: uppercase; color: var(--muted); min-width: 0; }
+  label input, label select, label textarea { color: var(--ink); text-transform: none; letter-spacing: 0; }
+  .title-field input { font-family: var(--font-display) !important; font-stretch: 118%; font-weight: 780; font-size: 26px !important; text-transform: uppercase; letter-spacing: -.01em; border: 0 !important; border-bottom: var(--rule) !important; padding: 2px 0 8px !important; }
+  .title-field input:focus-visible { outline: none; border-bottom: 2px solid var(--accent) !important; }
+  .kind-hint { font-size: 12px; color: var(--muted); margin-top: -6px; }
   .row { display: flex; flex-wrap: wrap; gap: 12px; align-items: end; }
   .row > label { flex: 1 1 140px; }
-  .row.tight { gap: 10px; align-items: center; font-size: 13px; }
-  .check { display: flex; flex-direction: row; align-items: center; gap: 7px; font-size: 13px; color: var(--ink); }
-  .muted { font-size: 12px; color: var(--muted); }
-  .narrow { width: 72px; }
-  .custom { display: grid; gap: 10px; padding: 10px 12px; background: var(--surface-2); border-radius: var(--radius-sm); }
-  .days { display: flex; gap: 6px; }
-  .days button { width: 32px; height: 32px; padding: 0; border-radius: 50%; font-size: 12px; }
-  .days button[aria-pressed='true'], .segmented button[aria-pressed='true'] { background: var(--accent); color: var(--accent-ink); border-color: var(--accent); }
-  .segmented { display: inline-flex; border: 1px solid var(--line-strong); border-radius: var(--radius-sm); overflow: hidden; }
-  .segmented button { border: 0; border-radius: 0; padding: 5px 12px; font-size: 12px; background: var(--surface); }
-  .segmented button + button { border-left: 1px solid var(--line-strong); }
+  .row.tight { gap: 12px; align-items: center; }
+  .check { display: flex; flex-direction: row; align-items: center; gap: 8px; font-family: var(--font-mono); font-size: 11px; letter-spacing: .04em; color: var(--ink); text-transform: uppercase; }
+  .muted { font-family: var(--font-mono); font-size: 11px; color: var(--muted); }
+  .narrow { width: 76px; }
+  .custom { display: grid; gap: 10px; padding: 12px; border: 1px solid var(--line-strong); }
+  .custom .row.tight > span, .ends > span, .scope > span { font-family: var(--font-mono); font-size: 11px; letter-spacing: .06em; text-transform: uppercase; }
+  .days { display: flex; gap: 0; }
+  .days button { width: 34px; height: 30px; padding: 0; border-right-width: 0; }
+  .days button:last-child { border-right-width: 1px; }
+  .days button[aria-pressed='true'], .segmented button[aria-pressed='true'] { background: var(--invert-bg); color: var(--invert-ink); }
+  .segmented { display: inline-flex; }
+  .segmented button { border-right-width: 0; padding: 6px 12px; }
+  .segmented button:last-child { border-right-width: 1px; }
   .ends > label { flex: 0 0 auto; }
-  .ends input { width: auto; }
-  .scope { display: flex; flex-wrap: wrap; gap: 14px; align-items: center; padding: 10px 12px; border: 1px solid var(--line); border-radius: var(--radius-sm); font-size: 13px; }
-  .scope > span { font-weight: 600; }
-  .error { color: var(--risk); font-size: 13px; }
-  footer { display: flex; align-items: center; gap: 8px; padding: 12px 18px; border-top: 1px solid var(--line); background: var(--surface-2); border-radius: 0 0 12px 12px; }
+  .ends input:not([type='radio']) { width: auto; }
+  .scope { display: flex; flex-wrap: wrap; gap: 14px; align-items: center; padding: 12px; border: 1px solid var(--accent); background: var(--accent-soft); }
+  .error { font-family: var(--font-mono); font-size: 12px; color: var(--risk); }
+  .error::before { content: '! '; font-weight: 700; }
+  footer { display: flex; align-items: stretch; gap: 0; border-top: var(--rule); }
+  footer > button, footer .confirm button { border: 0; border-left: var(--rule); padding: 12px 18px; }
+  footer > button:first-child, footer .confirm button:first-child { border-left: 0; border-right: var(--rule); }
   .spacer { flex: 1; }
-  .hint { font-size: 11px; color: var(--faint); }
-  .confirm { display: flex; gap: 6px; }
+  .hint { align-self: center; padding: 0 14px; font-family: var(--font-mono); font-size: 10.5px; text-transform: uppercase; letter-spacing: .05em; color: var(--faint); }
+  .confirm { display: flex; }
   .sr-only { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); }
   @media (max-width: 600px) { .hint { display: none; } }
 </style>

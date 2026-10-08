@@ -5,7 +5,7 @@
   import { calendarRange, type PersonalView } from '../lib/api.ts';
   import type { CalendarRange } from '../lib/calendar-types.ts';
   import { addDays, formatDate, formatMonth, monthGrid, weekDays, zonedParts } from '../lib/calendar.ts';
-  import { blankDraft, hhmm, minutesOf, type EditTarget, type EventDraft } from '../lib/editor.ts';
+  import { blankDraft, minutesOf, type EditTarget, type EventDraft } from '../lib/editor.ts';
   import type { LocalMutation } from '../lib/local.ts';
 
   type Mode = 'day' | 'week' | 'month';
@@ -82,11 +82,6 @@
     draft.allDay = true;
     onedit({ kind: 'new' }, draft);
   }
-  function newEvent() {
-    const parts = zonedParts(now, zone);
-    const start = anchor === today ? hhmm(Math.min(23 * 60, Math.ceil((parts.minutes + 1) / 30) * 30)) : '09:00';
-    onedit({ kind: 'new' }, blankDraft(anchor || today, zone, start, settings.default_event_minutes));
-  }
   function keydown(event: KeyboardEvent) {
     const target = event.target as HTMLElement | null;
     if (event.defaultPrevented || event.ctrlKey || event.metaKey || event.altKey) return;
@@ -117,10 +112,9 @@
         <button aria-pressed={mode === value} title="{text} ({key})" onclick={() => { mode = value as Mode; }}>{text}</button>
       {/each}
     </div>
-    <button class="primary" disabled={busy} onclick={newEvent}>New event</button>
   </div>
 
-  {#if error}<div class="notice warn" role="alert"><p>{error}</p></div>{/if}
+  {#if error}<div class="notice warn" role="alert"><span class="label">Error</span><div><p>{error}</p></div></div>{/if}
 
   <div class="body" class:with-detail={selectedId && (selectedEvent || selectedItem)}>
     <div class="surface">
@@ -147,20 +141,20 @@
 
 <style>
   .calendar-page { display: flex; flex-direction: column; height: 100%; min-height: 0; }
-  .toolbar { display: flex; align-items: center; gap: 10px; padding: 12px 20px; border-bottom: 1px solid var(--line); background: var(--surface); flex-wrap: wrap; }
-  .toolbar h1 { font-size: 19px; letter-spacing: -.2px; }
+  .toolbar { display: flex; align-items: stretch; border-bottom: var(--rule); flex-wrap: wrap; }
+  .toolbar > button, .toolbar .nav button { border: 0; border-right: var(--rule); padding: 0 18px; min-height: 58px; }
+  .toolbar h1 { font-size: clamp(22px, 2.6vw, 38px); letter-spacing: -.02em; line-height: 1; align-self: center; padding: 0 22px; white-space: nowrap; }
   .nav { display: flex; }
-  .icon { font-size: 20px; line-height: 1; padding: 2px 10px; }
+  .icon { font-size: 18px; }
   .spacer { flex: 1; }
-  .segmented { display: inline-flex; border: 1px solid var(--line-strong); border-radius: var(--radius-sm); overflow: hidden; }
-  .segmented button { border: 0; border-radius: 0; padding: 5px 13px; font-size: 13px; background: var(--surface); }
-  .segmented button + button { border-left: 1px solid var(--line-strong); }
-  .segmented button[aria-pressed='true'] { background: var(--accent-soft); font-weight: 600; }
+  .segmented { display: flex; border-left: var(--rule); }
+  .segmented button { border: 0; border-right: var(--rule); padding: 0 18px; }
+  .segmented button[aria-pressed='true'] { background: var(--invert-bg); color: var(--invert-ink); }
   .body { flex: 1; min-height: 0; display: grid; grid-template-columns: minmax(0, 1fr); }
-  .body.with-detail { grid-template-columns: minmax(0, 1fr) 330px; }
-  .surface { min-height: 0; min-width: 0; height: 100%; overflow: hidden; background: var(--surface); }
-  .detail { border-left: 1px solid var(--line); padding: 16px 18px; overflow-y: auto; background: var(--bg); }
-  .notice { margin: 10px 20px 0; }
-  @media (max-width: 1100px) { .body.with-detail { grid-template-columns: minmax(0, 1fr) 280px; } }
-  @media (max-width: 760px) { .body.with-detail { grid-template-columns: minmax(0, 1fr); grid-template-rows: minmax(0, 1fr) auto; } .detail { border-left: 0; border-top: 1px solid var(--line); max-height: 45vh; } }
+  .body.with-detail { grid-template-columns: minmax(0, 1fr) 340px; }
+  .surface { min-height: 0; min-width: 0; height: 100%; overflow: hidden; }
+  .detail { border-left: var(--rule); padding: 18px 22px; overflow-y: auto; background: var(--bg); }
+  .notice { margin: 0; }
+  @media (max-width: 1100px) { .body.with-detail { grid-template-columns: minmax(0, 1fr) 290px; } .toolbar h1 { font-size: 22px; } }
+  @media (max-width: 760px) { .body.with-detail { grid-template-columns: minmax(0, 1fr); grid-template-rows: minmax(0, 1fr) auto; } .detail { border-left: 0; border-top: var(--rule); max-height: 45vh; } .toolbar > button, .segmented button { padding: 0 10px; } }
 </style>

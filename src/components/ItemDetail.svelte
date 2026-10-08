@@ -213,13 +213,17 @@
 
 <style>
   .item-detail { display: grid; align-content: start; }
-  .swatch { width: 10px; height: 10px; border-radius: 3px; display: inline-block; }
-  .confirm { border: 1px solid var(--risk); background: var(--risk-soft); border-radius: var(--radius-sm); padding: 10px 12px; margin-bottom: 14px; font-size: 13px; display: grid; gap: 8px; }
+  .swatch { width: 10px; height: 10px; display: inline-block; border: 1px solid var(--line-strong); }
+  .confirm { border: 1px solid var(--risk); padding: 10px 12px; margin-bottom: 14px; font-size: 13px; display: grid; gap: 8px; }
+  .confirm p { font-family: var(--font-mono); font-size: 11.5px; }
   .confirm div { display: flex; gap: 6px; }
   .notes { white-space: pre-wrap; }
-  .estimate { display: grid; gap: 8px; padding: 12px; border: 1px solid var(--line); border-radius: var(--radius-sm); background: var(--surface); margin-bottom: 16px; font-size: 13px; }
+  .evidence summary { cursor: pointer; font-family: var(--font-mono); font-size: 11px; letter-spacing: .07em; text-transform: uppercase; margin: 6px 0 10px; list-style: none; }
+  .evidence summary::before { content: '+ '; }
+  .evidence[open] summary::before { content: '– '; }
+  .estimate { display: grid; gap: 8px; padding: 12px; border: var(--rule); margin-bottom: 16px; font-size: 13px; }
+  .estimate strong { font-family: var(--font-mono); font-size: 11px; letter-spacing: .07em; text-transform: uppercase; }
   .estimate-fields { display: flex; gap: 8px; align-items: end; flex-wrap: wrap; }
-  .estimate-fields label { display: grid; gap: 3px; font-size: 11px; color: var(--muted); flex: 1 1 100px; }
+  .estimate-fields label { display: grid; gap: 3px; font-family: var(--font-mono); font-size: 10px; letter-spacing: .05em; text-transform: uppercase; color: var(--muted); flex: 1 1 100px; }
   .estimate-fields input { width: 100%; }
-  .evidence summary { cursor: pointer; font-weight: 600; font-size: 13px; margin-bottom: 10px; }
 </style>

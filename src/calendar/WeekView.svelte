@@ -127,7 +127,7 @@
   }
 
   function hourLabel(hour: number): string {
-    return `${hour % 12 || 12} ${hour < 12 ? 'AM' : 'PM'}`;
+    return `${hour % 12 || 12}${hour < 12 ? 'a' : 'p'}`;
   }
 
   function stopPointer(event: PointerEvent) {
@@ -216,6 +216,7 @@
                 type="button"
                 class="allday-item {event.kind}"
                 class:tentative={event.tentative}
+                class:transparent={event.occupancy === 'transparent'}
                 class:risk={riskWord(event) !== ''}
                 style={edgeVar(event.color)}
                 aria-pressed={selectedId === event.id}
@@ -238,8 +239,9 @@
     <div class="body" style="height: {GRID_PX}px">
       <div class="gutter">
         {#each hours as hour (hour)}
-          <span class="hour" style="top: {hour * HOUR_PX + 3}px">{hourLabel(hour)}</span>
+          <span class="hour" style="top: {hour * HOUR_PX}px">{hourLabel(hour)}</span>
         {/each}
+        {#if todayVisible}<span class="now-label" style="top: {todayTop}px" aria-hidden="true">{minutesLabel(today.minutes).replace(' AM', 'a').replace(' PM', 'p')}</span>{/if}
       </div>
       {#each columns as column (column.date)}
         <div
@@ -312,152 +314,77 @@
 </div>
 
 <style>
-  .week {
-    display: flex;
-    flex-direction: column;
-    height: 100%;
-    min-height: 0;
-    font-family: var(--font);
-    color: var(--ink);
-    background: var(--surface);
-    border: 1px solid var(--line);
-    border-radius: var(--radius);
-    box-shadow: var(--shadow);
-    overflow: hidden;
-  }
-  .scroller { flex: 1; min-height: 0; overflow: auto; position: relative; }
-  .sticky { position: sticky; top: 0; z-index: 5; min-width: calc(56px + var(--n) * 84px); background: var(--surface); }
-  .head, .allday, .body { display: grid; grid-template-columns: 56px repeat(var(--n), minmax(84px, 1fr)); min-width: calc(56px + var(--n) * 84px); }
-  .head { border-bottom: 1px solid var(--line); }
-  .allday { border-bottom: 1px solid var(--line-strong); }
+  /* Instrument grid: hairline hours, hatched closed time, ink blocks for facts,
+     dashed outlines for soft items, one signal colour for now and risk. */
+  .week { display: flex; flex-direction: column; height: 100%; min-height: 0; font-family: var(--font); color: var(--ink); background: var(--bg); overflow: hidden; }
+  .scroller { flex: 1; min-height: 0; overflow: auto; position: relative; scrollbar-width: thin; }
+  .sticky { position: sticky; top: 0; z-index: 8; min-width: calc(64px + var(--n) * 84px); background: var(--bg); }
+  .head, .allday, .body { display: grid; grid-template-columns: 64px repeat(var(--n), minmax(84px, 1fr)); min-width: calc(64px + var(--n) * 84px); }
+  .head { border-bottom: var(--rule); }
+  .allday { border-bottom: var(--rule); }
   .body { position: relative; }
-  .gutter-cell { border-right: 1px solid var(--line); }
-  .allday-label { display: flex; flex-direction: column; align-items: flex-end; justify-content: center; gap: 4px; padding: 4px 6px; font-size: 10px; color: var(--faint); }
+  .gutter-cell { border-right: var(--rule); }
+  .allday-label { display: flex; flex-direction: column; align-items: flex-end; justify-content: center; gap: 4px; padding: 4px 8px; font-family: var(--font-mono); font-size: 9.5px; letter-spacing: .08em; text-transform: uppercase; color: var(--muted); }
 
-  .day-head { display: flex; flex-direction: column; align-items: center; gap: 2px; padding: 8px 4px 7px; border-left: 1px solid var(--line); font-size: 12px; color: var(--muted); }
-  .day-head .number { display: grid; place-items: center; min-width: 28px; height: 28px; border-radius: 50%; font-size: 15px; color: var(--ink); }
-  .day-head.today .weekday { color: var(--ink); font-weight: 600; }
-  .day-head.today .number { background: var(--accent); color: var(--accent-ink); }
+  .day-head { display: grid; grid-template-columns: auto 1fr; align-items: end; gap: 0 8px; padding: 10px 10px 8px; border-left: 1px solid var(--line); }
+  .day-head .weekday { font-family: var(--font-mono); font-size: 10.5px; letter-spacing: .08em; text-transform: uppercase; color: var(--muted); padding-bottom: 4px; order: 2; }
+  .day-head .number { font-family: var(--font-display); font-stretch: 125%; font-weight: 800; font-size: 30px; line-height: .9; letter-spacing: -.03em; font-variant-numeric: tabular-nums; order: 1; }
+  .day-head.today { background: var(--invert-bg); color: var(--invert-ink); }
+  .day-head.today .weekday { color: var(--invert-ink); opacity: .7; }
+  .day-head.today .number { color: var(--accent); }
 
-  .allday-cell { position: relative; display: flex; flex-direction: column; gap: 3px; min-width: 0; padding: 4px; border-left: 1px solid var(--line); }
-  .allday-add { position: absolute; inset: 0; z-index: 0; margin: 0; padding: 0; border: 0; border-radius: 0; background-color: transparent; }
-  .allday-add:hover:not(:disabled) { background-color: var(--surface-2); }
+  .allday-cell { position: relative; display: flex; flex-direction: column; gap: 2px; min-width: 0; min-height: 30px; padding: 3px; border-left: 1px solid var(--line); }
+  .allday-add { position: absolute; inset: 0; z-index: 0; margin: 0; padding: 0; border: 0; background: transparent; }
+  .allday-add:hover:not(:disabled) { background: var(--surface); }
   .allday-add:focus-visible { outline: 2px solid var(--accent); outline-offset: -2px; }
 
-  /* Global button rules in app.css paint hover states with fixed colours. Each
-     control keeps its token fill and edge on hover as well as at rest. */
-  .allday-item, .chip-btn, .block, .deadline {
-    --fill: var(--anchor-soft);
-    --edge: var(--line-strong);
-    --hatch: none;
-    margin: 0;
-    font: inherit;
-    color: var(--ink);
-    background-color: var(--fill);
-    background-image: var(--hatch);
-    border: 1px solid var(--edge);
-    border-radius: var(--radius-sm);
-  }
-  .allday-item:hover:not(:disabled), .chip-btn:hover:not(:disabled), .block:hover:not(:disabled), .deadline:hover:not(:disabled) {
-    background-color: var(--fill);
-    background-image: var(--hatch);
-    border-color: var(--edge);
-  }
-  .allday-item:focus-visible, .chip-btn:focus-visible, .block:focus-visible, .deadline:focus-visible {
-    outline: 2px solid var(--accent);
-    outline-offset: 2px;
-  }
+  .allday-item, .chip-btn, .block, .deadline { margin: 0; font: inherit; text-transform: none; letter-spacing: 0; color: var(--ink); border-radius: 0; }
+  .allday-item:active, .block:active, .deadline:active { transform: none !important; }
+  .allday-item { position: relative; z-index: 1; display: flex; align-items: center; gap: 5px; width: 100%; min-width: 0; padding: 2px 6px; font-size: 11px; line-height: 1.3; text-align: left; border: 1px solid var(--line-strong); background: var(--bg); }
+  .allday-item .text { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-weight: 560; }
+  .allday-item .glyph { flex: none; font-size: 9px; }
+  .allday-item.anchor { background: var(--invert-bg); color: var(--invert-ink); box-shadow: inset 4px 0 0 var(--edge-color, transparent); padding-left: 9px; }
+  .allday-item.anchor.transparent, .allday-item.anchor.tentative { background: var(--bg); color: var(--ink); }
+  .allday-item.intention, .allday-item.routine { border-style: dashed; }
+  .allday-item.risk { background: var(--accent); border-color: var(--accent); color: var(--accent-ink); }
+  .allday-item:hover:not(:disabled) { filter: none; outline: 1px solid var(--line-strong); outline-offset: 1px; background: inherit; color: inherit; }
+  .allday-item.anchor:hover:not(:disabled) { background: var(--invert-bg); color: var(--invert-ink); }
+  .allday-item[aria-pressed='true'] { outline: 2px solid var(--accent); outline-offset: 1px; }
 
-  .allday-item { position: relative; z-index: 1; display: flex; align-items: center; gap: 5px; width: 100%; min-width: 0; padding: 2px 6px; border-left-width: 3px; border-left-color: var(--edge-color, var(--line-strong)); font-size: 11px; line-height: 1.3; text-align: left; }
-  .allday-item .text { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-  .allday-item .glyph { flex: none; font-size: 10px; }
-  .allday-item.anchor { --fill: var(--anchor-soft); --edge: var(--anchor); border-left-color: var(--edge-color, var(--anchor)); }
-  .allday-item.anchor.tentative { --hatch: repeating-linear-gradient(135deg, color-mix(in srgb, var(--anchor) 28%, transparent) 0 3px, transparent 3px 8px); }
-  .allday-item.deadline { --fill: var(--deadline-soft); --edge: var(--deadline); color: var(--deadline); }
-  .allday-item.intention, .allday-item.routine { --fill: var(--soft-bg); --edge: var(--soft); border: 1.5px dashed var(--soft); border-left-width: 1.5px; color: var(--ink); }
-  .allday-item.risk { --fill: var(--risk-soft); --edge: var(--risk); color: var(--risk); }
+  .chip-btn { position: relative; z-index: 1; padding: 1px 4px; border: 0; background: transparent; font-family: var(--font-mono); font-size: 10px; letter-spacing: .05em; text-transform: uppercase; color: var(--muted); text-align: left; }
+  .chip-btn:hover:not(:disabled) { color: var(--ink); background: transparent; }
 
-  .chip-btn { --fill: transparent; --edge: transparent; position: relative; z-index: 1; padding: 2px 4px; font-size: 11px; color: var(--muted); text-align: left; }
-  .chip-btn:hover:not(:disabled) { color: var(--ink); }
+  .gutter { position: relative; border-right: var(--rule); }
+  .hour { position: absolute; right: 8px; font-family: var(--font-mono); font-size: 10px; letter-spacing: .04em; line-height: 1; color: var(--muted); white-space: nowrap; transform: translateY(-50%); }
+  .hour:first-child { display: none; }
+  .now-label { position: absolute; right: 0; left: 0; z-index: 3; transform: translateY(-50%); background: var(--accent); color: var(--accent-ink); font-family: var(--font-mono); font-size: 10px; font-weight: 600; letter-spacing: .02em; text-align: center; padding: 1px 0; }
+  .col { position: relative; min-width: 0; border-left: 1px solid var(--line); background: transparent; touch-action: none; user-select: none; }
+  /* With usual hours declared, closed time is hatched and declared time reads as open paper. */
+  .week.declared .col { background: var(--closed); }
+  .col::after { content: ''; position: absolute; inset: 0; z-index: 1; pointer-events: none; background-image: repeating-linear-gradient(to bottom, var(--line) 0 1px, transparent 1px 48px); }
+  .band { position: absolute; left: 0; right: 0; z-index: 0; background: var(--bg); pointer-events: none; }
 
-  .gutter { position: relative; border-right: 1px solid var(--line); }
-  .hour { position: absolute; right: 6px; font-size: 11px; line-height: 1; color: var(--faint); white-space: nowrap; }
-  .col {
-    position: relative;
-    min-width: 0;
-    border-left: 1px solid var(--line);
-    background-color: transparent;
-    touch-action: none;
-    user-select: none;
-  }
-  /* Once usual hours exist, time outside them is quietly shaded and declared
-     time reads as open, the way working hours do in a conventional grid. */
-  .week.declared .col { background-color: var(--surface-2); }
-  .col::after {
-    content: '';
-    position: absolute;
-    inset: 0;
-    z-index: 1;
-    pointer-events: none;
-    background-image:
-      radial-gradient(circle at 50% 50%, var(--line) 1px, transparent 1.5px),
-      repeating-linear-gradient(to bottom, var(--line) 0 1px, transparent 1px 48px);
-    background-size: 6px 48px, 100% 100%;
-    background-repeat: repeat, no-repeat;
-  }
+  .block { position: absolute; z-index: 2; display: flex; flex-direction: column; gap: 1px; min-width: 0; overflow: hidden; padding: 3px 6px 3px 7px; font-size: 12px; line-height: 1.22; text-align: left; border: 1px solid var(--line-strong); background: var(--bg); }
+  .block.anchor { background: var(--invert-bg); color: var(--invert-ink); box-shadow: inset 4px 0 0 var(--edge-color, transparent); padding-left: 9px; }
+  .block.anchor.tentative { background: repeating-linear-gradient(-45deg, var(--line) 0 1px, var(--bg) 1px 6px); color: var(--ink); }
+  .block.anchor.transparent { background: var(--bg); color: var(--ink); }
+  .block.intention, .block.routine { border-style: dashed; background: var(--bg); }
+  .block:hover:not(:disabled) { background: var(--invert-bg); color: var(--invert-ink); }
+  .block.anchor:hover:not(:disabled) { background: var(--invert-bg); outline: 1px solid var(--accent); outline-offset: -1px; }
+  .block[aria-pressed='true'] { outline: 2px solid var(--accent); outline-offset: 1px; z-index: 3; }
+  .block .title { display: block; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-weight: 640; }
+  .block .meta { display: block; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-family: var(--font-mono); font-size: 10px; letter-spacing: .02em; opacity: .72; }
+  .block .readonly { font-weight: 400; opacity: .7; }
 
-  .band { position: absolute; left: 0; right: 0; z-index: 0; background: var(--surface); border-left: 2px solid var(--avail-line); pointer-events: none; }
+  .rule { position: absolute; left: 0; right: 0; z-index: 3; height: 0; border-top: 1px solid var(--ink); pointer-events: none; }
+  .rule.risk { border-top: 2px solid var(--risk); }
+  .deadline { position: absolute; left: 3px; right: 3px; z-index: 4; display: block; height: 18px; padding: 0 6px; font-family: var(--font-mono); font-size: 10.5px; letter-spacing: .01em; line-height: 16px; text-align: left; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; border: 1px solid var(--line-strong); background: var(--bg); color: var(--ink); }
+  .deadline.risk { background: var(--risk); border-color: var(--risk); color: var(--bg); }
+  .deadline:hover:not(:disabled) { background: var(--invert-bg); color: var(--invert-ink); }
+  .deadline[aria-pressed='true'] { outline: 2px solid var(--accent); outline-offset: 1px; }
 
-  .block {
-    --fill: var(--anchor-soft);
-    --edge: var(--line-strong);
-    position: absolute;
-    z-index: 2;
-    display: flex;
-    flex-direction: column;
-    gap: 1px;
-    min-width: 0;
-    overflow: hidden;
-    padding: 3px 6px 3px 7px;
-    border-left-width: 3px;
-    font-size: 12px;
-    line-height: 1.25;
-    text-align: left;
-  }
-  .block.anchor { --fill: var(--anchor-soft); --edge: var(--anchor); border-left-color: var(--edge-color, var(--anchor)); }
-  .block.anchor.tentative { --hatch: repeating-linear-gradient(135deg, color-mix(in srgb, var(--anchor) 28%, transparent) 0 3px, transparent 3px 8px); }
-  .block.anchor.transparent { --fill: transparent; border-color: var(--edge-color, var(--anchor)); }
-  .block.intention, .block.routine { --fill: var(--soft-bg); --edge: var(--soft); border: 1.5px dashed var(--soft); border-left-width: 1.5px; }
-  .block[aria-pressed='true'] { outline: 2px solid var(--ink); outline-offset: 0; }
-  .block .title { display: block; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-weight: 600; }
-  .block .meta { display: block; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 11px; color: var(--muted); }
-  .block .readonly { font-weight: 400; color: var(--muted); }
-
-  .rule { position: absolute; left: 0; right: 0; z-index: 3; height: 0; border-top: 1px solid var(--deadline); pointer-events: none; }
-  .rule.risk { border-top-color: var(--risk); }
-  .deadline {
-    --fill: var(--deadline-soft);
-    --edge: var(--deadline);
-    position: absolute;
-    left: 4px;
-    right: 4px;
-    z-index: 4;
-    display: block;
-    height: 18px;
-    padding: 0 6px;
-    font-size: 11px;
-    line-height: 16px;
-    color: var(--deadline);
-    text-align: left;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-  }
-  .deadline.risk { --fill: var(--risk-soft); --edge: var(--risk); color: var(--risk); }
-  .deadline[aria-pressed='true'] { outline: 2px solid var(--ink); outline-offset: 0; }
-
-  .selection { position: absolute; left: 2px; right: 2px; z-index: 5; display: flex; align-items: flex-start; padding: 2px 5px; overflow: hidden; pointer-events: none; font-size: 11px; color: var(--ink); background-color: var(--accent-soft); border: 1px solid var(--accent); border-radius: var(--radius-sm); opacity: 0.85; }
+  .selection { position: absolute; left: 2px; right: 2px; z-index: 5; display: flex; align-items: flex-start; padding: 3px 6px; overflow: hidden; pointer-events: none; font-family: var(--font-mono); font-size: 10.5px; color: var(--ink); background: var(--accent-soft); border: 1px solid var(--accent); }
 
   .now { position: absolute; left: 0; right: 0; z-index: 6; height: 0; border-top: 2px solid var(--now); pointer-events: none; }
-  .now .dot { position: absolute; left: -4px; top: -3px; width: 8px; height: 8px; border-radius: 50%; background: var(--now); }
+  .now .dot { position: absolute; left: -1px; top: -5px; width: 8px; height: 8px; background: var(--now); }
 </style>
