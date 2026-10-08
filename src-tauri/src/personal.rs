@@ -34,7 +34,7 @@ pub struct ImportResult {
 }
 
 pub fn view(store: &Store, now: Instant) -> Result<PersonalView, String> {
-    let zone: ZoneId = "America/Toronto".parse().unwrap();
+    let zone: ZoneId = store.settings()?.zone();
     let stored = store.read(now, zone)?;
     let input = stored.input;
     let output = temporal_core::evaluate(&input)

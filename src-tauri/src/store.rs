@@ -1,6 +1,8 @@
 //! The application's own SQLite cache. There is no Trace database connection.
 use crate::{
     local::{self, LocalMutation, LocalState},
+    series,
+    settings::{Settings, SettingsPatch},
     trace::{self, Export, ImportError, TraceTask},
 };
 use rusqlite::{Connection, OptionalExtension, TransactionBehavior, params};
@@ -31,14 +33,26 @@ struct Cache {
     metadata: Metadata,
     tasks: BTreeMap<String, CachedTask>,
     local: LocalState,
+    settings: Settings,
 }
+
+/// How far back the evaluation keeps resolved deadlines in view.
+const RESOLVED_DEADLINE_LOOKBACK_MS: u64 = 7 * 86_400_000;
+/// The Horizon's evaluated extent.
+pub const EVALUATION_MS: u64 = 14 * 86_400_000;
 
 pub struct StoredView {
     pub input: EvaluationInput,
     pub exported_at: Option<Instant>,
     pub last_import_at: Option<Instant>,
     pub local: LocalState,
+    pub settings: Settings,
+    /// Which evaluated Anchors are occurrences of a local series.
+    pub series_occurrences: Vec<SeriesLink>,
 }
+
+/// An evaluated Anchor, the local series it came from, and its date.
+pub type SeriesLink = (AnchorId, AnchorId, LocalDate);
 
 impl Store {
     pub fn open(path: &Path) -> Result<Self, String> {
@@ -69,6 +83,9 @@ impl Store {
                     .map_err(db_error)?;
                 tx.execute_batch(include_str!("../migrations/002_local_state.sql"))
                     .map_err(db_error)?;
+                tx.execute_batch(include_str!("../migrations/003_settings.sql"))
+                    .map_err(db_error)?;
+                save_settings(&tx, &Settings::default())?;
                 let id = uuid::Uuid::new_v4()
                     .to_string()
                     .parse()
@@ -103,9 +120,18 @@ impl Store {
                 tx.execute_batch(include_str!("../migrations/002_local_state.sql"))
                     .map_err(db_error)?;
                 ensure_local_state(&tx)?;
+                tx.execute_batch(include_str!("../migrations/003_settings.sql"))
+                    .map_err(db_error)?;
+                save_settings(&tx, &Settings::default())?;
                 load_cache(&tx)?;
             }
             2 => {
+                tx.execute_batch(include_str!("../migrations/003_settings.sql"))
+                    .map_err(db_error)?;
+                save_settings(&tx, &Settings::default())?;
+                load_cache(&tx)?;
+            }
+            3 => {
                 load_cache(&tx)?;
             }
             _ => return Err(
@@ -121,7 +147,7 @@ impl Store {
         let tx = self.connection.unchecked_transaction().map_err(db_error)?;
         let cache = load_cache(&tx)?;
         check_clock(&cache, now)?;
-        let input = build_input(&cache, now, zone)?;
+        let (input, series_occurrences) = build_slice(&cache, now, zone)?;
         temporal_core::validation::validate(&input)
             .map_err(|_| "Cached temporal data failed validation.".to_string())?;
         tx.commit().map_err(db_error)?;
@@ -130,17 +156,60 @@ impl Store {
             exported_at: cache.metadata.exported_at,
             last_import_at: cache.metadata.state.last_success_at,
             local: cache.local,
+            settings: cache.settings,
+            series_occurrences,
         })
     }
 
+    pub fn settings(&self) -> Result<Settings, String> {
+        load_settings(&self.connection)
+    }
+
+    pub fn update_settings(&mut self, patch: &SettingsPatch) -> Result<Settings, String> {
+        let tx = self
+            .connection
+            .transaction_with_behavior(TransactionBehavior::Immediate)
+            .map_err(db_error)?;
+        let mut settings = load_settings(&tx)?;
+        settings.apply(patch)?;
+        save_settings(&tx, &settings)?;
+        tx.commit().map_err(db_error)?;
+        Ok(settings)
+    }
+
+    /// Remember the Trace export file the user chose, for later re-reads.
+    pub fn remember_trace_path(&mut self, path: Option<String>) -> Result<(), String> {
+        let tx = self
+            .connection
+            .transaction_with_behavior(TransactionBehavior::Immediate)
+            .map_err(db_error)?;
+        let mut settings = load_settings(&tx)?;
+        settings.trace_export_path = path;
+        save_settings(&tx, &settings)?;
+        tx.commit().map_err(db_error)
+    }
+
     pub fn mutate_local(&mut self, mutation: &LocalMutation, now: Instant) -> Result<(), String> {
+        self.mutate_local_batch(std::slice::from_ref(mutation), now)
+    }
+
+    /// Apply several local changes as one transaction: all of them or none.
+    pub fn mutate_local_batch(
+        &mut self,
+        mutations: &[LocalMutation],
+        now: Instant,
+    ) -> Result<(), String> {
+        if mutations.is_empty() || mutations.len() > 16 {
+            return Err("Send between one and sixteen local changes at once.".into());
+        }
         let tx = self
             .connection
             .transaction_with_behavior(TransactionBehavior::Immediate)
             .map_err(db_error)?;
         let previous = load_cache(&tx)?;
         check_clock(&previous, now)?;
-        let previous_input = build_input(&previous, now, "America/Toronto".parse().unwrap())?;
+        let zone = previous.settings.zone();
+        let previous_input = build_input(&previous, now, zone)?;
         temporal_core::validation::validate(&previous_input).map_err(|_| {
             "Cached temporal data failed validation; no local change was applied.".to_string()
         })?;
@@ -150,7 +219,9 @@ impl Store {
             .iter()
             .map(|(external, cached)| (external.clone(), cached.task.meta.id))
             .collect();
-        local::apply(&mut next.local, mutation, &trace_tasks, now)?;
+        for mutation in mutations {
+            local::apply(&mut next.local, mutation, &trace_tasks, now)?;
+        }
         next.local.updated_at = Some(now);
         next.local.revision = next
             .local
@@ -160,7 +231,7 @@ impl Store {
             .and_then(NonZeroU64::new)
             .ok_or_else(|| "local snapshot revision limit reached".to_string())?;
         next.metadata.revision = next_revision(next.metadata.revision)?;
-        let candidate = build_input(&next, now, "America/Toronto".parse().unwrap())?;
+        let candidate = build_input(&next, now, zone)?;
         temporal_core::validation::validate(&candidate).map_err(|_| {
             "Local temporal change failed validation; previous state kept.".to_string()
         })?;
@@ -179,12 +250,11 @@ impl Store {
         let applied = trace::decode_json(json, now)
             .and_then(|export| reconcile(&previous, export, now))
             .and_then(|next| {
-                let candidate = build_input(&next, now, "America/Toronto".parse().unwrap())
-                    .map_err(|_| {
-                        ImportError::partial(
-                            "Trace evaluation time is out of range; previous snapshot kept.",
-                        )
-                    })?;
+                let candidate = build_input(&next, now, next.settings.zone()).map_err(|_| {
+                    ImportError::partial(
+                        "Trace evaluation time is out of range; previous snapshot kept.",
+                    )
+                })?;
                 temporal_core::validation::validate(&candidate).map_err(|_| {
                     ImportError::partial(
                         "Trace normalization failed validation; previous snapshot kept.",
@@ -397,6 +467,16 @@ fn check_clock(cache: &Cache, now: Instant) -> Result<(), String> {
             .routine_outcomes
             .iter()
             .any(|record| record.recorded_at > now)
+        || cache
+            .local
+            .anchor_series
+            .iter()
+            .any(|record| record.meta.created_at > now || record.meta.updated_at > now)
+        || cache
+            .local
+            .usual_availability
+            .as_ref()
+            .is_some_and(|record| record.meta.created_at > now || record.meta.updated_at > now)
     {
         Err("System time is earlier than cached records. Check the clock; recorded timestamps were kept.".into())
     } else {
@@ -466,40 +546,178 @@ fn load_cache(connection: &Connection) -> Result<Cache, String> {
         metadata,
         tasks,
         local,
+        settings: load_settings(connection)?,
     })
 }
+
+fn load_settings(connection: &Connection) -> Result<Settings, String> {
+    let payload: String = connection
+        .query_row(
+            "SELECT payload FROM app_settings WHERE singleton=1",
+            [],
+            |r| r.get(0),
+        )
+        .map_err(db_error)?;
+    serde_json::from_str(&payload)
+        .map_err(|_| "Stored settings are invalid; no reset was attempted.".to_string())
+}
+
+fn save_settings(connection: &Connection, settings: &Settings) -> Result<(), String> {
+    connection
+        .execute(
+            "INSERT INTO app_settings(singleton,payload) VALUES(1,?1) ON CONFLICT(singleton) DO UPDATE SET payload=excluded.payload",
+            [encode(settings)?],
+        )
+        .map_err(db_error)?;
+    Ok(())
+}
 fn build_input(cache: &Cache, now: Instant, zone: ZoneId) -> Result<EvaluationInput, String> {
-    Ok(EvaluationInput {
+    build_slice(cache, now, zone).map(|(input, _)| input)
+}
+
+/// The Horizon's evaluation input: facts relevant to today through the end of
+/// the evaluated extent. Leaving older facts out of one evaluation never
+/// deletes or rewrites them; they remain stored and visible in the Calendar.
+fn build_slice(
+    cache: &Cache,
+    now: Instant,
+    zone: ZoneId,
+) -> Result<(EvaluationInput, Vec<SeriesLink>), String> {
+    let rules = TimezoneRules::bundled();
+    let end = now
+        .checked_add_ms(EVALUATION_MS)
+        .map_err(|e| e.to_string())?;
+    let slice_start = rules
+        .date_at(now, zone)
+        .and_then(|date| rules.start_of_date(date, zone))
+        .or_else(|_| now.checked_sub_ms(86_400_000))
+        .map_err(|e| e.to_string())?;
+    let range = TimedSpan::new(slice_start, end).map_err(|e| e.to_string())?;
+    let local = &cache.local;
+
+    // Tombstones within the range stay in the input, so removal remains explicit.
+    let mut anchors: Vec<Anchor> = local
+        .anchors
+        .iter()
+        .filter(|anchor| {
+            anchor
+                .span
+                .resolve(&rules)
+                .is_ok_and(|span| span.overlaps(&range))
+        })
+        .cloned()
+        .collect();
+    let mut occurrences = Vec::new();
+    for record in &local.anchor_series {
+        for occurrence in series::expand_series(record, local.source.id, slice_start, end)
+            .map_err(|e| e.to_string())?
+        {
+            occurrences.push((
+                occurrence.anchor.meta.id,
+                occurrence.series_id,
+                occurrence.date,
+            ));
+            anchors.push(occurrence.anchor);
+        }
+    }
+
+    let task_done = |id: TaskRefId| {
+        cache
+            .tasks
+            .values()
+            .any(|t| t.task.meta.id == id && t.task.status == TaskStatus::Done)
+    };
+    let linked: std::collections::BTreeSet<DeadlineId> = cache
+        .tasks
+        .values()
+        .filter_map(|t| match t.task.due {
+            TaskDue::Deadline(id) => Some(id),
+            _ => None,
+        })
+        .collect();
+    let recent = slice_start
+        .checked_sub_ms(RESOLVED_DEADLINE_LOOKBACK_MS)
+        .map_err(|e| e.to_string())?;
+    let deadlines: Vec<Deadline> = local
+        .deadlines
+        .iter()
+        .filter(|deadline| {
+            if linked.contains(&deadline.meta.id) {
+                return true;
+            }
+            let unresolved = deadline.presence == Presence::Present
+                && match &deadline.fulfillment {
+                    Fulfillment::Recorded(RecordedResolution::Unresolved) => true,
+                    Fulfillment::Recorded(_) => false,
+                    Fulfillment::TraceTask(id) => !task_done(*id),
+                };
+            unresolved
+                || deadline
+                    .cutoff
+                    .endpoint(&rules)
+                    .is_ok_and(|at| at >= recent)
+        })
+        .cloned()
+        .collect();
+
+    let anchor_ids: std::collections::BTreeSet<AnchorId> =
+        anchors.iter().map(|a| a.meta.id).collect();
+    let deadline_ids: std::collections::BTreeSet<DeadlineId> =
+        deadlines.iter().map(|d| d.meta.id).collect();
+
+    let mut availability: Vec<AvailabilityDeclaration> = local
+        .availability
+        .iter()
+        .filter(|declaration| declaration.span.overlaps(&range))
+        .cloned()
+        .collect();
+    if let Some(usual) = &local.usual_availability {
+        availability.extend(
+            series::expand_usual(usual, &local.availability, slice_start, end)
+                .map_err(|e| e.to_string())?,
+        );
+    }
+
+    let input = EvaluationInput {
         schema_version: 1,
         snapshot_revision: cache.metadata.revision,
         captured_now: now,
-        sources: vec![cache.metadata.source.clone(), cache.local.source.clone()],
+        sources: vec![cache.metadata.source.clone(), local.source.clone()],
         source_states: vec![cache.metadata.state.clone()],
         required_sources: vec![RequiredSource {
             source_id: cache.metadata.source.id,
             role: SourceRole::Tasks,
         }],
         task_refs: cache.tasks.values().map(|r| r.task.clone()).collect(),
-        anchors: cache.local.anchors.clone(),
-        deadlines: cache.local.deadlines.clone(),
-        intentions: cache.local.intentions.clone(),
-        routines: cache.local.routines.clone(),
-        anchor_annotations: cache.local.anchor_annotations.clone(),
-        deadline_annotations: cache.local.deadline_annotations.clone(),
-        task_annotations: cache.local.task_annotations.clone(),
-        routine_outcomes: cache.local.routine_outcomes.clone(),
-        availability: cache.local.availability.clone(),
+        anchors,
+        deadlines,
+        intentions: local.intentions.clone(),
+        routines: local.routines.clone(),
+        anchor_annotations: local
+            .anchor_annotations
+            .iter()
+            .filter(|a| anchor_ids.contains(&a.target_id))
+            .cloned()
+            .collect(),
+        deadline_annotations: local
+            .deadline_annotations
+            .iter()
+            .filter(|a| deadline_ids.contains(&a.target_id))
+            .cloned()
+            .collect(),
+        task_annotations: local.task_annotations.clone(),
+        routine_outcomes: local.routine_outcomes.clone(),
+        availability,
         prior_suggestions: vec![],
         evaluation: EvaluationRequest {
             now,
-            evaluation_end: now
-                .checked_add_ms(14 * 86_400_000)
-                .map_err(|e| e.to_string())?,
+            evaluation_end: end,
             display_zone: zone,
             timezone_rules_version: TimezoneRules::bundled().version().into(),
             policy_version: PolicyVersion::ProofV1,
         },
-    })
+    };
+    Ok((input, occurrences))
 }
 
 fn ensure_local_state(connection: &Connection) -> Result<(), String> {

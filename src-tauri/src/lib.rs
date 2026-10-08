@@ -2,6 +2,8 @@
 pub mod local;
 pub mod personal;
 mod presentation;
+pub mod series;
+pub mod settings;
 pub mod store;
 pub mod today;
 pub mod trace;
