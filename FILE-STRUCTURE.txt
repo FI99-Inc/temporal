@@ -14,16 +14,20 @@ temporal-engine-foundation/
 ├── svelte.config.js
 ├── vite.config.ts # localhost-only synthetic preview during development
 ├── scripts/build-icon.mjs
+├── .github/workflows/build.yml # Linux checks + Windows MSVC installer
 ├── src/
 │   ├── main.ts
-│   ├── App.svelte
+│   ├── App.svelte # shell: navigation, quick add, editor host, refresh
 │   ├── Horizon.svelte
-│   ├── LocalEditor.svelte
+│   ├── LocalEditor.svelte # plans and estimates (routines, Trace work)
 │   ├── Today.svelte
+│   ├── theme.css # light/dark design tokens
 │   ├── app.css
-│   └── lib/ # app API, local form mapping, deterministic time geometry
-├── tests/horizon.test.ts
-├── tests/local.test.ts
+│   ├── calendar/ # Day/Week and Month views
+│   ├── components/ # EventEditor, ItemDetail, QuickAdd
+│   ├── views/ # Horizon, Calendar, Sources, Settings, Examples pages
+│   └── lib/ # API, calendar layout, editor model, quick-add parser
+├── tests/ # horizon, local, calendar, editor, quickadd (node:test)
 ├── src-tauri/
 │   ├── Cargo.toml
 │   ├── build.rs
@@ -32,9 +36,17 @@ temporal-engine-foundation/
 │   ├── icons/ # source SVG and Windows build resources
 │   ├── src/
 │   │   ├── main.rs
-│   │   ├── lib.rs # synthetic catalog and app IPC
+│   │   ├── lib.rs # synthetic catalog, desktop IPC, tray, reminders loop
 │   │   ├── presentation.rs # read-only projection of core results
-│   │   ├── personal.rs # system-time boundary and personal cache IPC
+│   │   ├── personal.rs # personal view and the shared command dispatcher
+│   │   ├── settings.rs # app-owned preferences
+│   │   ├── series.rs # repeating events and usual availability
+│   │   ├── ics.rs # read-only iCalendar parsing and expansion
+│   │   ├── calendars.rs # imported calendar sources and normalization
+│   │   ├── calendar.rs # Calendar read model over any range
+│   │   ├── credentials.rs # Windows Credential Manager for feed links
+│   │   ├── fetch.rs # person-initiated feed download (desktop only)
+│   │   ├── reminders.rs # pure due-reminder selection
 │   │   ├── local.rs # typed local facts, annotations, completion, and outcomes
 │   │   ├── today.rs # bounded deterministic today-v1 selection
 │   │   ├── store.rs # app-owned SQLite cache and reconciliation
@@ -42,10 +54,15 @@ temporal-engine-foundation/
 │   │   └── bin/scenario-preview.rs # development verification only
 │   ├── migrations/001_trace_cache.sql
 │   ├── migrations/002_local_state.sql
+│   ├── migrations/003_settings.sql
+│   ├── migrations/004_calendars.sql
 │   ├── tests/presentation_contract.rs
 │   ├── tests/trace_contract.rs
 │   ├── tests/local_contract.rs
 │   ├── tests/today_contract.rs
+│   ├── tests/calendar_contract.rs
+│   ├── tests/import_contract.rs
+│   ├── tests/ics_contract.rs
 │   └── tests/fixtures/ # synthetic Trace exports for browser import only
 ├── crates/
 │   └── temporal-core/

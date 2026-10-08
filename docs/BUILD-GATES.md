@@ -1026,6 +1026,93 @@ any external source.
 - **Acceptance:** full core/app/frontend suites, installer build, a recorded
   manual walkthrough, residual risks, and an updated ASTRA pointer.
 
+### Gate 4 evidence report — 2026-10-08
+
+**Status: Tasks 4.1–4.7 COMPLETE; 4.8 open pending the user's first Windows
+install.** Work was orchestrated across Haiku workers (iCalendar parser,
+quick-add parser, Calendar views, Sources and Settings pages, CI workflow)
+in isolated worktrees, each reviewed and re-verified before integration.
+
+Commits: `56c6097` plan, `d82db30` dependencies and contracts, `7ebf2c9`
+4.1+4.2 (one store migration), `95ad2bd` 4.3 with the 4.4 read model and 4.6
+reminder selection (shared command surface), `dff81d1` views and parsers,
+`17d7cea` engine fix F-1, `b4e490c` 4.4+4.5 UI, `c032f1a` performance,
+`dd8b8a1` 4.7 packaging and CI, `6460150` in-place work estimates,
+`050bcea` 4.6 single instance and sign-in start.
+
+- **4.1** Settings persist in schema v3 (`app_settings`); the display zone
+  defaults to the system zone on first run. The evaluation slice keeps
+  Anchors from the start of today through the 14-day extent, every unresolved
+  Deadline, and resolved ones from the last seven days; annotations follow
+  their targets. Older facts stay stored (calendar_contract).
+- **4.2** Local series (daily/weekly/monthly, interval, until or count,
+  skipped dates) expand into Anchors with UUIDv5-derived, UUIDv4-shaped
+  identities; DST ambiguity takes the earlier offset and gaps move forward.
+  Usual weekly availability expands into declarations that yield to one-off
+  ones. Six unit and six store tests, including DST and identity stability.
+- **4.3** iCalendar files and `https`/`webcal` subscriptions become
+  `calendar`-kind (or Google/Outlook/Quercus) sources with their own health,
+  last-known events, and UID plus original-start identity. 43 synthetic
+  parser/expansion tests (RRULE, RDATE, EXDATE, overrides, cancellations,
+  Windows and path TZIDs, DST, folding, VALARM isolation, bounds) and eight
+  store tests (coursework → Deadlines, refresh failure keeps last-known
+  events, staleness, hiding, removal, estimates, the handled overlay of
+  D-015). Subscription links live only in Windows Credential Manager; the
+  frontend and SQLite see a host name. Core gained one source kind,
+  `calendar`, with a health test.
+- **4.4** The app opens on the user's Horizon in a sidebar shell (Horizon,
+  Calendar, Sources, Settings); synthetic weeks moved behind Settings. Day,
+  Week, and Month views (37 layout tests) show fixed events as blocks,
+  deadlines as points, soft items dashed, declared hours as open time, and
+  imported rows read-only with their source colour. Light and dark themes.
+- **4.5** Quick add (62 parser tests) previews its interpretation before
+  saving; one editor (12 model tests) creates, edits, skips, and deletes
+  single and repeating events, deadlines, and optional items, with
+  "only this / every occurrence" scopes applied as one atomic batch.
+- **4.6** Pure reminder selection (unit-tested) drives desktop notifications
+  with title and time only; tray icon, close-to-tray, single instance, and an
+  opt-in start at sign-in keep reminders alive.
+- **4.7** Version 0.2.0: per-user NSIS installer with a 16–256 px icon set
+  and silent WebView2 bootstrap, cross-built from Linux with MinGW
+  (`x86_64-pc-windows-gnu`) because Microsoft's MSVC hosts are unreachable
+  from this environment. Its imports are system DLLs plus the bundled
+  `WebView2Loader.dll`; no development-bridge code is present. The GitHub
+  Actions workflow ran every check on a clean Linux runner (success) and
+  builds the MSVC installer on `windows-latest`.
+
+Engine fixes found during verification:
+
+- **F-1** The store had declared the Trace snapshot a required source for
+  every evaluation, so a never-imported or day-old manual snapshot marked
+  every window and unrelated deadline *conditional*. Trace now qualifies only
+  Trace task rows and task-linked deadlines, as the domain contract intends
+  (regression test in calendar_contract).
+- Deadline annotations now must target an existing local deadline or an
+  imported one in view; an unreadable stored calendar degrades to no events
+  instead of stopping the app; a missing tray host no longer aborts start-up.
+
+Verification: 120 frontend tests; 187 Rust tests and doctests; svelte-check,
+`cargo fmt`, and clippy with warnings denied on all features and on the
+Windows target; browser walkthrough of every page in light and dark against
+the real Rust command surface with synthetic data (quick add, edit one
+occurrence, delete, mark handled, estimate work, theme); the release desktop
+build launched natively under a virtual display, opened its store through
+IPC, detected the system zone, and rendered Horizon. No console errors.
+
+Deviations and residual risks:
+
+- Not yet launched on Windows by anyone: WebView2 rendering, toast
+  notifications, Credential Manager, tray, and sign-in start are verified by
+  compilation and Linux runtime only. 4.8 closes with the user's install.
+- The Canvas mapping (`event-assignment-` UIDs and zero-length entries become
+  Deadlines in coursework mode) is inferred, not observed from a live feed.
+- Feeds never report submission; past coursework stays overdue until marked
+  handled (D-015).
+- Reminders fire only while Temporal runs; a zone whose DST change falls at
+  midnight cannot form a civil day boundary that day (inherited from 2.4).
+- Not built: write-back, `.ics` export, search, drag-to-move, an MSI, code
+  signing, auto-update.
+
 Gate 4 excludes write-back, cloud sync, accounts, telemetry, AI, mobile,
 signing, auto-update, and public distribution.
 

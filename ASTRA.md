@@ -9,11 +9,13 @@ reports in `docs/BUILD-GATES.md` carry the detailed evidence.
 
 **Current gate:** Gate 4 — Calendar-replacement release (in progress)
 
-**Current task:** 4.1 Settings, display zone, and a bounded evaluation slice
+**Current task:** 4.8 Verify Gate 4 on Windows (install, connect real
+calendars, confirm reminders), then the Gate 3.5 personal-local trial
 
-**Status:** Gates 0–2 complete. Gate 3 reordered by D-014 on 2026-10-08:
-its Quercus REST adapter (3.1–3.3) is deferred; the personal trial (3.5) runs
-on the Gate 4 release.
+**Status:** Gates 0–2 complete. Gate 4 Tasks 4.1–4.7 complete with evidence
+in `docs/BUILD-GATES.md`; 4.8 waits on the user's first Windows install. Gate
+3 was reordered by D-014: its Quercus REST adapter (3.1–3.3) is deferred and
+its personal trial (3.5) runs on this release.
 
 On 2026-10-08 the user asked for a fully functioning version they can use as a
 true calendar replacement, delivered as an executable desktop app, with UI and
@@ -120,6 +122,13 @@ where the model first meets real coursework; separate observation from change.
   while exposing `partial` health; re-import restored healthy state. A process
   restart preserved the whole cache. Gate 2 is complete; its report carries the
   full evidence.
+
+- Gate 4 (2026-10-08): settings, local series, usual availability, bounded
+  slice, read-only iCalendar sources (43 parser tests), Calendar Day/Week/
+  Month, quick add, event editor, reminders with tray and single instance,
+  and a 0.2.0 per-user NSIS installer cross-built with MinGW. Engine fix F-1:
+  Trace health no longer qualifies every window. 120 frontend and 187 Rust
+  tests pass; CI's clean Linux job passed. Not yet launched on Windows.
 
 ## Open questions and residual limits
 
