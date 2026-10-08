@@ -34,7 +34,7 @@ export interface TraceInfo {
   completed_tasks: number; unresolved_dates: number; last_attempt: string;
   tasks: TraceChoice[]; export_path: string | null;
 }
-export type Theme = 'system' | 'light' | 'dark';
+export type Theme = 'system' | 'light' | 'dark' | 'rose';
 export interface Settings {
   display_zone: string | null; week_starts_on: 'mon' | 'sun'; reminder_minutes: number | null;
   theme: Theme; default_event_minutes: number; keep_running_in_tray: boolean;

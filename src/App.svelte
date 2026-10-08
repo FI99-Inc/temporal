@@ -29,8 +29,12 @@
   let toastId = 0;
 
   const zone = $derived(personal?.view.zone ?? Intl.DateTimeFormat().resolvedOptions().timeZone);
-  const clock = $derived(new Intl.DateTimeFormat('en-US', { timeZone: zone, hour: 'numeric', minute: '2-digit' }).format(new Date(now)));
-  const dateLine = $derived(new Intl.DateTimeFormat('en-US', { timeZone: zone, weekday: 'long', month: 'long', day: 'numeric' }).format(new Date(now)));
+  const clockParts = $derived(new Intl.DateTimeFormat('en-US', { timeZone: zone, hour: 'numeric', minute: '2-digit', hour12: true }).formatToParts(new Date(now)));
+  const clock = $derived(clockParts.filter(p => p.type === 'hour' || p.type === 'minute' || p.type === 'literal').map(p => p.value).join('').trim().padStart(5, '0'));
+  const meridiem = $derived(clockParts.find(p => p.type === 'dayPeriod')?.value ?? '');
+  const weekday = $derived(new Intl.DateTimeFormat('en-US', { timeZone: zone, weekday: 'short' }).format(new Date(now)));
+  const dayMonth = $derived(new Intl.DateTimeFormat('en-GB', { timeZone: zone, day: '2-digit', month: 'short' }).format(new Date(now)));
+  const sourceLine = $derived(personal ? `${personal.calendars.filter(c => !c.hidden && c.health === 'healthy').length}/${personal.calendars.filter(c => !c.hidden).length} calendars current` : 'Opening store');
   const attention = $derived(personal ? personal.calendars.filter(c => !c.hidden && c.health !== 'healthy').length + (personal.calendars.some(c => c.past_unhandled.length) ? 1 : 0) : 0);
 
   function initialView(): View {
@@ -123,11 +127,11 @@
     else if (event.key === '3') view = 'sources';
     else if (event.key === '4') view = 'settings';
   }
-  const nav: { id: View; label: string; key: string; icon: string }[] = [
-    { id: 'horizon', label: 'Horizon', key: 'H', icon: 'M3 17c3-6 6-9 9-9s6 3 9 9M3 17h18M12 8V4' },
-    { id: 'calendar', label: 'Calendar', key: 'C', icon: 'M4 6h16v14H4zM4 10h16M9 3v4M15 3v4' },
-    { id: 'sources', label: 'Sources', key: '3', icon: 'M5 6c0-1.7 3.1-3 7-3s7 1.3 7 3-3.1 3-7 3-7-1.3-7-3zM5 6v12c0 1.7 3.1 3 7 3s7-1.3 7-3V6M5 12c0 1.7 3.1 3 7 3s7-1.3 7-3' },
-    { id: 'settings', label: 'Settings', key: '4', icon: 'M12 15a3 3 0 100-6 3 3 0 000 6zM19 12l2-1-1-3-2 .3-1.4-1.4.3-2-3-1-1 2h-2l-1-2-3 1 .3 2L5.8 7.3 4 7 3 10l2 1v2l-2 1 1 3 2-.3 1.4 1.4-.3 2 3 1 1-2h2l1 2 3-1-.3-2 1.4-1.4 2 .3 1-3-2-1z' },
+  const nav: { id: View; label: string; key: string }[] = [
+    { id: 'horizon', label: 'Horizon', key: 'H' },
+    { id: 'calendar', label: 'Calendar', key: 'C' },
+    { id: 'sources', label: 'Sources', key: '3' },
+    { id: 'settings', label: 'Settings', key: '4' },
   ];
 </script>
 
@@ -135,49 +139,57 @@
 <svelte:head><title>Temporal Engine</title></svelte:head>
 
 <a class="skip-link" href="#main">Skip to content</a>
-<div class="shell">
-  <nav class="sidebar" aria-label="Main">
-    <div class="brand"><span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span><span>Temporal</span></div>
-    {#each nav as item (item.id)}
-      <button class="nav-item" aria-current={view === item.id ? 'page' : undefined} title="{item.label} ({item.key})" onclick={() => { view = item.id; }}>
-        <svg viewBox="0 0 24 24" aria-hidden="true"><path d={item.icon} /></svg><span>{item.label}</span>
-        {#if item.id === 'sources' && attention}<em class="nav-badge" aria-label="{attention} need attention">{attention}</em>{/if}
-      </button>
-    {/each}
-    <div class="sidebar-foot">
-      <strong>{dateLine}</strong>
-      <span>{personal ? 'Stored on this computer' : desktop ? 'Opening your local store…' : 'Development preview'}</span>
+<div class="frame">
+  <header class="masthead">
+    <div class="mark"><span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span><span class="wordmark">Temporal</span></div>
+    <nav class="tabs" aria-label="Main">
+      {#each nav as item, index (item.id)}
+        <button class="tab" aria-current={view === item.id ? 'page' : undefined} title="{item.label} ({item.key})" onclick={() => { view = item.id; }}>
+          <span class="index">0{index + 1}</span>{item.label}
+          {#if item.id === 'sources' && attention}<span class="tab-badge" aria-label="{attention} need attention">{attention}</span>{/if}
+        </button>
+      {/each}
+    </nav>
+    <div class="readout" aria-label="Current time">
+      <div class="readout-date">{weekday}<span>{dayMonth}</span></div>
+      <strong class="readout-clock">{clock}<sup>{meridiem}</sup></strong>
     </div>
-  </nav>
+  </header>
 
-  <div class="content">
-    <header class="topbar">
-      <QuickAdd {zone} {now} defaultMinutes={personal?.settings.default_event_minutes ?? 60} busy={busy || !personal} onapply={apply} onedit={openEditor} bind:input={quickInput} />
-      <button class="primary" disabled={busy || !personal} onclick={newEvent} title="New event (N)">New</button>
-      <div class="clock"><strong>{clock}</strong><span>{zone}</span></div>
-    </header>
-
-    <main id="main" class="page" class:flush={view === 'calendar'} aria-busy={busy}>
-      {#if loadError && !personal}
-        <div class="notice warn" role="alert"><div><strong>Temporal could not open its local store.</strong><p>{loadError}</p></div><button onclick={refresh}>Try again</button></div>
-      {/if}
-      {#if view === 'examples'}
-        <ExamplesView onclose={() => { view = 'horizon'; }} />
-      {:else if personal}
-        {#if view === 'horizon'}
-          <HorizonView data={personal.view} {personal} {busy} onedit={openEditor} onapply={apply} onnavigate={(next) => { view = next; }} />
-        {:else if view === 'calendar'}
-          <CalendarView {personal} {busy} {version} {now} onedit={openEditor} onapply={apply} />
-        {:else if view === 'sources'}
-          <SourcesView {personal} {busy} {run} />
-        {:else if view === 'settings'}
-          <SettingsView {personal} {busy} onsettings={saveSettings} onmutate={mutateOne} onexamples={() => { view = 'examples'; }} />
-        {/if}
-      {:else if !loadError}
-        <div class="loading" role="status">Opening your time…</div>
-      {/if}
-    </main>
+  <div class="command">
+    <QuickAdd {zone} {now} defaultMinutes={personal?.settings.default_event_minutes ?? 60} busy={busy || !personal} onapply={apply} onedit={openEditor} bind:input={quickInput} />
+    <button class="primary" disabled={busy || !personal} onclick={newEvent} title="New event (N)">New event →</button>
   </div>
+
+  <main id="main" class="page" class:flush={view === 'calendar'} aria-busy={busy}>
+    {#if loadError && !personal}
+      <div class="notice warn" role="alert"><span class="label">Error</span><div><strong>Temporal could not open its local store.</strong><p>{loadError}</p></div><button onclick={refresh}>Try again</button></div>
+    {/if}
+    {#if view === 'examples'}
+      <ExamplesView onclose={() => { view = 'horizon'; }} />
+    {:else if personal}
+      {#if view === 'horizon'}
+        <HorizonView data={personal.view} {personal} {busy} onedit={openEditor} onapply={apply} onnavigate={(next) => { view = next; }} />
+      {:else if view === 'calendar'}
+        <CalendarView {personal} {busy} {version} {now} onedit={openEditor} onapply={apply} />
+      {:else if view === 'sources'}
+        <SourcesView {personal} {busy} {run} />
+      {:else if view === 'settings'}
+        <SettingsView {personal} {busy} onsettings={saveSettings} onmutate={mutateOne} onexamples={() => { view = 'examples'; }} />
+      {/if}
+    {:else if !loadError}
+      <div class="loading" role="status">Opening your time…</div>
+    {/if}
+  </main>
+
+  <footer class="status">
+    <span class="live">Temporal Engine</span>
+    <span>v0.2.0</span>
+    <span>{personal ? 'Local store' : desktop ? 'Opening store' : 'Preview'}</span>
+    <span>{zone}</span>
+    <span class:warn={attention > 0}>{sourceLine}</span>
+    <span>No cloud · No telemetry</span>
+  </footer>
 </div>
 
 {#if editing}

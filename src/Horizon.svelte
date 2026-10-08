@@ -35,7 +35,7 @@
 </script>
 
 <section class="horizon" aria-label="Horizon time view">
-  <div class="horizon-heading"><h2>The shape of your time</h2><span>Near time expands. Distant time compresses.</span></div>
+  <div class="horizon-heading"><h2>Next 14 days</h2><span>Logarithmic · now at left</span></div>
   {#if earlier.length}
     <div class="earlier">
       <h3>Earlier</h3>

@@ -19,6 +19,8 @@ pub enum Theme {
     System,
     Light,
     Dark,
+    /// Dusty pink paper with bottle-green ink.
+    Rose,
 }
 
 #[derive(Clone, Debug, Eq, PartialEq, Serialize, Deserialize)]

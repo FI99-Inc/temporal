@@ -47,9 +47,9 @@
 </script>
 
 <div class="quick" class:open={focused && text.trim()}>
-  <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14M5 12h14" /></svg>
+  <span class="prompt" aria-hidden="true">Add&nbsp;›</span>
   <input bind:this={input} bind:value={text} onkeydown={keydown} onfocus={() => { focused = true; }} onblur={() => { focused = false; }}
-    placeholder={'Add… e.g. "Lab Tue 2-4pm every week" or "PS3 due Fri 11:59pm"'} aria-label="Quick add" aria-describedby="quick-preview" disabled={busy} maxlength="300" />
+    placeholder={'Lab Tue 2-4pm every week  ·  PS3 due Fri 11:59pm  ·  maybe call grandma sunday'} aria-label="Quick add" aria-describedby="quick-preview" disabled={busy} maxlength="300" />
   <kbd>/</kbd>
   {#if text.trim()}
     <div class="preview" id="quick-preview" role="status">
@@ -67,20 +67,21 @@
 </div>
 
 <style>
-  .quick { position: relative; flex: 1; max-width: 640px; display: flex; align-items: center; gap: 8px; padding: 0 10px; border: 1px solid var(--line-strong); border-radius: 8px; background: var(--surface-2); }
-  .quick:focus-within { border-color: var(--accent); background: var(--surface); box-shadow: 0 0 0 3px var(--accent-soft); }
-  svg { width: 16px; height: 16px; stroke: var(--muted); fill: none; stroke-width: 2; stroke-linecap: round; flex-shrink: 0; }
-  input { flex: 1; border: 0 !important; background: transparent !important; padding: 9px 0 !important; outline: none !important; font-size: 13.5px; }
-  kbd { font: 11px var(--font); color: var(--faint); border: 1px solid var(--line-strong); border-bottom-width: 2px; border-radius: 4px; padding: 0 5px; background: var(--surface); }
+  .quick { position: relative; flex: 1; display: flex; align-items: center; gap: 14px; padding: 0 20px; min-width: 0; }
+  .quick:focus-within { background: var(--surface); }
+  .prompt { font-family: var(--font-mono); font-size: 11.5px; font-weight: 600; letter-spacing: .08em; text-transform: uppercase; color: var(--accent); white-space: nowrap; }
+  input { flex: 1; border: 0 !important; background: transparent !important; padding: 12px 0 !important; outline: none !important; font-family: var(--font-mono) !important; font-size: 13px !important; min-width: 0; }
+  kbd { font: 500 10.5px var(--font-mono); color: var(--muted); border: 1px solid var(--line-strong); padding: 1px 5px; background: transparent; }
   .quick:focus-within > kbd { display: none; }
-  .preview { position: absolute; left: -1px; right: -1px; top: calc(100% + 6px); z-index: 40; background: var(--surface); border: 1px solid var(--line-strong); border-radius: 8px; box-shadow: var(--shadow-lg); padding: 12px 14px; display: none; gap: 6px; }
+  .preview { position: absolute; left: -1px; right: 0; top: 100%; z-index: 40; background: var(--bg); border: var(--rule); box-shadow: var(--shadow-lg); padding: 14px 20px; display: none; gap: 8px; }
   .quick.open .preview { display: grid; }
-  .line { display: flex; gap: 8px; align-items: center; font-size: 14px; }
-  .kind { font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: .06em; padding: 2px 6px; border-radius: 4px; background: var(--anchor-soft); color: var(--anchor); }
-  .kind.deadline { background: var(--deadline-soft); color: var(--deadline); }
-  .kind.intention { background: var(--soft-bg); color: var(--soft); border: 1px dashed var(--soft); }
-  .desc { font-size: 13px; color: var(--muted); }
+  .line { display: flex; gap: 10px; align-items: center; font-size: 15px; }
+  .line strong { font-family: var(--font-display); font-stretch: 115%; font-weight: 760; text-transform: uppercase; letter-spacing: -.01em; }
+  .kind { font: 600 10px var(--font-mono); text-transform: uppercase; letter-spacing: .08em; padding: 3px 6px; background: var(--invert-bg); color: var(--invert-ink); }
+  .kind.deadline { background: var(--accent); color: var(--accent-ink); }
+  .kind.intention { background: transparent; color: var(--ink); outline: 1px dashed var(--ink); outline-offset: -1px; }
+  .desc { font-family: var(--font-mono); font-size: 12px; color: var(--ink); }
   .desc.err { color: var(--risk); }
-  .notes { font-size: 11px; color: var(--faint); }
-  .keys { display: flex; gap: 14px; font-size: 11px; color: var(--faint); margin-top: 2px; }
+  .notes { font-family: var(--font-mono); font-size: 11px; color: var(--muted); }
+  .keys { display: flex; gap: 16px; font-family: var(--font-mono); font-size: 10.5px; text-transform: uppercase; letter-spacing: .05em; color: var(--muted); margin-top: 2px; }
 </style>
