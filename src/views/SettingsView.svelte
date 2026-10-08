@@ -35,8 +35,9 @@
   const hourLabel = (hour: number) => `${hour % 12 === 0 ? 12 : hour % 12} ${hour < 12 ? 'AM' : 'PM'}`;
   const themes: { value: Theme; label: string }[] = [
     { value: 'system', label: 'System' },
-    { value: 'light', label: 'Light' },
-    { value: 'dark', label: 'Dark' },
+    { value: 'light', label: 'Paper' },
+    { value: 'dark', label: 'Ink' },
+    { value: 'rose', label: 'Rose' },
   ];
 
   async function setZone(event: Event) {
@@ -132,6 +133,10 @@
   ];
   const EMPTY_PROBLEM = 'Add at least one time range to save. To clear usual availability, use Remove usual availability.';
 
+  // Track scale: hour ticks every three hours, labelled under the first row.
+  const ticks = [0, 3, 6, 9, 12, 15, 18, 21];
+  const pad2 = (n: number) => String(n).padStart(2, '0');
+
   const emptyDraft = (): Draft => ({ mon: [], tue: [], wed: [], thu: [], fri: [], sat: [], sun: [] });
   let nextKey = 0;
   let draft = $state<Draft>(emptyDraft());
@@ -197,6 +202,26 @@
   const hasRanges = $derived(weekdays.some(day => draft[day].length > 0));
   const problem = $derived(findProblem(draft) ?? (dirty && !hasRanges ? EMPTY_PROBLEM : null));
 
+  // Declared hours: the union of each day's valid ranges, so an overlap is never counted twice.
+  function declaredMinutes(source: Draft): number {
+    let total = 0;
+    for (const day of weekdays) {
+      let covered = 0;
+      let edge = -1;
+      for (const span of spansOf(source[day]).filter(s => s.end > s.start).sort((a, b) => a.start - b.start)) {
+        const from = Math.max(span.start, edge);
+        if (span.end > from) {
+          covered += span.end - from;
+          edge = span.end;
+        }
+      }
+      total += covered;
+    }
+    return total;
+  }
+  const hoursText = (minutes: number) => (minutes % 60 === 0 ? `${minutes / 60} h` : `${(minutes / 60).toFixed(1)} h`);
+  const declaredText = $derived(hoursText(declaredMinutes(draft)));
+
   // Editor actions.
   function applyPreset(days: Weekday[], start: string, end: string) {
     const next = emptyDraft();
@@ -248,27 +273,32 @@
 </script>
 
 <div class="settings">
-  <h1>Settings</h1>
+  <section class="headline">
+    <h1>Settings</h1>
+    <div class="aside">Stored on this computer<br />No account · No cloud · No telemetry</div>
+  </section>
 
-  <section class="card" aria-labelledby="display-heading">
-    <h2 id="display-heading">Time and display</h2>
+  <section class="panel" aria-labelledby="display-heading">
+    <div class="section-bar"><span class="index">01</span><h2 class="bar-title" id="display-heading">Time and display</h2></div>
 
     <div class="row">
-      <div class="label-col"><label for="zone">Time zone</label></div>
-      <div class="control-col">
+      <div class="name-cell">
+        <label class="name" for="zone">Time zone</label>
+        <p class="desc" id="zone-note">Each event keeps its own zone; this only changes how time is shown.</p>
+      </div>
+      <div class="control">
         <select id="zone" value={zoneValue} disabled={busy} onchange={setZone} aria-describedby="zone-note">
           <option value={LOCAL}>This computer: {localZone}</option>
           {#each zoneOptions as zone (zone)}
             <option value={zone}>{zone}</option>
           {/each}
         </select>
-        <p class="note" id="zone-note">Each event keeps its own zone; this only changes how time is shown.</p>
       </div>
     </div>
 
     <div class="row">
-      <div class="label-col"><span id="week-start-label">Week starts on</span></div>
-      <div class="control-col">
+      <div class="name-cell"><span class="name" id="week-start-label">Week starts on</span></div>
+      <div class="control">
         <div class="seg" role="group" aria-labelledby="week-start-label">
           <button type="button" aria-pressed={settings.week_starts_on === 'mon'} disabled={busy} onclick={() => setWeekStart('mon')}>Monday</button>
           <button type="button" aria-pressed={settings.week_starts_on === 'sun'} disabled={busy} onclick={() => setWeekStart('sun')}>Sunday</button>
@@ -277,8 +307,8 @@
     </div>
 
     <div class="row">
-      <div class="label-col"><label for="duration">New events last</label></div>
-      <div class="control-col">
+      <div class="name-cell"><label class="name" for="duration">New events last</label></div>
+      <div class="control">
         <select id="duration" value={String(settings.default_event_minutes)} disabled={busy} onchange={setDuration}>
           {#each durationOptions as minutes (minutes)}
             <option value={String(minutes)}>{minutes} minutes</option>
@@ -288,8 +318,8 @@
     </div>
 
     <div class="row">
-      <div class="label-col"><label for="day-start">Day and week views open at</label></div>
-      <div class="control-col">
+      <div class="name-cell"><label class="name" for="day-start">Day and week views open at</label></div>
+      <div class="control">
         <select id="day-start" value={String(settings.day_start_hour)} disabled={busy} onchange={setDayStart}>
           {#each hours as hour (hour)}
             <option value={String(hour)}>{hourLabel(hour)}</option>
@@ -299,8 +329,11 @@
     </div>
 
     <div class="row">
-      <div class="label-col"><span id="theme-label">Theme</span></div>
-      <div class="control-col">
+      <div class="name-cell">
+        <span class="name" id="theme-label">Theme</span>
+        <p class="desc">System follows this computer: Ink when it is dark, Paper otherwise.</p>
+      </div>
+      <div class="control">
         <div class="seg" role="group" aria-labelledby="theme-label">
           {#each themes as option (option.value)}
             <button type="button" aria-pressed={settings.theme === option.value} disabled={busy} onclick={() => setTheme(option.value)}>{option.label}</button>
@@ -310,31 +343,33 @@
     </div>
   </section>
 
-  <section class="card" aria-labelledby="reminder-heading">
-    <h2 id="reminder-heading">Reminders</h2>
+  <section class="panel" aria-labelledby="reminder-heading">
+    <div class="section-bar"><span class="index">02</span><h2 class="bar-title" id="reminder-heading">Reminders</h2></div>
 
     <div class="row">
-      <div class="label-col"><span class="field-name">Fixed events</span></div>
-      <div class="control-col">
+      <div class="name-cell">
+        <span class="name">Fixed events</span>
+        <p class="desc">A reminder shows only the event title and time.</p>
+      </div>
+      <div class="control">
         <label class="check">
           <input type="checkbox" checked={reminderOn} disabled={busy} onchange={setReminders} />
           <span>Remind me before fixed events</span>
         </label>
         <div class="inline">
-          <label for="lead">Lead time</label>
+          <label class="caption" for="lead">Lead time</label>
           <select id="lead" value={String(leadValue)} disabled={busy || !reminderOn} onchange={setLead}>
             {#each leadOptions as minutes (minutes)}
               <option value={String(minutes)}>{leadLabel(minutes)}</option>
             {/each}
           </select>
         </div>
-        <p class="note">A reminder shows only the event title and time.</p>
       </div>
     </div>
 
     <div class="row">
-      <div class="label-col"><span class="field-name">When closed</span></div>
-      <div class="control-col">
+      <div class="name-cell"><span class="name">When closed</span></div>
+      <div class="control">
         <label class="check">
           <input type="checkbox" checked={settings.keep_running_in_tray} disabled={busy} onchange={setTray} />
           <span>Keep running in the notification area when the window is closed, so reminders continue</span>
@@ -343,67 +378,81 @@
           <input type="checkbox" checked={settings.open_at_login} disabled={busy || !desktop} onchange={setLogin} />
           <span>Open Temporal quietly in the notification area when I sign in</span>
         </label>
-        {#if !desktop}<p class="note">Desktop app only.</p>{/if}
+        {#if !desktop}<p class="desc">Desktop app only.</p>{/if}
       </div>
     </div>
   </section>
 
-  <section class="card" aria-labelledby="usual-heading">
-    <h2 id="usual-heading">Usual availability</h2>
+  <section class="panel" aria-labelledby="usual-heading">
+    <div class="section-bar">
+      <span class="index">03</span>
+      <h2 class="bar-title" id="usual-heading">Usual availability</h2>
+      <span class="spacer"></span>
+      <span class="label">Declared hours / week: {declaredText}</span>
+    </div>
     <p class="lede">Temporal suggests work only inside time you say you're willing to use. An empty calendar is not free time.</p>
 
     <div class="presets" role="group" aria-label="Presets">
       {#each presets as preset (preset.label)}
-        <button type="button" class="btn small" disabled={busy} onclick={() => applyPreset(preset.days, preset.start, preset.end)}>{preset.label}</button>
+        <button type="button" disabled={busy} onclick={() => applyPreset(preset.days, preset.start, preset.end)}>{preset.label}</button>
       {/each}
-      <button type="button" class="btn small" disabled={busy} onclick={clearAll}>Clear all</button>
-      <span class="hint">Presets replace the whole week until you save.</span>
+      <button type="button" disabled={busy} onclick={clearAll}>Clear all</button>
+      <span class="caption">Presets replace the whole week until you save.</span>
     </div>
 
-    <div class="days">
-      {#each orderedDays as day (day)}
-        <div class="day" role="group" aria-labelledby="usual-{day}">
-          <div class="day-name" id="usual-{day}">{dayNames[day]}</div>
-          <div class="day-body">
-            {#each draft[day] as range (range.key)}
-              <div class="range">
-                <label class="time"><span>From</span><input type="time" step="900" bind:value={range.start} disabled={busy} /></label>
-                <label class="time"><span>To</span><input type="time" step="900" bind:value={range.end} disabled={busy} /></label>
-                {#if range.end === '00:00'}<span class="midnight">midnight</span>{/if}
-                <button type="button" class="icon" aria-label="Remove {dayNames[day]} time" disabled={busy} onclick={() => removeRange(day, range.key)}>×</button>
-              </div>
-            {:else}
-              <span class="none">Not available</span>
+    {#each orderedDays as day, index (day)}
+      <div class="day" role="group" aria-labelledby="usual-{day}">
+        <span class="day-name" aria-hidden="true">{shortNames[day]}</span>
+        <span class="sr-only" id="usual-{day}">{dayNames[day]}</span>
+
+        <div class="track-cell">
+          <div class="track" aria-hidden="true">
+            {#each ticks as hour (hour)}
+              <span class="tick" style:left="{(hour / 24) * 100}%"></span>
             {/each}
-            <button type="button" class="btn small" disabled={busy} onclick={() => addRange(day)}>+ Add time</button>
-          </div>
-        </div>
-      {/each}
-    </div>
-
-    <div class="glance" aria-hidden="true">
-      <span class="glance-title">Week at a glance</span>
-      {#each orderedDays as day (day)}
-        <div class="glance-row">
-          <span class="glance-day">{shortNames[day]}</span>
-          <div class="bar">
-            {#each barsFor(day) as bar, index (index)}
+            {#each barsFor(day) as bar, n (n)}
               <span class="block" style:left="{bar.left}%" style:width="{bar.width}%"></span>
             {/each}
           </div>
+          {#if index === 0}
+            <div class="axis" aria-hidden="true">
+              {#each ticks as hour (hour)}
+                <span style:left="{(hour / 24) * 100}%">{pad2(hour)}</span>
+              {/each}
+            </div>
+          {/if}
         </div>
-      {/each}
-      <div class="glance-axis"><span>12 AM</span><span>6 AM</span><span>12 PM</span><span>6 PM</span><span>12 AM</span></div>
+
+        <div class="editor">
+          {#each draft[day] as range (range.key)}
+            <div class="range">
+              <label class="time"><span class="sr-only">From</span><input type="time" step="900" bind:value={range.start} disabled={busy} /></label>
+              <span class="dash" aria-hidden="true">–</span>
+              <label class="time"><span class="sr-only">To</span><input type="time" step="900" bind:value={range.end} disabled={busy} /></label>
+              {#if range.end === '00:00'}<span class="midnight">midnight</span>{/if}
+              <button type="button" class="ghost x" aria-label="Remove {dayNames[day]} time" disabled={busy} onclick={() => removeRange(day, range.key)}>×</button>
+            </div>
+          {:else}
+            <span class="caption">Not available</span>
+          {/each}
+          <button type="button" disabled={busy} onclick={() => addRange(day)}>+ Add</button>
+        </div>
+      </div>
+    {/each}
+
+    <div class="row">
+      <div class="name-cell">
+        <label class="name" for="places">Places these hours usually happen</label>
+        <p class="desc" id="places-hint">Comma-separated, lowercase. Leave blank if unknown.</p>
+      </div>
+      <div class="control">
+        <input id="places" type="text" bind:value={placesText} placeholder="home, campus" autocomplete="off" disabled={busy} aria-describedby="places-hint" />
+      </div>
     </div>
 
-    <div class="fields">
-      <div class="field">
-        <label for="places">Places these hours usually happen</label>
-        <input id="places" type="text" bind:value={placesText} placeholder="home, campus" autocomplete="off" disabled={busy} aria-describedby="places-hint" />
-        <span class="hint" id="places-hint">Comma-separated, lowercase. Leave blank if unknown.</span>
-      </div>
-      <div class="field">
-        <label for="energy">Energy in these hours</label>
+    <div class="row">
+      <div class="name-cell"><label class="name" for="energy">Energy in these hours</label></div>
+      <div class="control">
         <select id="energy" bind:value={energyChoice} disabled={busy}>
           {#each energyOptions as option (option.value)}
             <option value={option.value}>{option.label}</option>
@@ -412,174 +461,235 @@
       </div>
     </div>
 
-    <p class="problem" aria-live="polite">{problem ?? ''}</p>
     <div class="actions">
-      <button type="button" class="btn primary" disabled={busy || !dirty || problem !== null} onclick={save}>Save usual availability</button>
-      {#if personal.local.usual_availability}
-        <button type="button" class="btn" disabled={busy} onclick={removeUsual}>Remove usual availability</button>
-      {/if}
-      {#if dirty}<span class="status" role="status">Unsaved changes</span>{/if}
+      <p class="problem" aria-live="polite">{problem ?? ''}</p>
+      <div class="buttons">
+        <button type="button" class="primary" disabled={busy || !dirty || problem !== null} onclick={save}>Save usual availability →</button>
+        {#if personal.local.usual_availability}
+          <button type="button" disabled={busy} onclick={removeUsual}>Remove usual availability</button>
+        {/if}
+        {#if dirty}<span class="unsaved" role="status">Unsaved changes</span>{/if}
+      </div>
     </div>
   </section>
 
-  <section class="card" aria-labelledby="about-heading">
-    <h2 id="about-heading">About and data</h2>
-    <p>Everything stays on this computer. No account, no cloud, no telemetry.</p>
+  <section class="panel" aria-labelledby="about-heading">
+    <div class="section-bar"><span class="index">04</span><h2 class="bar-title" id="about-heading">About and data</h2></div>
 
-    <div class="row">
-      <div class="label-col"><span class="field-name">Examples</span></div>
-      <div class="control-col">
-        <button type="button" class="btn" disabled={busy} onclick={onexamples}>Explore example weeks</button>
-        <p class="note">Synthetic scenarios used to check how Horizon behaves.</p>
+    <dl>
+      <div class="row">
+        <dt class="name">Data</dt>
+        <dd class="value">Everything stays on this computer. No account, no cloud, no telemetry.</dd>
       </div>
-    </div>
-
-    <p class="version">Temporal Engine 0.1 · personal build</p>
+      <div class="row">
+        <dt class="name">Version</dt>
+        <dd class="value">Temporal Engine 0.1 · personal build</dd>
+      </div>
+      <div class="row">
+        <dt class="name">Examples</dt>
+        <dd class="value">
+          <button type="button" disabled={busy} onclick={onexamples}>Explore example weeks →</button>
+          <p class="desc">Synthetic scenarios used to check how Horizon behaves.</p>
+        </dd>
+      </div>
+    </dl>
   </section>
 </div>
 
 <style>
   .settings {
-    max-width: 920px;
-    margin: 0 auto;
-    padding: 24px 16px 48px;
+    padding-bottom: 48px;
     color: var(--ink);
-    font-family: var(--font);
-    font-size: 14px;
+    font-size: 13px;
     line-height: 1.45;
   }
-  h1 {
-    font-family: var(--font-display);
-    font-size: 28px;
-    font-weight: 600;
-    margin: 0 0 4px;
+
+  /* Visually hidden, but still the accessible name of each time input. */
+  .sr-only {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    margin: -1px;
+    padding: 0;
+    overflow: hidden;
+    clip: rect(0 0 0 0);
+    white-space: nowrap;
+    border: 0;
   }
-  .lede { margin: 0 0 14px; color: var(--muted); }
-  .card {
-    background: var(--surface);
-    border: 1px solid var(--line);
-    border-radius: var(--radius);
-    padding: 20px;
-    margin: 16px 0 0;
+
+  /* Section titles sit in the global section bar; mono caps, not the display face. */
+  .bar-title {
+    margin: 0;
+    font-family: var(--font-mono);
+    font-stretch: 100%;
+    font-weight: 400;
+    font-size: 11px;
+    letter-spacing: 0.07em;
+    line-height: inherit;
+    text-transform: uppercase;
   }
-  .card h2 {
-    font-family: var(--font-display);
-    font-size: 18px;
-    font-weight: 600;
-    margin: 0 0 8px;
+
+  /* Sections are full-bleed and separated by rules. */
+  .panel { border-bottom: var(--rule); }
+  .lede {
+    padding: 14px 28px;
+    border-bottom: 1px solid var(--line);
+    font-size: 13px;
+    line-height: 1.6;
+    color: var(--muted);
   }
+
+  /* Setting rows: name on the left, control on the right. */
   .row {
     display: grid;
-    grid-template-columns: 200px minmax(0, 1fr);
-    gap: 8px 24px;
-    padding: 14px 0;
-    border-top: 1px solid var(--line);
+    grid-template-columns: 260px minmax(0, 1fr);
+    column-gap: 24px;
     align-items: start;
+    padding: 14px 28px;
+    border-bottom: 1px solid var(--line);
   }
-  h2 + .row { border-top: none; padding-top: 6px; }
-  .label-col { padding-top: 6px; font-weight: 600; }
-  .label-col label { font-weight: 600; }
-  .field-name { font-weight: 600; }
-  .control-col { min-width: 0; }
-  .note, .hint { margin: 6px 0 0; font-size: 13px; color: var(--muted); }
-  .hint { display: block; }
-  .version { margin: 16px 0 0; font-size: 12px; color: var(--faint); }
+  .row:last-child { border-bottom: 0; }
+  .row > :first-child { padding-top: 8px; }
+  .name {
+    display: block;
+    font-family: var(--font-mono);
+    font-size: 11px;
+    font-weight: 400;
+    letter-spacing: 0.06em;
+    line-height: 1.45;
+    text-transform: uppercase;
+    color: var(--ink);
+  }
+  .desc {
+    margin: 6px 0 0;
+    font-size: 12px;
+    line-height: 1.5;
+    color: var(--muted);
+  }
+  .caption {
+    font-family: var(--font-mono);
+    font-size: 11px;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: var(--faint);
+  }
+  .control {
+    display: grid;
+    gap: 10px;
+    justify-items: start;
+    min-width: 0;
+  }
+  .check {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-size: 13px;
+    cursor: pointer;
+  }
   .inline {
     display: flex;
     align-items: center;
-    gap: 8px;
-    margin-top: 10px;
+    gap: 10px;
   }
-  .inline label { color: var(--muted); }
+  .inline .caption { color: var(--muted); }
+  .control input[type='text'] {
+    width: 100%;
+    max-width: 440px;
+  }
 
-  select, input[type='text'], input[type='time'] {
-    font: inherit;
-    color: var(--ink);
-    background: var(--surface);
-    border: 1px solid var(--line-strong);
-    border-radius: var(--radius-sm);
-    padding: 6px 8px;
-    min-height: 32px;
-    box-sizing: border-box;
-  }
-  input[type='time'] { width: 7.5rem; }
-  input[type='text'] { width: 100%; }
-
-  .btn {
-    font: inherit;
-    color: var(--ink);
-    background: var(--surface);
-    border: 1px solid var(--line-strong);
-    border-radius: var(--radius-sm);
-    padding: 6px 12px;
-    cursor: pointer;
-  }
-  .btn.primary {
-    background: var(--accent);
-    color: var(--accent-ink);
-    border-color: var(--accent);
-    font-weight: 600;
-  }
-  .btn.small { padding: 4px 10px; font-size: 13px; }
-  .btn:disabled, select:disabled, input:disabled { opacity: 0.5; cursor: not-allowed; }
-  :is(button, input, select):focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
-
-  .seg {
-    display: inline-flex;
-    border: 1px solid var(--line-strong);
-    border-radius: var(--radius-sm);
-    overflow: hidden;
-  }
+  /* Segmented controls: joined buttons on one ink rule; the pressed one inverts. */
+  .seg { display: inline-flex; }
   .seg button {
-    font: inherit;
-    color: var(--ink);
-    background: var(--surface);
-    border: 0;
-    padding: 6px 14px;
-    cursor: pointer;
+    position: relative;
+    padding: 7px 14px;
   }
-  .seg button + button { border-left: 1px solid var(--line-strong); }
-  .seg button[aria-pressed='true'] { background: var(--accent-soft); font-weight: 600; }
-  .seg button:disabled { opacity: 0.5; cursor: not-allowed; }
-
-  .check {
-    display: flex;
-    gap: 8px;
-    align-items: flex-start;
-    cursor: pointer;
+  .seg button + button { margin-left: -1px; }
+  .seg button[aria-pressed='true'] {
+    z-index: 1;
+    background: var(--invert-bg);
+    color: var(--invert-ink);
   }
-  .check input { margin-top: 3px; accent-color: var(--accent); }
 
+  /* Usual availability. */
   .presets {
     display: flex;
     flex-wrap: wrap;
-    gap: 8px;
     align-items: center;
-    margin-bottom: 10px;
+    gap: 6px;
+    padding: 12px 28px;
+    border-bottom: 1px solid var(--line);
   }
-  .presets .hint { margin: 0 0 0 4px; }
+  .presets button { padding: 5px 9px; }
+  .presets .caption { margin-left: 8px; }
 
-  .days {
-    display: grid;
-    border: 1px solid var(--line);
-    border-radius: var(--radius-sm);
-    overflow: hidden;
-  }
   .day {
+    position: relative;
     display: grid;
-    grid-template-columns: 120px minmax(0, 1fr);
-    gap: 12px;
-    padding: 10px 12px;
-    background: var(--surface);
+    grid-template-columns: 76px minmax(0, 1fr) minmax(0, 380px);
+    column-gap: 24px;
+    align-items: start;
+    padding: 12px 28px;
+    border-bottom: 1px solid var(--line);
   }
-  .day + .day { border-top: 1px solid var(--line); }
-  .day-name { font-weight: 600; padding-top: 6px; }
-  .day-body {
+  .day-name {
+    display: flex;
+    align-items: center;
+    height: 26px;
+    font-family: var(--font-display);
+    font-stretch: 115%;
+    font-weight: 760;
+    font-size: 18px;
+    line-height: 1;
+    text-transform: uppercase;
+  }
+  .track-cell {
+    display: grid;
+    gap: 4px;
+    min-width: 0;
+  }
+  .track {
+    position: relative;
+    height: 26px;
+    border: var(--rule);
+    background: var(--closed);
+  }
+  .tick {
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    width: 1px;
+    background: var(--line);
+  }
+  .block {
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    background: var(--invert-bg);
+  }
+  .axis {
+    position: relative;
+    height: 12px;
+    font-family: var(--font-mono);
+    font-size: 9.5px;
+    line-height: 12px;
+    letter-spacing: 0.04em;
+    color: var(--muted);
+  }
+  .axis span {
+    position: absolute;
+    top: 0;
+    transform: translateX(-50%);
+    white-space: nowrap;
+  }
+  .axis span:first-child { transform: none; }
+
+  .editor {
     display: flex;
     flex-wrap: wrap;
     align-items: center;
-    gap: 8px;
+    gap: 6px 12px;
     min-width: 0;
+    min-height: 26px;
   }
   .range {
     display: inline-flex;
@@ -588,97 +698,96 @@
     gap: 6px;
   }
   .time {
+    position: relative;
     display: inline-flex;
     align-items: center;
-    gap: 4px;
-    font-size: 13px;
-    color: var(--muted);
   }
-  .midnight { font-size: 12px; color: var(--muted); }
-  .none { color: var(--faint); padding-top: 6px; }
-  .icon {
-    font: inherit;
-    line-height: 1;
-    width: 28px;
-    height: 28px;
-    padding: 0;
-    color: var(--muted);
-    background: var(--surface);
-    border: 1px solid var(--line-strong);
-    border-radius: var(--radius-sm);
-    cursor: pointer;
+  .settings .editor input[type='time'] {
+    width: 6.5rem;
+    height: 26px;
+    padding: 0 6px;
   }
-
-  .glance {
-    display: grid;
-    gap: 6px;
-    margin-top: 14px;
-  }
-  .glance-title {
+  .dash {
+    font-family: var(--font-mono);
     font-size: 12px;
-    color: var(--faint);
+    color: var(--muted);
   }
-  .glance-row {
-    display: grid;
-    grid-template-columns: 40px minmax(0, 1fr);
-    align-items: center;
-    gap: 10px;
+  .midnight {
+    font-family: var(--font-mono);
+    font-size: 10.5px;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: var(--muted);
   }
-  .glance-day { font-size: 12px; color: var(--muted); }
-  .bar {
-    position: relative;
-    height: 16px;
-    background: var(--surface);
-    background-image: linear-gradient(to right, var(--line) 1px, transparent 1px);
-    background-size: 25% 100%;
-    border: 1px solid var(--line);
-    border-radius: 3px;
-  }
-  .block {
-    position: absolute;
-    top: 0;
-    bottom: 0;
-    box-sizing: border-box;
-    background: var(--avail);
-    border: 1px solid var(--avail-line);
-    border-radius: 2px;
-  }
-  .glance-axis {
-    display: flex;
-    justify-content: space-between;
-    padding-left: 50px;
-    font-size: 11px;
-    color: var(--faint);
+  .x {
+    width: 26px;
+    height: 26px;
+    padding: 0;
+    font-size: 14px;
+    line-height: 1;
   }
 
-  .fields {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
-    gap: 12px 24px;
-    margin-top: 16px;
-  }
-  .field { display: grid; gap: 4px; align-content: start; }
-  .field label { font-weight: 600; }
-
-  .problem {
-    min-height: 1.3em;
-    margin: 10px 0 0;
-    font-size: 13px;
-    color: var(--risk);
-  }
+  /* Save bar: validation and unsaved messages in mono. */
   .actions {
+    display: grid;
+    gap: 10px;
+    padding: 14px 28px 16px;
+  }
+  .buttons {
     display: flex;
     flex-wrap: wrap;
     align-items: center;
     gap: 10px;
-    margin-top: 6px;
   }
-  .status { font-size: 13px; color: var(--muted); }
+  .problem {
+    min-height: 1.3em;
+    font-family: var(--font-mono);
+    font-size: 12px;
+    line-height: 1.3;
+    color: var(--risk);
+  }
+  .unsaved {
+    display: inline-flex;
+    align-items: center;
+    gap: 7px;
+    font-family: var(--font-mono);
+    font-size: 12px;
+    color: var(--muted);
+  }
+  .unsaved::before {
+    content: '';
+    width: 6px;
+    height: 6px;
+    background: var(--accent);
+  }
 
-  @media (max-width: 640px) {
-    .row { grid-template-columns: 1fr; }
-    .label-col { padding-top: 0; }
-    .day { grid-template-columns: 1fr; gap: 6px; }
-    .day-name { padding-top: 0; }
+  /* About and data: key / value spec rows. */
+  .value {
+    display: grid;
+    gap: 6px;
+    justify-items: start;
+    margin: 0;
+    padding-top: 7px;
+    font-size: 13px;
+    line-height: 1.5;
+    color: var(--ink);
+    overflow-wrap: anywhere;
+  }
+
+  @media (max-width: 760px) {
+    .lede, .presets { padding-left: 16px; padding-right: 16px; }
+    .row {
+      grid-template-columns: minmax(0, 1fr);
+      row-gap: 10px;
+      padding: 14px 16px;
+    }
+    .row > :first-child { padding-top: 0; }
+    .value { padding-top: 0; }
+    .day {
+      grid-template-columns: minmax(0, 1fr);
+      row-gap: 8px;
+      padding: 12px 16px;
+    }
+    .actions { padding-left: 16px; padding-right: 16px; }
   }
 </style>
