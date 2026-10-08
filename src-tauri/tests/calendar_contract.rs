@@ -396,3 +396,63 @@ fn a_version_two_store_migrates_to_settings() {
     drop(reopened);
     std::fs::remove_file(path).unwrap();
 }
+
+#[test]
+fn trace_health_qualifies_task_work_but_not_windows_or_unrelated_deadlines() {
+    let mut store = Store::memory().unwrap();
+    let mut usual = LocalMutation::upsert(LocalKind::UsualAvailability);
+    usual.blocks = vec![
+        BlockInput {
+            weekday: Weekday::Wed,
+            start: "09:00".into(),
+            end: "17:00".into(),
+        },
+        BlockInput {
+            weekday: Weekday::Fri,
+            start: "09:00".into(),
+            end: "17:00".into(),
+        },
+    ];
+    store.mutate_local(&usual, now()).unwrap();
+    let mut deadline = LocalMutation::upsert(LocalKind::Deadline);
+    deadline.title = Some("Synthetic form".into());
+    deadline.due = Some("2026-09-15T17:00".into());
+    deadline.effort_minutes = Some(60);
+    deadline.minimum_chunk_minutes = Some(30);
+    store.mutate_local(&deadline, now()).unwrap();
+    let conditional = |store: &Store, at: Instant, species: &str| -> Vec<bool> {
+        let view = temporal_app::personal::view(store, at).unwrap();
+        serde_json::to_value(&view.view).unwrap()["items"]
+            .as_array()
+            .unwrap()
+            .iter()
+            .filter(|i| i["species"] == species)
+            .map(|i| i["conditional"].as_bool().unwrap())
+            .collect()
+    };
+    // Trace was never imported: nothing about time depends on it.
+    assert!(conditional(&store, now(), "window").iter().all(|c| !c));
+    assert_eq!(conditional(&store, now(), "deadline"), [false]);
+
+    let export = serde_json::json!({
+        "version": "1.0",
+        "exported_at": now().to_string(),
+        "tasks": [{
+            "id": "trace-synthetic", "text": "Synthetic reading", "raw_input": null, "link": null,
+            "status": "later", "context": "desk", "priority": 2,
+            "due_at": null, "created_at": "2026-09-09T10:00:00.000Z",
+            "updated_at": "2026-09-09T11:00:00.000Z", "completed_at": null, "sort_order": 1.5
+        }]
+    });
+    store.import_json(&export.to_string(), now()).unwrap();
+    let mut work = LocalMutation::upsert(LocalKind::TaskAnnotation);
+    work.trace_external_id = Some("trace-synthetic".into());
+    work.effort_minutes = Some(60);
+    work.minimum_chunk_minutes = Some(30);
+    store.mutate_local(&work, now()).unwrap();
+    // Two days later the manual snapshot is stale: only task work is qualified.
+    let later = now().checked_add_ms(2 * 86_400_000).unwrap();
+    assert_eq!(conditional(&store, later, "task"), [true]);
+    assert!(conditional(&store, later, "window").iter().all(|c| !c));
+    assert_eq!(conditional(&store, later, "deadline"), [false]);
+}

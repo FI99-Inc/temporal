@@ -1075,10 +1075,11 @@ fn build_slice(
     let mut imported_deadlines = Vec::new();
     let mut sources = vec![cache.metadata.source.clone(), local.source.clone()];
     let mut source_states = vec![cache.metadata.state.clone()];
-    let mut required_sources = vec![RequiredSource {
-        source_id: cache.metadata.source.id,
-        role: SourceRole::Tasks,
-    }];
+    // Trace supplies tasks, not time. Its health qualifies task rows and any
+    // deadline linked to a task (the core adds those needs itself); declaring
+    // it required here would qualify every window and unrelated deadline
+    // whenever the manual snapshot is old or was never imported.
+    let mut required_sources = Vec::new();
     let lookback = slice_start
         .checked_sub_ms(366 * 86_400_000)
         .map_err(|e| e.to_string())?;
