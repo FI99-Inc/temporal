@@ -144,6 +144,9 @@ mod desktop {
     /// Subscriptions refresh at most this often in the background.
     const FEED_REFRESH: Duration = Duration::from_secs(3 * 3600);
 
+    /// Whether the notification-area icon exists, so hiding is reversible.
+    struct TrayReady(bool);
+
     pub struct Runtime {
         vault: Box<dyn credentials::Vault>,
         shown: Mutex<BTreeSet<String>>,
@@ -503,17 +506,21 @@ mod desktop {
                 if let Some(icon) = app.default_window_icon() {
                     tray = tray.icon(icon.clone());
                 }
-                tray.build(app)?;
+                // Without a tray the app still works; the window then simply
+                // closes instead of hiding (see the close handler).
+                let tray_ready = tray.build(app).is_ok();
+                app.manage(TrayReady(tray_ready));
                 background(app.handle().clone());
                 Ok(())
             })
             .on_window_event(|window, event| {
                 if let tauri::WindowEvent::CloseRequested { api, .. } = event {
                     let app = window.app_handle();
-                    let keep = app
-                        .state::<personal::AppStore>()
-                        .with(app, |store| Ok(store.settings()?.keep_running_in_tray))
-                        .unwrap_or(false);
+                    let keep = app.state::<TrayReady>().0
+                        && app
+                            .state::<personal::AppStore>()
+                            .with(app, |store| Ok(store.settings()?.keep_running_in_tray))
+                            .unwrap_or(false);
                     if keep {
                         api.prevent_close();
                         let _ = window.hide();

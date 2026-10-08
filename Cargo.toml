@@ -3,10 +3,13 @@ members = ["crates/temporal-core", "src-tauri"]
 resolver = "3"
 
 [workspace.package]
-version = "0.1.0"
+version = "0.2.0"
 edition = "2024"
 rust-version = "1.98"
 publish = false
 
 [workspace.lints.rust]
 unsafe_code = "forbid"
+
+[profile.release]
+strip = true
