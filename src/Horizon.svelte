@@ -61,19 +61,18 @@
         {@const lanes = placed.length ? Math.max(...placed.map(r => r.lane)) + 1 : 0}
         <section class="track {track.species}" aria-label={track.title}>
           <div class="track-label"><h3>{track.title}</h3><span>{track.hint}</span></div>
-          <div class="track-items" style:height="{Math.max(60, lanes * 96)}px">
+          <div class="track-items" style:height="{Math.max(60, lanes * 60)}px">
             {#each placed as row (row.item.id)}
               {@const item = row.item}
-              <div class="time-mark {item.species}" class:imported={item.ownership.startsWith('Imported')} style:top="{row.lane * 96 + 10}px" aria-hidden="true">
+              <div class="time-mark {item.species}" class:imported={item.ownership.startsWith('Imported')} style:top="{row.lane * 60 + 6}px" aria-hidden="true">
                 <i class="time-stem" style:left="{row.x}px"></i>
                 {#if item.end !== null}<i class="duration-bar" style:left="{row.x}px" style:width="{Math.max(2, row.barEnd - row.x)}px"></i>{/if}
               </div>
               <button class="temporal-item {item.species}" class:chosen={selectedId === item.id} class:conditional={item.conditional}
-                style:left="{row.labelX}px" style:width="{row.width}px" style:top="{row.lane * 96 + 19}px"
+                style:left="{row.labelX}px" style:width="{row.width}px" style:top="{row.lane * 60 + 15}px"
                 onclick={() => onselect(item.id)} aria-pressed={selectedId === item.id} title={`${item.title}: ${item.when}. ${stateLabel(item)}${item.conditional ? ' (conditional)' : ''}. ${item.source}`}>
                 <span class="item-name">{#if item.milestone}<span class="milestone" aria-label="Milestone">◇</span>{/if}{item.title}</span>
-                <span class="item-state" class:risk={item.risk === 'tight' || item.risk === 'insufficient'}>{stateLabel(item)}{item.conditional ? ' · conditional' : ''}</span>
-                <span class="item-source">{item.source}</span>
+                <span class="item-meta"><span class="item-state" class:risk={item.risk === 'tight' || item.risk === 'insufficient'}>{stateLabel(item)}{item.conditional ? ' · conditional' : ''}</span><span class="item-source">{item.source}</span></span>
               </button>
             {:else}
               <p class="track-empty">{track.species === 'anchor' ? 'No upcoming anchors in these inputs.' : track.species === 'deadline' ? 'No upcoming real deadlines.' : data.has_declarations ? 'No declared opportunity remains in this range.' : 'Availability has not been declared.'}</p>

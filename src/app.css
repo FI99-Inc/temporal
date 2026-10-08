@@ -202,7 +202,7 @@ input[type='color'] { border: 1px solid var(--line-strong); padding: 0; width: 3
 .time-mark.deadline .time-stem { width: 9px; height: 9px; transform: translateX(-4px) rotate(45deg); background: var(--deadline); top: -1px; }
 .time-mark.window .duration-bar { height: 6px; background: var(--closed); border: 1px solid var(--ink); }
 .time-mark.window .time-stem { background: var(--muted); }
-.temporal-item { text-align: left; display: flex; flex-direction: column; gap: 1px; position: absolute; padding: 6px 8px; background: var(--bg); border: var(--rule); line-height: 1.4; height: 70px; text-transform: none; letter-spacing: 0; font-family: var(--font); font-weight: 400; font-size: 12px; color: var(--ink); }
+.temporal-item { text-align: left; display: flex; flex-direction: column; gap: 1px; position: absolute; padding: 4px 8px; background: var(--bg); border: var(--rule); line-height: 1.35; height: 40px; text-transform: none; letter-spacing: 0; font-family: var(--font); font-weight: 400; font-size: 12px; color: var(--ink); }
 .temporal-item:hover:not(:disabled) { background: var(--surface); color: var(--ink); }
 .temporal-item.deadline { border-left-width: 4px; }
 .temporal-item.window { border-style: dashed; }
@@ -210,9 +210,11 @@ input[type='color'] { border: 1px solid var(--line-strong); padding: 0; width: 3
 .temporal-item.chosen { background: var(--invert-bg); color: var(--invert-ink); }
 .temporal-item.chosen .item-state, .temporal-item.chosen .item-source { color: var(--invert-ink); opacity: .75; }
 .item-name { font-size: 12px; font-weight: 640; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; width: 100%; }
-.item-state { font-family: var(--font-mono); font-size: 10px; letter-spacing: 0.04em; text-transform: uppercase; color: var(--muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.item-meta { display: flex; gap: 6px; min-width: 0; width: 100%; overflow: hidden; white-space: nowrap; }
+.item-source::before { content: '· '; }
+.item-state { font-family: var(--font-mono); font-size: 10px; letter-spacing: 0.04em; text-transform: uppercase; color: var(--muted); white-space: nowrap; flex-shrink: 0; max-width: 100%; overflow: hidden; text-overflow: ellipsis; }
 .item-state.risk { color: var(--risk); }
-.item-source { font-family: var(--font-mono); font-size: 10px; color: var(--faint); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; width: 100%; }
+.item-source { font-family: var(--font-mono); font-size: 10px; color: var(--faint); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; min-width: 0; flex: 1; }
 .milestone { font-size: 14px; margin-right: 5px; line-height: 10px; }
 button.chosen { background: var(--invert-bg); color: var(--invert-ink); }
 .track-empty { padding: 8px 10px; font-family: var(--font-mono); font-size: 11px; letter-spacing: .04em; text-transform: uppercase; color: var(--faint); }

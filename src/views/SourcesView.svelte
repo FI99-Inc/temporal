@@ -208,57 +208,77 @@
 {/snippet}
 
 <div class="sources">
-  <header class="page-head">
+  <section class="headline">
     <h1>Sources</h1>
-    <p class="intro">Temporal reads these and never writes back. Each keeps its own freshness.</p>
-  </header>
+    <div class="aside">Temporal reads these and never writes back.<br />Each keeps its own freshness.</div>
+  </section>
 
-  <section class="card" aria-labelledby="sources-calendars">
-    <h2 id="sources-calendars">Calendars</h2>
+  <section class="block" aria-labelledby="sources-calendars">
+    <div class="section-bar">
+      <span class="index">01</span>
+      <h2 id="sources-calendars">Calendars</h2>
+      <span class="spacer"></span>
+      <span class="label">{personal.calendars.length} connected</span>
+    </div>
 
     {#if personal.calendars.length === 0}
-      <p class="empty">No calendars yet. Add Google, Outlook, or your Quercus course calendar below.</p>
+      <div class="list-empty"><p class="caps">No calendars yet. Add Google, Outlook, or your Quercus course calendar below.</p></div>
     {:else}
       <ul class="calendar-list">
         {#each personal.calendars as c (c.id)}
           {@const pill = healthPill(c)}
           {@const unhandled = c.past_unhandled.length}
-          <li class="calendar">
-            <div class="calendar-main">
+          <li class="calendar" class:is-hidden={c.hidden}>
+            <div class="calendar-row">
               <span class="swatch" style:background={c.color} aria-hidden="true"></span>
-              <div class="calendar-body">
-                <div class="calendar-title">
-                  <strong>{c.label}</strong>
-                  <span class="badge">{kindLabels[c.kind]}</span>
-                  <span class="pill {pill.tone}">{pill.text}</span>
-                </div>
-                <p class="meta">{c.mode === 'coursework' ? 'Coursework: assignments become deadlines' : 'Events'}</p>
-                <p class="meta">{c.origin === 'file' ? 'File' : 'Subscribed'} · {c.origin_label}</p>
-                <p class="meta">
-                  {#if c.last_success}Updated {c.last_success} · {/if}{c.event_count} {plural(c.event_count, 'entry', 'entries')}{#if c.skipped > 0} · {c.skipped} unreadable {plural(c.skipped, 'entry', 'entries')} skipped{/if}
-                </p>
-                {#if c.last_error}<p class="error">{c.last_error}</p>{/if}
-                {#if c.hidden}<p class="meta faint">Hidden from Horizon and Calendar</p>{/if}
-              </div>
-            </div>
 
-            <div class="actions">
-              {#if c.origin === 'file'}
-                <button class="btn" type="button" disabled={busy} aria-label="Refresh {c.label}" onclick={() => refreshFile(c)}>Refresh</button>
-              {:else}
-                <button class="btn" type="button" disabled={busy || !desktop} aria-label="Refresh {c.label}" onclick={() => run('Calendar refreshed', () => refreshCalendars(c.id))}>Refresh</button>
-                {#if !desktop}<span class="desk-note">Available in the desktop app</span>{/if}
-              {/if}
-              <button class="btn" type="button" disabled={busy} aria-label="Edit {c.label}" aria-expanded={editingId === c.id} onclick={() => toggleEdit(c)}>Edit</button>
-              <button class="btn" type="button" disabled={busy} aria-label="Remove {c.label}" onclick={() => { removingId = c.id; }}>Remove</button>
+              <div class="name">
+                <strong>{c.label}</strong>
+                {#if c.hidden}<span class="label">Hidden</span>{/if}
+              </div>
+
+              <div class="meta">
+                <p>{kindLabels[c.kind]} · {c.mode === 'coursework' ? 'Coursework: assignments become deadlines' : 'Events'} · {c.origin === 'file' ? 'File' : 'Subscribed'} · {c.origin_label}</p>
+                <p>{#if c.last_success}Updated {c.last_success}{' · '}{/if}{c.event_count} {plural(c.event_count, 'entry', 'entries')}{#if c.skipped > 0} · {c.skipped} unreadable {plural(c.skipped, 'entry', 'entries')} skipped{/if}</p>
+                {#if c.hidden}<p class="faint">Hidden from Horizon and Calendar</p>{/if}
+              </div>
+
+              <span class="health" title={pill.text}>
+                {#if c.health === 'healthy'}
+                  <i class="sq ink" aria-hidden="true"></i>Up to date
+                {:else if c.health === 'stale'}
+                  <i class="sq signal" aria-hidden="true"></i>Stale — last-known
+                {:else if c.health === 'unavailable' || c.health === 'partial' || c.health === 'incompatible'}
+                  <i class="sq risk" aria-hidden="true"></i>Refresh failed
+                {:else}
+                  <i class="sq" aria-hidden="true"></i>{c.health === 'never_loaded' ? 'Not loaded' : readable(c.health)}
+                {/if}
+              </span>
+
+              <div class="actions">
+                {#if c.origin === 'file'}
+                  <button type="button" disabled={busy} aria-label="Refresh {c.label}" onclick={() => refreshFile(c)}>Refresh</button>
+                {:else}
+                  <button type="button" disabled={busy || !desktop} aria-label="Refresh {c.label}" onclick={() => run('Calendar refreshed', () => refreshCalendars(c.id))}>Refresh</button>
+                  {#if !desktop}<span class="desk-note">Available in the desktop app</span>{/if}
+                {/if}
+                <button type="button" disabled={busy} aria-label="Edit {c.label}" aria-expanded={editingId === c.id} onclick={() => toggleEdit(c)}>Edit</button>
+                <button type="button" disabled={busy} aria-label="Remove {c.label}" onclick={() => { removingId = c.id; }}>Remove</button>
+              </div>
+
+              {#if c.last_error}<p class="error">{c.last_error}</p>{/if}
             </div>
 
             {#if removingId === c.id}
-              <div class="confirm">
-                <p>Remove {c.label}? Its events disappear from Temporal; the source is not changed.</p>
+              <div class="notice warn">
+                <span class="label">Confirm</span>
+                <div>
+                  <strong>Remove {c.label}?</strong>
+                  <p>Its events disappear from Temporal; the source is not changed.</p>
+                </div>
                 <div class="actions">
-                  <button class="btn danger" type="button" disabled={busy} onclick={() => remove(c)}>Remove</button>
-                  <button class="btn" type="button" disabled={busy} onclick={() => { removingId = null; }}>Cancel</button>
+                  <button class="danger" type="button" disabled={busy} onclick={() => remove(c)}>Remove</button>
+                  <button type="button" disabled={busy} onclick={() => { removingId = null; }}>Cancel</button>
                 </div>
               </div>
             {/if}
@@ -270,7 +290,7 @@
                   <input type="text" required maxlength="80" bind:value={editLabel} disabled={busy} />
                 </label>
                 {@render colourPicker(editColor, (hex) => { editColor = hex; }, busy)}
-                <div class="grid-2">
+                <div class="editor-row">
                   <label class="field">
                     <span>Mode</span>
                     <select bind:value={editMode} disabled={busy}>
@@ -284,16 +304,19 @@
                   </label>
                 </div>
                 <div class="actions">
-                  <button class="btn primary" type="submit" disabled={busy || editLabel.trim() === ''}>Save</button>
-                  <button class="btn" type="button" disabled={busy} onclick={() => { editingId = null; }}>Cancel</button>
+                  <button class="primary" type="submit" disabled={busy || editLabel.trim() === ''}>Save</button>
+                  <button type="button" disabled={busy} onclick={() => { editingId = null; }}>Cancel</button>
                 </div>
               </form>
             {/if}
 
             {#if unhandled > 0}
-              <div class="notice">
-                <p>{unhandled} past {plural(unhandled, 'deadline', 'deadlines')} from this calendar {unhandled === 1 ? 'is' : 'are'} not marked handled, so {unhandled === 1 ? 'it counts' : 'they count'} as overdue.</p>
-                <button class="btn" type="button" disabled={busy} onclick={() => markAllHandled(c.past_unhandled)}>Mark all handled</button>
+              <div class="notice warn">
+                <span class="label">Overdue</span>
+                <div>
+                  <p>{unhandled} past {plural(unhandled, 'deadline', 'deadlines')} from this calendar {unhandled === 1 ? 'is' : 'are'} not marked handled, so {unhandled === 1 ? 'it counts' : 'they count'} as overdue.</p>
+                </div>
+                <button type="button" disabled={busy} onclick={() => markAllHandled(c.past_unhandled)}>Mark all handled →</button>
               </div>
             {/if}
           </li>
@@ -311,11 +334,14 @@
     />
   </section>
 
-  <section class="card" aria-labelledby="sources-add">
-    <h2 id="sources-add">Add a calendar</h2>
+  <section class="block" aria-labelledby="sources-add">
+    <div class="section-bar">
+      <span class="index">02</span>
+      <h2 id="sources-add">Add a calendar</h2>
+    </div>
 
-    <form class="add" onsubmit={submitAdd}>
-      <div class="grid-2">
+    <form class="body" onsubmit={submitAdd}>
+      <div class="field-grid">
         <label class="field">
           <span>Name</span>
           <input type="text" required maxlength="80" bind:value={addName} disabled={busy} />
@@ -381,261 +407,298 @@
       {/if}
 
       <div class="actions">
-        <button class="btn primary" type="submit" disabled={busy || !addReady}>Add calendar</button>
+        <button class="primary" type="submit" disabled={busy || !addReady}>Add calendar →</button>
       </div>
     </form>
   </section>
 
-  <section class="card" aria-labelledby="sources-trace">
-    <h2 id="sources-trace">Trace tasks</h2>
-
-    {#if personal.trace.exported_at}
-      <div class="trace-summary">
-        <p>
-          <strong>{personal.trace.present_tasks} {plural(personal.trace.present_tasks, 'task', 'tasks')}</strong>
-          · {personal.trace.completed_tasks} completed
-        </p>
-        <p class="meta">Exported {personal.trace.exported_at}{#if personal.trace.imported_at} · imported {personal.trace.imported_at}{/if}</p>
-        {#if personal.trace.last_attempt}<p class="meta">Last attempt: {readable(personal.trace.last_attempt)}</p>{/if}
-        {#if personal.trace.unresolved_dates > 0}
-          <p class="notice-text">
-            {personal.trace.unresolved_dates} Trace due {plural(personal.trace.unresolved_dates, 'value', 'values')} {personal.trace.unresolved_dates === 1 ? 'needs' : 'need'} precision before {personal.trace.unresolved_dates === 1 ? 'it becomes' : 'they become'} deadlines.
-          </p>
-        {/if}
-      </div>
-    {:else}
-      <p class="empty">Bring your tasks into view: in Trace press Ctrl+K → Export as JSON.</p>
-    {/if}
-
-    <div class="actions">
-      <button class="btn" type="button" disabled={busy || !desktop} onclick={() => run('Trace imported', () => pickTraceExport())}>Choose export file…</button>
-      {#if !desktop}<span class="desk-note">Available in the desktop app</span>{/if}
-      <button class="btn" type="button" disabled={busy} onclick={() => traceInput?.click()}>Import a JSON file once</button>
+  <section class="block" aria-labelledby="sources-trace">
+    <div class="section-bar">
+      <span class="index">03</span>
+      <h2 id="sources-trace">Trace tasks</h2>
     </div>
 
-    {#if personal.trace.export_path}
-      <div class="watch">
-        <p>Watching {personal.trace.export_path}. Re-export from Trace and Temporal picks it up when you return.</p>
-        <div class="actions">
-          <button class="btn" type="button" disabled={busy || !desktop} onclick={() => run('Trace re-read', () => reimportTrace())}>Re-read now</button>
-          <button class="btn" type="button" disabled={busy || !desktop} onclick={() => run('Stopped watching', async () => { await forgetTraceExport(); })}>Stop watching</button>
-        </div>
+    <div class="body">
+      {#if personal.trace.exported_at}
+        <dl class="spec">
+          <div class="spec-row">
+            <dt>Tasks</dt>
+            <dd><strong>{personal.trace.present_tasks} {plural(personal.trace.present_tasks, 'task', 'tasks')}</strong> · {personal.trace.completed_tasks} completed</dd>
+          </div>
+          <div class="spec-row">
+            <dt>Exported</dt>
+            <dd>{personal.trace.exported_at}</dd>
+          </div>
+          {#if personal.trace.imported_at}
+            <div class="spec-row">
+              <dt>Imported</dt>
+              <dd>{personal.trace.imported_at}</dd>
+            </div>
+          {/if}
+          {#if personal.trace.last_attempt}
+            <div class="spec-row">
+              <dt>Last attempt</dt>
+              <dd>{readable(personal.trace.last_attempt)}</dd>
+            </div>
+          {/if}
+          {#if personal.trace.unresolved_dates > 0}
+            <div class="spec-row">
+              <dt>Unresolved dates</dt>
+              <dd class="risk">{personal.trace.unresolved_dates} Trace due {plural(personal.trace.unresolved_dates, 'value', 'values')} {personal.trace.unresolved_dates === 1 ? 'needs' : 'need'} precision before {personal.trace.unresolved_dates === 1 ? 'it becomes' : 'they become'} deadlines.</dd>
+            </div>
+          {/if}
+        </dl>
+      {:else}
+        <p class="caps">Bring your tasks into view: in Trace press Ctrl+K → Export as JSON.</p>
+      {/if}
+
+      <div class="actions">
+        <button type="button" disabled={busy || !desktop} onclick={() => run('Trace imported', () => pickTraceExport())}>Choose export file…</button>
+        {#if !desktop}<span class="desk-note">Available in the desktop app</span>{/if}
+        <button type="button" disabled={busy} onclick={() => traceInput?.click()}>Import a JSON file once</button>
       </div>
-    {/if}
 
-    <input
-      bind:this={traceInput}
-      type="file"
-      accept=".json,application/json"
-      hidden
-      aria-label="Trace export file"
-      onchange={(event) => onTraceJson(event.currentTarget)}
-    />
+      {#if personal.trace.export_path}
+        <div class="watch">
+          <p class="note">Watching {personal.trace.export_path}. Re-export from Trace and Temporal picks it up when you return.</p>
+          <div class="actions">
+            <button type="button" disabled={busy || !desktop} onclick={() => run('Trace re-read', () => reimportTrace())}>Re-read now</button>
+            <button type="button" disabled={busy || !desktop} onclick={() => run('Stopped watching', async () => { await forgetTraceExport(); })}>Stop watching</button>
+          </div>
+        </div>
+      {/if}
 
-    <p class="note">Trace stays the owner of task text, dates, and completion. Temporal never writes to Trace.</p>
+      <input
+        bind:this={traceInput}
+        type="file"
+        accept=".json,application/json"
+        hidden
+        aria-label="Trace export file"
+        onchange={(event) => onTraceJson(event.currentTarget)}
+      />
+
+      <p class="note">Trace stays the owner of task text, dates, and completion. Temporal never writes to Trace.</p>
+    </div>
   </section>
 </div>
 
 <style>
-  .sources {
-    max-width: 920px;
-    margin: 0 auto;
-    padding: 24px 16px 48px;
-    display: grid;
-    gap: 16px;
-    color: var(--ink);
-    font-family: var(--font);
-  }
-  .page-head h1 {
-    margin: 0;
-    font-family: var(--font-display);
-    font-size: 28px;
-    font-weight: 600;
-    line-height: 1.2;
-    color: var(--ink);
-  }
-  .intro { margin: 6px 0 0; font-size: 14px; color: var(--muted); }
+  .sources { min-width: 0; padding-bottom: 48px; color: var(--ink); }
 
-  .card {
-    background: var(--surface);
-    border: 1px solid var(--line);
-    border-radius: var(--radius);
-    padding: 20px;
-    display: grid;
-    gap: 16px;
-    min-width: 0;
-  }
-  @media (max-width: 480px) {
-    .card { padding: 16px; }
-  }
-  .card h2 { margin: 0; font-size: 17px; font-weight: 600; color: var(--ink); }
-
-  .empty, .note { margin: 0; font-size: 14px; color: var(--muted); }
-  .note { font-size: 12px; color: var(--faint); }
-  .meta { margin: 2px 0 0; font-size: 13px; color: var(--muted); overflow-wrap: anywhere; }
+  /* Ruled blocks: the section bar is the rule; bodies run full bleed. */
+  .block + .block { border-top: var(--rule); }
+  .section-bar h2 { margin: 0; font: inherit; letter-spacing: inherit; text-transform: inherit; }
+  .body { display: grid; gap: 18px; min-width: 0; padding: 20px 28px; }
+  .list-empty { padding: 14px 28px; }
+  .caps { margin: 0; font-family: var(--font-mono); font-size: 11px; letter-spacing: 0.06em; text-transform: uppercase; line-height: 1.6; color: var(--muted); }
+  .note { margin: 0; font-size: 12px; line-height: 1.5; color: var(--muted); overflow-wrap: anywhere; }
   .faint { color: var(--faint); }
-  .help { margin: 0; font-size: 13px; color: var(--muted); }
-  .privacy { margin: 0; font-size: 12px; color: var(--faint); }
-  .desk-note { font-size: 12px; color: var(--faint); }
+  .desk-note { font-family: var(--font-mono); font-size: 10.5px; letter-spacing: 0.06em; text-transform: uppercase; color: var(--faint); }
+  .actions { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
 
-  /* Calendars */
-  .calendar-list { list-style: none; margin: 0; padding: 0; display: grid; gap: 12px; }
-  .calendar {
+  /* Calendars: one ruled row each. Confirm and edit open inside the same ruled block. */
+  .calendar-list { list-style: none; margin: 0; padding: 0; }
+  .calendar { min-width: 0; border-bottom: 1px solid var(--line); }
+  .calendar:last-child { border-bottom: 0; }
+  .calendar.is-hidden .calendar-row { opacity: 0.55; }
+  .calendar-row {
     display: grid;
-    gap: 12px;
-    padding: 14px;
-    border: 1px solid var(--line);
-    border-radius: var(--radius-sm);
-    background: var(--surface-2);
+    grid-template-columns: 14px minmax(150px, 1fr) minmax(0, 1.5fr) auto auto;
+    grid-template-areas: 'sw name meta health actions' '. err err err err';
+    column-gap: 18px;
+    align-items: start;
+    padding: 14px 28px;
     min-width: 0;
   }
-  .calendar-main { display: grid; grid-template-columns: 12px minmax(0, 1fr); gap: 12px; align-items: start; }
-  .swatch { width: 12px; height: 12px; border-radius: 50%; margin-top: 5px; }
-  .calendar-body { min-width: 0; }
-  .calendar-title { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
-  .calendar-title strong { font-size: 15px; overflow-wrap: anywhere; }
-  .badge {
-    font-size: 12px;
-    padding: 1px 7px;
-    border-radius: 4px;
-    background: var(--surface-3);
+  .swatch { grid-area: sw; width: 14px; height: 14px; margin-top: 4px; border: 1px solid var(--ink); }
+  .name {
+    grid-area: name;
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    gap: 4px 12px;
+    min-width: 0;
+    font-family: var(--font-display);
+    font-stretch: 115%;
+    font-weight: 760;
+    font-size: 20px;
+    line-height: 1.05;
+    letter-spacing: -0.01em;
+    text-transform: uppercase;
+  }
+  .name strong { font-weight: inherit; overflow-wrap: anywhere; }
+  .name .label { font-weight: 500; color: var(--muted); }
+  .meta {
+    grid-area: meta;
+    display: grid;
+    gap: 2px;
+    min-width: 0;
+    font-family: var(--font-mono);
+    font-size: 11px;
+    letter-spacing: 0.06em;
+    line-height: 1.55;
+    text-transform: uppercase;
+    color: var(--muted);
+    overflow-wrap: anywhere;
+  }
+  .meta p { margin: 0; }
+  .health {
+    grid-area: health;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding-top: 3px;
+    font-family: var(--font-mono);
+    font-size: 11px;
+    letter-spacing: 0.06em;
+    line-height: 1.2;
+    text-transform: uppercase;
+    white-space: nowrap;
+  }
+  .sq { flex-shrink: 0; width: 8px; height: 8px; border: 1px solid var(--ink); }
+  .sq.ink { background: var(--ink); }
+  .sq.signal { background: var(--accent); border-color: var(--accent); }
+  .sq.risk { background: var(--risk); border-color: var(--risk); }
+  .calendar-row > .actions { grid-area: actions; justify-content: flex-end; }
+  .error {
+    grid-area: err;
+    margin: 6px 0 0;
+    font-family: var(--font-mono);
+    font-size: 11px;
+    line-height: 1.5;
+    color: var(--risk);
+    overflow-wrap: anywhere;
+  }
+
+  /* Rows that open under a calendar: confirm, edit, and the overdue notice. */
+  .calendar > .notice { border-top: 1px solid var(--line); border-bottom: 0; }
+  .calendar > .notice p { margin-top: 0; color: var(--ink); }
+  .calendar > .notice > .actions { margin-right: 28px; }
+  .editor {
+    display: grid;
+    gap: 16px;
+    min-width: 0;
+    margin: 0 28px 18px;
+    padding: 16px;
+    border: var(--rule);
+  }
+
+  /* Labels above fields: mono caps. Inputs keep their global square ruled style. */
+  .field { display: grid; gap: 6px; min-width: 0; }
+  .field > span { font-family: var(--font-mono); font-size: 10.5px; letter-spacing: 0.06em; text-transform: uppercase; color: var(--muted); }
+  .field > input[type='text'],
+  .field > input[type='url'],
+  .field > select { width: 100%; }
+  .field > input[type='file']::file-selector-button {
+    margin-right: 12px;
+    padding: 7px 11px;
+    font-family: var(--font-mono);
+    font-size: 11.5px;
+    font-weight: 500;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: var(--ink);
+    background: transparent;
+    border: 1px solid var(--line-strong);
+    cursor: pointer;
+  }
+  .field > input[type='file']::file-selector-button:hover { background: var(--invert-bg); color: var(--invert-ink); }
+  .field-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 16px; }
+  .editor-row { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; align-items: end; }
+  .check {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    min-height: 32px;
+    font-family: var(--font-mono);
+    font-size: 11px;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+  }
+
+  /* Colour: 24px squares, selected is a 2px ink outline set off by 2px. */
+  .colours { display: grid; gap: 8px; min-width: 0; margin: 0; padding: 0; border: 0; }
+  .colours legend { padding: 0 0 6px; font-family: var(--font-mono); font-size: 10.5px; letter-spacing: 0.06em; text-transform: uppercase; color: var(--muted); }
+  .swatches { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; }
+  .swatch-btn { width: 24px; height: 24px; padding: 0; border: 1px solid var(--ink); }
+  .swatch-btn[aria-pressed='true'] { outline: 2px solid var(--ink); outline-offset: 2px; }
+  .custom {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    margin-left: 6px;
+    font-family: var(--font-mono);
+    font-size: 10.5px;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
     color: var(--muted);
   }
-  .pill { font-size: 12px; padding: 2px 8px; border-radius: 999px; }
-  .pill.ok { background: var(--ok-soft); color: var(--ok); }
-  .pill.risk { background: var(--risk-soft); color: var(--risk); }
-  .pill.neutral { background: var(--surface-3); color: var(--muted); }
-  .error { margin: 4px 0 0; font-size: 13px; color: var(--risk); overflow-wrap: anywhere; }
+  .custom input[type='color'] { width: 24px; height: 24px; padding: 0; }
 
-  .confirm, .notice {
+  /* Joined two-way control: shared borders, inverted when active. */
+  .method { display: flex; flex-wrap: wrap; align-items: center; gap: 14px; }
+  .segmented { display: inline-flex; max-width: 100%; }
+  .seg { padding: 8px 16px; }
+  .seg + .seg { margin-left: -1px; }
+  .seg[aria-pressed='true'] { background: var(--invert-bg); color: var(--invert-ink); }
+  .help { margin: 0; font-size: 12px; line-height: 1.5; color: var(--muted); }
+  .privacy {
+    margin: 0;
+    font-family: var(--font-mono);
+    font-size: 10.5px;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: var(--muted);
+  }
+  .privacy::before { content: '▲ '; }
+
+  /* Trace: a two-column spec table. */
+  .spec { margin: 0; border-top: 1px solid var(--line); }
+  .spec-row {
+    display: grid;
+    grid-template-columns: 220px minmax(0, 1fr);
+    gap: 16px;
+    align-items: baseline;
+    padding: 11px 0;
+    border-bottom: 1px solid var(--line);
+    font-size: 13px;
+    line-height: 1.5;
+  }
+  .spec dt { font-family: var(--font-mono); font-size: 11px; letter-spacing: 0.06em; text-transform: uppercase; }
+  .watch {
     display: flex;
     flex-wrap: wrap;
     align-items: center;
     justify-content: space-between;
-    gap: 10px;
-    padding: 10px 12px;
-    border-radius: var(--radius-sm);
+    gap: 12px;
+    padding-top: 14px;
+    border-top: 1px solid var(--line);
   }
-  .confirm { background: var(--surface-3); }
-  .confirm p { margin: 0; font-size: 13px; color: var(--ink); }
-  .notice { background: var(--risk-soft); }
-  .notice p { margin: 0; font-size: 13px; color: var(--ink); }
+  .watch .note { flex: 1 1 280px; min-width: 0; }
 
-  .editor { display: grid; gap: 14px; padding-top: 4px; border-top: 1px dashed var(--line-strong); }
-
-  /* Shared controls */
-  .actions { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
-  .btn {
-    font: inherit;
-    font-size: 13px;
-    color: var(--ink);
-    background: var(--surface);
-    border: 1px solid var(--line-strong);
-    border-radius: var(--radius-sm);
-    padding: 6px 12px;
-    cursor: pointer;
-  }
-  .btn:hover:not(:disabled) { background: var(--surface-3); }
-  .btn.primary { background: var(--accent); color: var(--accent-ink); border-color: var(--accent); }
-  .btn.danger { color: var(--risk); border-color: var(--risk); }
-  .btn:disabled, .seg:disabled { opacity: 0.5; cursor: default; }
-  .btn:focus-visible,
-  .seg:focus-visible,
-  .swatch-btn:focus-visible,
-  input:focus-visible,
-  select:focus-visible {
-    outline: 2px solid var(--accent);
-    outline-offset: 2px;
-  }
-
-  .field { display: grid; gap: 4px; min-width: 0; font-size: 13px; }
-  .field > span { font-weight: 600; color: var(--ink); }
-  .check {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    font-size: 14px;
-    color: var(--ink);
-    align-self: end;
-    padding-bottom: 6px;
-  }
-  .grid-2 { display: grid; grid-template-columns: repeat(auto-fit, minmax(190px, 1fr)); gap: 12px; align-items: start; }
-  .add { display: grid; gap: 14px; }
-
-  input[type='text'],
-  input[type='url'],
-  select {
-    font: inherit;
-    font-size: 14px;
-    color: var(--ink);
-    background: var(--surface);
-    border: 1px solid var(--line-strong);
-    border-radius: var(--radius-sm);
-    padding: 7px 9px;
-    width: 100%;
-    min-width: 0;
-    box-sizing: border-box;
-  }
-  input[type='file'] { font-size: 13px; color: var(--ink); max-width: 100%; }
-  input[type='checkbox'] { accent-color: var(--accent); }
-  input[type='color'] {
-    width: 36px;
-    height: 30px;
-    padding: 0;
-    border: 1px solid var(--line-strong);
-    border-radius: var(--radius-sm);
-    background: var(--surface);
-    cursor: pointer;
-  }
   input[hidden] { display: none; }
 
-  .colours { border: 0; margin: 0; padding: 0; min-width: 0; display: grid; gap: 6px; }
-  .colours legend { padding: 0; margin-bottom: 6px; font-size: 13px; font-weight: 600; color: var(--ink); }
-  .swatches { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; }
-  .swatch-btn {
-    width: 26px;
-    height: 26px;
-    padding: 0;
-    border-radius: 50%;
-    border: 2px solid var(--surface);
-    box-shadow: 0 0 0 1px var(--line-strong);
-    cursor: pointer;
+  @media (max-width: 1080px) {
+    .calendar-row {
+      grid-template-columns: 14px minmax(0, 1fr) auto;
+      grid-template-areas: 'sw name name' '. meta meta' '. health actions' '. err err';
+      row-gap: 10px;
+    }
   }
-  .swatch-btn[aria-pressed='true'] { box-shadow: 0 0 0 2px var(--surface), 0 0 0 4px var(--ink); }
-  .custom { display: inline-flex; align-items: center; gap: 8px; font-size: 13px; color: var(--muted); }
-
-  .method { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; }
-  .segmented {
-    display: inline-flex;
-    max-width: 100%;
-    border: 1px solid var(--line-strong);
-    border-radius: var(--radius-sm);
-    overflow: hidden;
-    background: var(--surface);
+  @media (max-width: 760px) {
+    .calendar-row,
+    .body,
+    .list-empty { padding-left: 16px; padding-right: 16px; }
+    .calendar-row {
+      grid-template-columns: 14px minmax(0, 1fr);
+      grid-template-areas: 'sw name' '. meta' '. health' '. actions' '. err';
+    }
+    .calendar-row > .actions { justify-content: flex-start; }
+    .editor { margin: 0 16px 18px; }
+    .calendar > .notice > .actions { margin: 0 16px 12px; justify-self: start; }
   }
-  .seg {
-    font: inherit;
-    font-size: 13px;
-    color: var(--muted);
-    background: transparent;
-    border: 0;
-    padding: 7px 14px;
-    cursor: pointer;
+  @media (max-width: 560px) {
+    .field-grid, .editor-row { grid-template-columns: minmax(0, 1fr); }
+    .spec-row { grid-template-columns: minmax(0, 1fr); gap: 4px; }
   }
-  .seg + .seg { border-left: 1px solid var(--line-strong); }
-  .seg[aria-pressed='true'] { background: var(--accent-soft); color: var(--ink); font-weight: 600; }
-
-  /* Trace */
-  .trace-summary { display: grid; gap: 4px; }
-  .trace-summary p { margin: 0; font-size: 14px; color: var(--ink); }
-  .trace-summary .notice-text { color: var(--risk); }
-  .watch {
-    display: grid;
-    gap: 8px;
-    padding: 12px;
-    border-radius: var(--radius-sm);
-    background: var(--surface-2);
-    border: 1px solid var(--line);
-  }
-  .watch p { margin: 0; font-size: 13px; color: var(--ink); overflow-wrap: anywhere; }
 </style>
