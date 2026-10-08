@@ -1,0 +1,104 @@
+/* Design tokens. Components use these variables only; never hard-code colours.
+   Rigidity and provenance are carried by shape and line style first, colour second. */
+:root {
+  color-scheme: light;
+  --font: 'Segoe UI Variable Text', 'Segoe UI', system-ui, sans-serif;
+  --font-display: 'Segoe UI Variable Display', Bahnschrift, 'Segoe UI', system-ui, sans-serif;
+  --bg: #eef2f5;
+  --surface: #ffffff;
+  --surface-2: #f6f9fb;
+  --surface-3: #e8eef2;
+  --line: #d6e0e7;
+  --line-strong: #b9c9d4;
+  --ink: #1d3445;
+  --muted: #546b7c;
+  --faint: #8597a5;
+  --accent: #286580;
+  --accent-ink: #ffffff;
+  --accent-soft: #e2eef4;
+  --anchor: #286580;
+  --anchor-soft: #dcebf2;
+  --deadline: #8a4b2a;
+  --deadline-soft: #f6e8df;
+  --soft: #5b6f8f;
+  --soft-bg: #eef1f7;
+  --avail: rgba(53, 107, 86, 0.08);
+  --avail-line: rgba(53, 107, 86, 0.35);
+  --risk: #9a4e38;
+  --risk-soft: #f8e9e3;
+  --ok: #356b56;
+  --ok-soft: #e3f0ea;
+  --now: #c2410c;
+  --radius: 8px;
+  --radius-sm: 5px;
+  --shadow: 0 1px 2px rgba(20, 40, 55, 0.06), 0 4px 14px rgba(20, 40, 55, 0.06);
+  --shadow-lg: 0 10px 40px rgba(20, 40, 55, 0.18);
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme='light']) {
+    color-scheme: dark;
+    --bg: #0f1820;
+    --surface: #16222c;
+    --surface-2: #1a2833;
+    --surface-3: #22323e;
+    --line: #2a3b48;
+    --line-strong: #3a4f5e;
+    --ink: #e3ecf2;
+    --muted: #9db0bf;
+    --faint: #6f8494;
+    --accent: #6fb3d2;
+    --accent-ink: #0b1a22;
+    --accent-soft: #1d3442;
+    --anchor: #6fb3d2;
+    --anchor-soft: #1c3644;
+    --deadline: #e3a07a;
+    --deadline-soft: #3a2a21;
+    --soft: #a7b6d4;
+    --soft-bg: #212b3b;
+    --avail: rgba(110, 190, 150, 0.08);
+    --avail-line: rgba(110, 190, 150, 0.35);
+    --risk: #ec9a80;
+    --risk-soft: #3b2620;
+    --ok: #7cc4a1;
+    --ok-soft: #1c3329;
+    --now: #fb923c;
+    --shadow: 0 1px 2px rgba(0, 0, 0, 0.3), 0 4px 14px rgba(0, 0, 0, 0.25);
+    --shadow-lg: 0 10px 40px rgba(0, 0, 0, 0.5);
+  }
+}
+
+:root[data-theme='dark'] {
+  color-scheme: dark;
+  --bg: #0f1820;
+  --surface: #16222c;
+  --surface-2: #1a2833;
+  --surface-3: #22323e;
+  --line: #2a3b48;
+  --line-strong: #3a4f5e;
+  --ink: #e3ecf2;
+  --muted: #9db0bf;
+  --faint: #6f8494;
+  --accent: #6fb3d2;
+  --accent-ink: #0b1a22;
+  --accent-soft: #1d3442;
+  --anchor: #6fb3d2;
+  --anchor-soft: #1c3644;
+  --deadline: #e3a07a;
+  --deadline-soft: #3a2a21;
+  --soft: #a7b6d4;
+  --soft-bg: #212b3b;
+  --avail: rgba(110, 190, 150, 0.08);
+  --avail-line: rgba(110, 190, 150, 0.35);
+  --risk: #ec9a80;
+  --risk-soft: #3b2620;
+  --ok: #7cc4a1;
+  --ok-soft: #1c3329;
+  --now: #fb923c;
+  --shadow: 0 1px 2px rgba(0, 0, 0, 0.3), 0 4px 14px rgba(0, 0, 0, 0.25);
+  --shadow-lg: 0 10px 40px rgba(0, 0, 0, 0.5);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { animation-duration: 0.01ms !important; transition-duration: 0.01ms !important; scroll-behavior: auto !important; }
+}
