@@ -2,6 +2,42 @@
 fn main() {
     let arguments: Vec<String> = std::env::args().skip(1).collect();
     let result = match arguments.as_slice() {
+        [command, path, at] if command == "call" => (|| {
+            use std::io::Read;
+            let path = std::path::Path::new(path);
+            if let Some(parent) = path.parent() {
+                std::fs::create_dir_all(parent).map_err(|e| e.to_string())?;
+            }
+            let mut store = temporal_app::store::Store::open(path)?;
+            let now = at
+                .parse()
+                .map_err(|_| "Invalid injected preview time".to_string())?;
+            let mut body = String::new();
+            std::io::stdin()
+                .take(25 * 1024 * 1024)
+                .read_to_string(&mut body)
+                .map_err(|e| e.to_string())?;
+            #[derive(serde::Deserialize)]
+            struct Call {
+                command: String,
+                #[serde(default)]
+                args: serde_json::Value,
+            }
+            let call: Call =
+                serde_json::from_str(&body).map_err(|e| format!("Invalid preview call: {e}"))?;
+            let args = if call.args.is_null() {
+                serde_json::json!({})
+            } else {
+                call.args
+            };
+            serde_json::to_string(&temporal_app::personal::call(
+                &mut store,
+                now,
+                &call.command,
+                args,
+            )?)
+            .map_err(|e| e.to_string())
+        })(),
         [command, path, at]
             if command == "personal" || command == "import" || command == "mutate" =>
         {

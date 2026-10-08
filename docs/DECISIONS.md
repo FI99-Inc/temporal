@@ -106,6 +106,20 @@ the following, without reopening D-001–D-013:
 Still excluded: mobile, cloud storage, accounts, telemetry, write-back to any
 external source, machine-authored time blocking, and AI.
 
+### D-015 — Marking an imported deadline handled (provisional)
+
+An iCalendar feed (including Canvas/Quercus) reports deadlines but never their
+submission state, and the domain contract lets only the owning source resolve
+a source-owned deadline. Without a remedy every past assignment would remain
+overdue forever, filling the radar with work already done.
+
+The app therefore keeps an explicit, local **handled** acknowledgement beside
+an imported deadline. It never writes a resolution into the source fact: the
+deadline keeps its provenance, stays visible in the Calendar labelled
+"handled", and only leaves pressure and the daily edit. Undo is one action.
+Unacknowledged past imported deadlines remain overdue, as the contract says.
+Revisit when a source can report fulfillment (the deferred Quercus adapter).
+
 ## Open questions
 
 These are intentionally not blockers for documentation Gate 0 unless a gate explicitly requires them.

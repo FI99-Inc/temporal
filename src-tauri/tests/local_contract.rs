@@ -564,7 +564,7 @@ fn migration_local_failure_and_clock_rewind_keep_last_committed_state() {
     let connection = rusqlite::Connection::open(&path).unwrap();
     connection
         .execute_batch(
-            "DROP TABLE local_temporal_state; DROP TABLE app_settings; PRAGMA user_version=1;",
+            "DROP TABLE local_temporal_state; DROP TABLE app_settings; DROP TABLE calendar_sources; PRAGMA user_version=1;",
         )
         .unwrap();
     drop(connection);

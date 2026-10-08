@@ -1,0 +1,10 @@
+BEGIN:VCALENDAR
+VERSION:2.0
+PRODID:-//Synthetic Calendar Co//Fixtures//EN
+BEGIN:VEVENT
+UID:synthetic-windows-1@example.invalid
+DTSTART;TZID="Eastern Standard Time":20260915T090000
+DTEND;TZID="Eastern Standard Time":20260915T100000
+SUMMARY:Synthetic Windows Zone Meeting
+END:VEVENT
+END:VCALENDAR

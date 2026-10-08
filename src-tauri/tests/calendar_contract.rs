@@ -382,7 +382,9 @@ fn a_version_two_store_migrates_to_settings() {
     drop(store);
     let connection = rusqlite::Connection::open(&path).unwrap();
     connection
-        .execute_batch("DROP TABLE app_settings; PRAGMA user_version=2;")
+        .execute_batch(
+            "DROP TABLE app_settings; DROP TABLE calendar_sources; PRAGMA user_version=2;",
+        )
         .unwrap();
     drop(connection);
     let reopened = Store::open(&path).unwrap();

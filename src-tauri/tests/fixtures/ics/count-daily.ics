@@ -1,0 +1,11 @@
+BEGIN:VCALENDAR
+VERSION:2.0
+PRODID:-//Synthetic Calendar Co//Fixtures//EN
+BEGIN:VEVENT
+UID:synthetic-count-1@example.invalid
+DTSTART;TZID=America/Toronto:20260901T080000
+DTEND;TZID=America/Toronto:20260901T083000
+RRULE:FREQ=DAILY;COUNT=3
+SUMMARY:Synthetic Daily Check
+END:VEVENT
+END:VCALENDAR

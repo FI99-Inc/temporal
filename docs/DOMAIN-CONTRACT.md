@@ -184,7 +184,7 @@ Imported recurring Anchors arrive as bounded, normalized individual occurrences 
 
 ## 6. Source state and mutability
 
-A source catalog records stable ID, kind (`local`, `trace`, `quercus`, `google`, `outlook`), and user-visible synthetic/local label. These are finite source kinds, not a plugin interface. Multiple kinds can be represented in synthetic inputs without implementing any adapter.
+A source catalog records stable ID, kind (`local`, `trace`, `quercus`, `google`, `outlook`, `calendar` for another read-only iCalendar feed, per D-014), and user-visible synthetic/local label. These are finite source kinds, not a plugin interface. Multiple kinds can be represented in synthetic inputs without implementing any adapter.
 
 For each external source, the input has `last_attempt_at?`, `last_attempt_outcome=never|complete|partial|failed|incompatible`, `last_success_at?`, and a positive `fresh_for_ms`. Coverage of the last complete success is explicit: optional Anchor interval, optional Deadline interval, and a Task catalog completeness flag. Coverage says what was authoritatively queried, not that the source knows all of the user's life.
 

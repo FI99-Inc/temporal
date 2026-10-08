@@ -1,0 +1,12 @@
+BEGIN:VCALENDAR
+VERSION:2.0
+PRODID:-//Synthetic Calendar Co//Fixtures//EN
+X-WR-CALNAME:Synthetic Floating Calendar
+X-WR-TIMEZONE:America/Toronto
+BEGIN:VEVENT
+UID:synthetic-floating-1@example.invalid
+DTSTART:20260305T090000
+DTEND:20260305T100000
+SUMMARY:Synthetic Floating Morning
+END:VEVENT
+END:VCALENDAR

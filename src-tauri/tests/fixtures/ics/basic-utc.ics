@@ -1,0 +1,13 @@
+BEGIN:VCALENDAR
+VERSION:2.0
+PRODID:-//Synthetic Calendar Co//Fixtures//EN
+BEGIN:VEVENT
+UID:synthetic-utc-1@example.invalid
+DTSTAMP:20260901T120000Z
+DTSTART:20260915T140000Z
+DTEND:20260915T150000Z
+SUMMARY:Synthetic Seminar
+LOCATION:Room Alpha
+URL:https://example.invalid/synthetic-seminar
+END:VEVENT
+END:VCALENDAR

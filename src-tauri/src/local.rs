@@ -35,6 +35,20 @@ pub struct LocalState {
     /// Display-only place and notes for single local Anchors and Deadlines.
     #[serde(default)]
     pub event_details: BTreeMap<String, EventDetails>,
+    /// Imported deadlines the person marked handled, by deadline identity.
+    /// The source fact is unchanged; the acknowledgement only leaves it out of
+    /// pressure and the daily edit (D-015).
+    #[serde(default)]
+    pub handled_imports: BTreeMap<String, Handled>,
+}
+
+#[derive(Clone, Debug, Eq, PartialEq, Serialize, Deserialize)]
+#[serde(deny_unknown_fields)]
+pub struct Handled {
+    pub recorded_at: Instant,
+    /// The calendar source the deadline belonged to when marked.
+    #[serde(default)]
+    pub source_id: String,
 }
 
 impl LocalState {
@@ -59,6 +73,7 @@ impl LocalState {
             anchor_series: vec![],
             usual_availability: None,
             event_details: BTreeMap::new(),
+            handled_imports: BTreeMap::new(),
         }
     }
 }
@@ -85,6 +100,7 @@ pub enum LocalKind {
     AnchorSeries,
     SeriesSkip,
     UsualAvailability,
+    ImportedHandled,
 }
 
 /// One usual weekly block as typed in the Settings page.
@@ -368,6 +384,20 @@ fn upsert(
         LocalKind::AnchorSeries => upsert_series(state, mutation, now),
         LocalKind::SeriesSkip => skip_occurrence(state, mutation, now, true),
         LocalKind::UsualAvailability => upsert_usual(state, mutation, now),
+        LocalKind::ImportedHandled => {
+            let id = parse_id::<DeadlineId>(mutation.id.as_deref())?.to_string();
+            if state.handled_imports.contains_key(&id) {
+                return Err("that deadline is already marked handled".into());
+            }
+            state.handled_imports.insert(
+                id,
+                Handled {
+                    recorded_at: now,
+                    source_id: String::new(),
+                },
+            );
+            Ok(())
+        }
     }
 }
 
@@ -450,6 +480,13 @@ fn remove(
         LocalKind::UsualAvailability => {
             if state.usual_availability.take().is_none() {
                 return Err("usual availability is not declared".into());
+            }
+            Ok(())
+        }
+        LocalKind::ImportedHandled => {
+            let id = parse_id::<DeadlineId>(mutation.id.as_deref())?.to_string();
+            if state.handled_imports.remove(&id).is_none() {
+                return Err("that deadline is not marked handled".into());
             }
             Ok(())
         }

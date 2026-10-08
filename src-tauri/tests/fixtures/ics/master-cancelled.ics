@@ -1,0 +1,12 @@
+BEGIN:VCALENDAR
+VERSION:2.0
+PRODID:-//Synthetic Calendar Co//Fixtures//EN
+BEGIN:VEVENT
+UID:synthetic-cancelled-master-1@example.invalid
+DTSTART;TZID=America/Toronto:20260907T090000
+DTEND;TZID=America/Toronto:20260907T100000
+RRULE:FREQ=WEEKLY;COUNT=3
+STATUS:CANCELLED
+SUMMARY:Synthetic Cancelled Series
+END:VEVENT
+END:VCALENDAR

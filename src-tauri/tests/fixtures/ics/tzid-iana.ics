@@ -1,0 +1,10 @@
+BEGIN:VCALENDAR
+VERSION:2.0
+PRODID:-//Synthetic Calendar Co//Fixtures//EN
+BEGIN:VEVENT
+UID:synthetic-iana-1@example.invalid
+DTSTART;TZID=America/Toronto:20260915T090000
+DTEND;TZID=America/Toronto:20260915T100000
+SUMMARY:Synthetic Studio Hours
+END:VEVENT
+END:VCALENDAR
