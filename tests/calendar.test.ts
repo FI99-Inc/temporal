@@ -24,6 +24,7 @@ function ev(partial: Partial<CalendarEvent> & Pick<CalendarEvent, 'id' | 'kind'>
     series_id: null,
     occurrence_date: null,
     location: null,
+    notes: null,
     occupancy: 'busy',
     tentative: false,
     state: 'upcoming',

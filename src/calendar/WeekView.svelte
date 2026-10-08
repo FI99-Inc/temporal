@@ -189,7 +189,7 @@
   $effect(() => detachDrag);
 </script>
 
-<div class="week" style="--n: {days.length}">
+<div class="week" class:declared={availability.length > 0} style="--n: {days.length}">
   <section class="scroller" bind:this={scroller} aria-label="Time grid">
     <div class="sticky">
       <div class="head">
@@ -387,18 +387,26 @@
     min-width: 0;
     border-left: 1px solid var(--line);
     background-color: transparent;
+    touch-action: none;
+    user-select: none;
+  }
+  /* Once usual hours exist, time outside them is quietly shaded and declared
+     time reads as open, the way working hours do in a conventional grid. */
+  .week.declared .col { background-color: var(--surface-2); }
+  .col::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    z-index: 1;
+    pointer-events: none;
     background-image:
       radial-gradient(circle at 50% 50%, var(--line) 1px, transparent 1.5px),
       repeating-linear-gradient(to bottom, var(--line) 0 1px, transparent 1px 48px);
     background-size: 6px 48px, 100% 100%;
     background-repeat: repeat, no-repeat;
-    background-position: 0 0, 0 0;
-    touch-action: none;
-    user-select: none;
   }
-  .col.today { background-color: var(--surface-2); }
 
-  .band { position: absolute; left: 0; right: 0; z-index: 0; background: var(--avail); border-left: 1px solid var(--avail-line); pointer-events: none; }
+  .band { position: absolute; left: 0; right: 0; z-index: 0; background: var(--surface); border-left: 2px solid var(--avail-line); pointer-events: none; }
 
   .block {
     --fill: var(--anchor-soft);

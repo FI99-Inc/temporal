@@ -31,6 +31,8 @@ export interface CalendarEvent {
   /** `YYYY-MM-DD` occurrence date within a series or routine, if any. */
   occurrence_date: string | null;
   location: string | null;
+  /** Display-only notes for local events and deadlines. */
+  notes: string | null;
   occupancy: 'busy' | 'transparent' | 'unknown' | null;
   tentative: boolean;
   /** Lifecycle label from the stored fact, e.g. upcoming, overdue, satisfied. */

@@ -1,168 +1,193 @@
 <script lang="ts">
   import { onMount } from 'svelte';
-  import Horizon from './Horizon.svelte';
-  import LocalEditor from './LocalEditor.svelte';
-  import Today from './Today.svelte';
+  import EventEditor from './components/EventEditor.svelte';
+  import QuickAdd from './components/QuickAdd.svelte';
+  import CalendarView from './views/CalendarView.svelte';
+  import ExamplesView from './views/ExamplesView.svelte';
+  import HorizonView from './views/HorizonView.svelte';
+  import SettingsView from './views/SettingsView.svelte';
+  import SourcesView from './views/SourcesView.svelte';
+  import { desktop, mutateBatch, onChanged, personalSnapshot, reimportTrace, updateSettings, type ImportResult, type PersonalView, type SettingsPatch } from './lib/api.ts';
+  import { blankDraft, hhmm, type EditTarget, type EventDraft } from './lib/editor.ts';
+  import { zonedParts } from './lib/calendar.ts';
   import type { LocalMutation } from './lib/local.ts';
-  import { catalog, snapshot, desktop, personalSnapshot, importTrace, mutateLocal, type Scenario, type Snapshot, type TraceInfo, type PersonalView, type LocalState } from './lib/api.ts';
-  let scenarios = $state<Scenario[]>([]);
-  let data = $state<Snapshot | null>(null);
-  let selectedId = $state<string | null>(null);
-  let scenarioId = $state('S02');
-  let busy = $state(true);
-  let error = $state('');
-  let personal = $state(false);
-  let trace = $state<TraceInfo | null>(null);
-  let local = $state<LocalState | null>(null);
-  let filePicker = $state<HTMLInputElement>();
-  let requestNumber = 0;
-  let selected = $derived(data?.items.find(i => i.id === selectedId));
-  let nextAnchor = $derived(data?.items.filter(i => i.species === 'anchor' && i.phase === 'upcoming').sort((a, b) => a.start! - b.start!)[0]);
-  async function load(id: string, minutes = 0) {
-    const request = ++requestNumber;
-    busy = true; error = '';
-    try {
-      const next = await snapshot(id, minutes);
-      if (request !== requestNumber) return;
-      if (personal || id !== data?.scenario.id || !next.items.some(i => i.id === selectedId)) selectedId = null;
-      data = next; scenarioId = id; personal = false; trace = null; local = null;
-    } catch (e) {
-      if (request === requestNumber) error = String(e instanceof Error ? e.message : e);
-    } finally { if (request === requestNumber) busy = false; }
+
+  type View = 'horizon' | 'calendar' | 'sources' | 'settings' | 'examples';
+  type Toast = { id: number; text: string; error: boolean };
+  let view = $state<View>(initialView());
+  let personal = $state<PersonalView | null>(null);
+  let busy = $state(false);
+  let loadError = $state('');
+  let toasts = $state<Toast[]>([]);
+  let version = $state(0);
+  let wall = $state(Date.now());
+  // The desktop app follows the system clock; the development preview is frozen
+  // at its injected evaluation time so every view agrees on "now".
+  const now = $derived(desktop || !personal ? wall : personal.view.now);
+  let editing = $state<{ target: EditTarget; draft: EventDraft; key: number } | null>(null);
+  let quickInput = $state<HTMLInputElement>();
+  let toastId = 0;
+
+  const zone = $derived(personal?.view.zone ?? Intl.DateTimeFormat().resolvedOptions().timeZone);
+  const clock = $derived(new Intl.DateTimeFormat('en-US', { timeZone: zone, hour: 'numeric', minute: '2-digit' }).format(new Date(now)));
+  const dateLine = $derived(new Intl.DateTimeFormat('en-US', { timeZone: zone, weekday: 'long', month: 'long', day: 'numeric' }).format(new Date(now)));
+  const attention = $derived(personal ? personal.calendars.filter(c => !c.hidden && c.health !== 'healthy').length + (personal.calendars.some(c => c.past_unhandled.length) ? 1 : 0) : 0);
+
+  function initialView(): View {
+    try { const saved = localStorage.getItem('temporal.view'); if (saved === 'horizon' || saved === 'calendar' || saved === 'sources' || saved === 'settings') return saved; } catch { /* storage unavailable */ }
+    return 'horizon';
   }
-  function showPersonal(next: PersonalView) {
-    if (!personal || !next.view.items.some(i => i.id === selectedId)) selectedId = null;
-    data = next.view; trace = next.trace; local = next.local; personal = true;
-  }
-  async function loadPersonal() {
-    const request = ++requestNumber;
-    busy = true; error = '';
-    try { const next = await personalSnapshot(); if (request === requestNumber) showPersonal(next); }
-    catch (e) { if (request === requestNumber) error = String(e instanceof Error ? e.message : e); }
-    finally { if (request === requestNumber) busy = false; }
-  }
-  async function importFile(file: File | undefined) {
-    if (!file) return;
-    const request = ++requestNumber;
-    busy = true; error = '';
-    try {
-      if (file.size > 10 * 1024 * 1024) throw new Error('Trace export exceeds 10 MiB. Previous snapshot kept.');
-      const json = new TextDecoder('utf-8', { fatal:true }).decode(await file.arrayBuffer());
-      const result = await importTrace(json);
-      if (request === requestNumber) { showPersonal(result.personal); error = result.error ?? ''; }
-    } catch (e) { if (request === requestNumber) error = String(e instanceof Error ? e.message : e); }
-    finally { if (request === requestNumber) busy = false; if (filePicker) filePicker.value = ''; }
-  }
-  async function saveLocal(mutation: LocalMutation) {
-    if (busy) throw new Error('An update is already in progress.');
-    const request = ++requestNumber;
-    busy = true; error = '';
-    try { const next = await mutateLocal(mutation); if (request === requestNumber) showPersonal(next); }
-    finally { if (request === requestNumber) busy = false; }
-  }
-  // A daily edit must not silently go stale. Local time re-evaluates the cache
-  // on a minute tick and on focus; the synthetic preview stays explicitly frozen.
+  $effect(() => { if (view !== 'examples') try { localStorage.setItem('temporal.view', view); } catch { /* storage unavailable */ } });
   $effect(() => {
-    if (!desktop || !personal) return;
-    const refresh = () => { if (!busy && document.visibilityState === 'visible') void loadPersonal(); };
-    const timer = setInterval(refresh, 60_000);
-    window.addEventListener('focus', refresh);
-    return () => { clearInterval(timer); window.removeEventListener('focus', refresh); };
+    const theme = personal?.settings.theme ?? 'system';
+    if (theme === 'system') delete document.documentElement.dataset.theme;
+    else document.documentElement.dataset.theme = theme;
   });
+
+  function toast(text: string, error = false) {
+    const id = ++toastId;
+    toasts = [...toasts, { id, text, error }];
+    setTimeout(() => { toasts = toasts.filter(t => t.id !== id); }, error ? 9000 : 3500);
+  }
+  function accept(result: PersonalView | ImportResult | null | void): boolean {
+    if (!result) return true;
+    if ('view' in result) { personal = result; version++; return true; }
+    personal = result.personal; version++;
+    if (result.error) { toast(result.error, true); return false; }
+    return true;
+  }
+  /** One operation at a time; failures become a visible message, never a silent loss. */
+  async function run(label: string, task: () => Promise<PersonalView | ImportResult | null | void>): Promise<boolean> {
+    if (busy) { toast('Another change is still saving.', true); return false; }
+    busy = true;
+    try {
+      const ok = accept(await task());
+      if (ok && label) toast(label);
+      return ok;
+    } catch (e) { toast(String(e instanceof Error ? e.message : e), true); return false; }
+    finally { busy = false; }
+  }
+  const apply = (label: string, mutations: LocalMutation[]) => mutations.length
+    ? run(label, () => mutateBatch(mutations)) : (label ? (toast(label, true), Promise.resolve(false)) : Promise.resolve(false));
+  const saveSettings = (patch: SettingsPatch) => run('', () => updateSettings(patch));
+  const mutateOne = (mutation: LocalMutation) => apply('Saved', [mutation]);
+
+  async function refresh() {
+    if (busy) return;
+    try {
+      if (desktop && personal?.trace.export_path) {
+        const imported = await reimportTrace().catch(() => null);
+        if (imported) { accept(imported); return; }
+      }
+      const next = await personalSnapshot();
+      personal = next; version++; loadError = '';
+    } catch (e) { loadError = String(e instanceof Error ? e.message : e); }
+  }
+  function openEditor(target: EditTarget, draft: EventDraft) { editing = { target, draft, key: Date.now() }; }
+  function newEvent() {
+    const parts = zonedParts(now, zone);
+    openEditor({ kind: 'new' }, blankDraft(parts.date, zone, hhmm(Math.min(23 * 60, Math.ceil((parts.minutes + 1) / 30) * 30)), personal?.settings.default_event_minutes ?? 60));
+  }
+
   onMount(() => {
+    let stop: (() => void) | undefined;
     void (async () => {
-      try { scenarios = await catalog(); if (desktop) await loadPersonal(); else await load(scenarioId); }
-      catch (e) { error = String(e); busy = false; }
+      try {
+        let first = await personalSnapshot();
+        if (!first.settings.display_zone) {
+          const system = Intl.DateTimeFormat().resolvedOptions().timeZone;
+          first = await updateSettings({ display_zone: system }).catch(() => first);
+        }
+        personal = first; version++;
+      } catch (e) { loadError = String(e instanceof Error ? e.message : e); }
+      stop = await onChanged(() => { void refresh(); });
     })();
+    // The daily edit must not go stale: re-evaluate every minute while visible and on focus.
+    const tick = setInterval(() => { wall = Date.now(); if (document.visibilityState === 'visible') void refresh(); }, 60_000);
+    const clockTick = setInterval(() => { wall = Date.now(); }, 15_000);
+    const focus = () => { wall = Date.now(); void refresh(); };
+    window.addEventListener('focus', focus);
+    return () => { clearInterval(tick); clearInterval(clockTick); window.removeEventListener('focus', focus); stop?.(); };
   });
-  const readable = (value: string) => value.replaceAll('_', ' ');
+
+  function keydown(event: KeyboardEvent) {
+    const target = event.target as HTMLElement | null;
+    const typing = Boolean(target && (target.closest('input, textarea, select, dialog') || target.isContentEditable));
+    if (editing) return;
+    if ((event.ctrlKey || event.metaKey) && event.key.toLowerCase() === 'n') { event.preventDefault(); newEvent(); return; }
+    if (typing || event.ctrlKey || event.metaKey || event.altKey) return;
+    if (event.key === '/') { event.preventDefault(); quickInput?.focus(); }
+    else if (event.key === 'n') { event.preventDefault(); newEvent(); }
+    else if (event.key === 'h' || event.key === '1') view = 'horizon';
+    else if (event.key === 'c' || event.key === '2') view = 'calendar';
+    else if (event.key === '3') view = 'sources';
+    else if (event.key === '4') view = 'settings';
+  }
+  const nav: { id: View; label: string; key: string; icon: string }[] = [
+    { id: 'horizon', label: 'Horizon', key: 'H', icon: 'M3 17c3-6 6-9 9-9s6 3 9 9M3 17h18M12 8V4' },
+    { id: 'calendar', label: 'Calendar', key: 'C', icon: 'M4 6h16v14H4zM4 10h16M9 3v4M15 3v4' },
+    { id: 'sources', label: 'Sources', key: '3', icon: 'M5 6c0-1.7 3.1-3 7-3s7 1.3 7 3-3.1 3-7 3-7-1.3-7-3zM5 6v12c0 1.7 3.1 3 7 3s7-1.3 7-3V6M5 12c0 1.7 3.1 3 7 3s7-1.3 7-3' },
+    { id: 'settings', label: 'Settings', key: '4', icon: 'M12 15a3 3 0 100-6 3 3 0 000 6zM19 12l2-1-1-3-2 .3-1.4-1.4.3-2-3-1-1 2h-2l-1-2-3 1 .3 2L5.8 7.3 4 7 3 10l2 1v2l-2 1 1 3 2-.3 1.4 1.4-.3 2 3 1 1-2h2l1 2 3-1-.3-2 1.4-1.4 2 .3 1-3-2-1z' },
+  ];
 </script>
 
-<svelte:head><title>Temporal Engine — Horizon</title></svelte:head>
+<svelte:window onkeydown={keydown} />
+<svelte:head><title>Temporal Engine</title></svelte:head>
 
-<a class="skip-link" href="#main">Skip to Horizon</a>
-<div class="app-shell">
-  <header class="app-header">
-    <div class="brand"><span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span><span>Temporal Engine</span></div>
-    <span class="sample-mode">{personal ? (desktop ? 'Local data' : 'Preview cache') : 'Sample data'}</span>
-    <nav class="view-switch" aria-label="Data view">
-      <button aria-pressed={personal} disabled={busy} onclick={loadPersonal}>My time</button>
-      <button aria-pressed={!personal} disabled={busy} onclick={() => load(scenarioId)}>Examples</button>
-    </nav>
-    {#if !personal}<label class="scenario-picker">Example week
-      <select aria-label="Example week" value={scenarioId} disabled={busy || !scenarios.length} onchange={(e) => load(e.currentTarget.value)}>
-        {#each scenarios as scenario (scenario.id)}<option value={scenario.id}>{scenario.title}</option>{/each}
-      </select>
-    </label>{:else}<div class="import-control">
-      <input class="file-input" type="file" accept=".json,application/json" aria-label="Trace JSON export" bind:this={filePicker} onchange={(e) => importFile(e.currentTarget.files?.[0])} />
-      <button disabled={busy} onclick={() => filePicker?.click()}>Import Trace JSON</button>
-    </div>{/if}
-  </header>
+<a class="skip-link" href="#main">Skip to content</a>
+<div class="shell">
+  <nav class="sidebar" aria-label="Main">
+    <div class="brand"><span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span><span>Temporal</span></div>
+    {#each nav as item (item.id)}
+      <button class="nav-item" aria-current={view === item.id ? 'page' : undefined} title="{item.label} ({item.key})" onclick={() => { view = item.id; }}>
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d={item.icon} /></svg><span>{item.label}</span>
+        {#if item.id === 'sources' && attention}<em class="nav-badge" aria-label="{attention} need attention">{attention}</em>{/if}
+      </button>
+    {/each}
+    <div class="sidebar-foot">
+      <strong>{dateLine}</strong>
+      <span>{personal ? 'Stored on this computer' : desktop ? 'Opening your local store…' : 'Development preview'}</span>
+    </div>
+  </nav>
 
-  <main id="main" aria-busy={busy}>
-    <section class="page-heading" aria-label="Current virtual time">
-      <div><h1>Horizon</h1><p>{data?.date_label ?? 'Your near future, in view'}</p></div>
-      <div class="clock-controls">
-        <div class="clock"><span class="now-dot" aria-hidden="true"></span><strong>{data?.clock_label ?? '—'}</strong><span>{personal ? (desktop ? 'Local time' : 'Frozen preview time') : 'Virtual time'}</span></div>
-        {#if personal}<button class="refresh-view" disabled={busy} onclick={loadPersonal}>Update view</button>
-        {:else}<div class="time-buttons" aria-label="Virtual clock controls">
-          <button disabled={busy || !data || data.offset_minutes === 0} onclick={() => load(scenarioId, 0)}>Reset time</button>
-          <button disabled={busy || !data || data.offset_minutes + 60 > data.max_offset_minutes} onclick={() => data && load(scenarioId, data.offset_minutes + 60)}>+1 hour</button>
-          <button disabled={busy || !data || data.offset_minutes + 1440 > data.max_offset_minutes} onclick={() => data && load(scenarioId, data.offset_minutes + 1440)}>+1 day</button>
-        </div>{/if}
-      </div>
-    </section>
+  <div class="content">
+    <header class="topbar">
+      <QuickAdd {zone} {now} defaultMinutes={personal?.settings.default_event_minutes ?? 60} busy={busy || !personal} onapply={apply} onedit={openEditor} bind:input={quickInput} />
+      <button class="primary" disabled={busy || !personal} onclick={newEvent} title="New event (N)">New</button>
+      <div class="clock"><strong>{clock}</strong><span>{zone}</span></div>
+    </header>
 
-    {#if error}
-      <div class="error" role="alert"><strong>Horizon could not update</strong><p>{error}</p><button onclick={() => personal ? loadPersonal() : load(scenarioId)}>Reload view</button></div>
-    {/if}
-
-    {#if data}
-      <div class="scenario-note"><p>{data.scenario.description}</p><span role="status">{busy ? 'Updating…' : personal ? 'Stored on this computer' : 'Time changes only this sample'}</span></div>
-      {#if personal && trace}<section class="trace-overview" aria-label="Trace snapshot">
-        <div><strong>{trace.exported_at ? `${trace.present_tasks} Trace tasks · ${trace.completed_tasks} completed` : 'Bring your tasks into view'}</strong>
-          <p>{trace.exported_at ? `Exported ${trace.exported_at} · Last import ${trace.imported_at}` : 'In Trace, press Ctrl+K → Export as JSON. Import that file here.'}</p>
-          {#if trace.unresolved_dates}<p>{trace.unresolved_dates} source date{trace.unresolved_dates === 1 ? '' : 's'} need precision before becoming deadlines. Select a task to inspect the original value.</p>{/if}
-        </div>
-        <div class="trace-import-state"><span>Last import: {readable(trace.last_attempt)}</span><small>{desktop ? 'Snapshot only; later Trace edits need a new export.' : 'Browser preview: use synthetic exports only.'}</small></div>
-      </section>{/if}
-      {#if personal && local && trace}
-        <LocalEditor {local} tasks={trace.tasks} now={data.now} zone={data.zone} {busy} onsave={saveLocal} />
+    <main id="main" class="page" class:flush={view === 'calendar'} aria-busy={busy}>
+      {#if loadError && !personal}
+        <div class="notice warn" role="alert"><div><strong>Temporal could not open its local store.</strong><p>{loadError}</p></div><button onclick={refresh}>Try again</button></div>
       {/if}
-      <Today today={data.today} {selectedId} onselect={(id) => { selectedId = id; }} />
-      <div class="workspace">
-        <Horizon {data} {selectedId} onselect={(id) => { selectedId = id; }} />
-        <aside class="inspector" aria-label="Selected item details">
-          {#if selected}
-            <div class="inspector-heading"><span class="detail-kind"><span class="species-shape {selected.species}"></span>{selected.species}</span><button class="close" aria-label="Close details" onclick={() => { selectedId = null; }}>×</button></div>
-            <h2>{selected.title}</h2>
-            <p class="detail-when">{selected.when}</p>
-            <div class="source-box"><strong>{selected.ownership}</strong><span>{selected.source}</span>{#if selected.milestone}<span>◇ Marked as a milestone</span>{/if}</div>
-            <dl class="state-details">
-              <div><dt>State</dt><dd>{readable(selected.phase)}</dd></div>
-              {#if selected.risk}<div><dt>Pressure</dt><dd class:risk={['tight', 'insufficient', 'overdue'].includes(selected.risk)}>{readable(selected.risk)}</dd></div>{/if}
-            {#if selected.conditional}<div><dt>Source basis</dt><dd>Conditional; inspect freshness and coverage below</dd></div>{/if}
-            </dl>
-            <h3>Why this appears</h3>
-            <ul class="reasons">{#each selected.reasons as reason}<li>{reason}</li>{/each}</ul>
-            {#if selected.facts.length}<h3>Evidence and calculation</h3><dl class="facts">{#each selected.facts as fact}<div><dt>{fact.label}</dt><dd>{fact.value}</dd></div>{/each}</dl>{/if}
-          {:else}
-            <span class="detail-kind">A closer look</span>
-            <h2>Time, with context.</h2>
-            <p class="inspector-intro">Select an item to see what is recorded, what is estimated, and why it appears here.</p>
-            {#if nextAnchor}<div class="next-anchor"><span>Next recorded anchor</span><strong>{nextAnchor.title}</strong><p>{nextAnchor.when}</p><button onclick={() => { selectedId = nextAnchor!.id; }}>Inspect anchor</button></div>{/if}
-            <div class="legend" aria-label="Visual key">
-              <p><span class="species-shape anchor"></span>Bars show fixed occurrences</p>
-              <p><span class="species-shape deadline"></span>Markers show real deadlines</p>
-              <p><span class="species-shape window"></span>Open spans show derived opportunity</p>
-              <p><span class="species-shape suggestion"></span>Dashed shapes are advice</p>
-            </div>
-            <p class="small-note">A fitting window is not a reservation. Pressure describes one item's declared opportunity at a time.</p>
-          {/if}
-          <details class="source-status"><summary>Source state</summary>{#each data.sources as source}<div><span>{source.label}</span><strong class:qualified={source.health !== 'healthy'}>{readable(source.health)}</strong></div>{/each}<p>{personal ? 'Health describes the last imported snapshot. Update view re-evaluates this cache; import a new export for newer Trace facts.' : 'These sources are synthetic examples.'}</p></details>
-        </aside>
-      </div>
-    {:else if !error}<div class="loading" role="status">Preparing the synthetic Horizon…</div>{/if}
-  </main>
-  <footer><span>Personal time, in perspective.</span><span>Prototype for exploring the shape of Horizon</span></footer>
+      {#if view === 'examples'}
+        <ExamplesView onclose={() => { view = 'horizon'; }} />
+      {:else if personal}
+        {#if view === 'horizon'}
+          <HorizonView data={personal.view} {personal} {busy} onedit={openEditor} onapply={apply} onnavigate={(next) => { view = next; }} />
+        {:else if view === 'calendar'}
+          <CalendarView {personal} {busy} {version} {now} onedit={openEditor} onapply={apply} />
+        {:else if view === 'sources'}
+          <SourcesView {personal} {busy} {run} />
+        {:else if view === 'settings'}
+          <SettingsView {personal} {busy} onsettings={saveSettings} onmutate={mutateOne} onexamples={() => { view = 'examples'; }} />
+        {/if}
+      {:else if !loadError}
+        <div class="loading" role="status">Opening your time…</div>
+      {/if}
+    </main>
+  </div>
+</div>
+
+{#if editing}
+  {#key editing.key}
+    <EventEditor target={editing.target} initial={editing.draft} {busy} onsave={apply} onclose={() => { editing = null; }} />
+  {/key}
+{/if}
+
+<div class="toast-stack" aria-live="polite">
+  {#each toasts as t (t.id)}
+    <div class="toast" class:error={t.error} role={t.error ? 'alert' : 'status'}><p>{t.text}</p><button class="ghost" aria-label="Dismiss" onclick={() => { toasts = toasts.filter(x => x.id !== t.id); }}>×</button></div>
+  {/each}
 </div>
