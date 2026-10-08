@@ -72,6 +72,36 @@
     if (await onapply(scope === 'one' && target.kind === 'series' ? 'Occurrence removed' : 'Deleted', deleteMutations(target, scope))) onclose();
   }
   const editable = $derived(Boolean(series || localAnchor || localDeadline || intention));
+  // Imported deadlines and Trace tasks keep their source facts; a local work
+  // estimate beside them is what lets pressure and Today assess the work.
+  const traceTask = $derived(species === 'task' ? personal?.trace.tasks.find(t => t.id === id) ?? null : null);
+  const estimateKind = $derived(imported && species === 'deadline' ? 'deadline' : traceTask ? 'task' : null);
+  const currentWork = $derived.by(() => {
+    if (!local) return null;
+    if (estimateKind === 'deadline') {
+      const note = local.deadline_annotations.find(a => a.target_id === id);
+      return note?.work.kind === 'standalone' ? note.work.value : null;
+    }
+    if (estimateKind === 'task') return local.task_annotations.find(a => a.target_id === id)?.work ?? null;
+    return null;
+  });
+  let effortText = $state('');
+  let chunkText = $state('');
+  $effect(() => {
+    const work = currentWork;
+    effortText = work && work.effort.kind !== 'unknown' ? String(work.effort.value) : '';
+    chunkText = work?.minimum_chunk_minutes ? String(work.minimum_chunk_minutes) : '';
+  });
+  async function saveEstimate(event: SubmitEvent) {
+    event.preventDefault();
+    const effort = String(effortText).trim() === '' ? undefined : Math.round(Number(effortText));
+    let chunk = String(chunkText).trim() === '' ? undefined : Math.round(Number(chunkText));
+    if (effort !== undefined && chunk === undefined) chunk = Math.max(1, Math.min(30, effort));
+    const base = { action: 'upsert' as const, replace_work: true, effort_minutes: effort, minimum_chunk_minutes: chunk, zone };
+    await onapply('Estimate saved', [estimateKind === 'deadline'
+      ? { ...base, kind: 'deadline_annotation', id }
+      : { ...base, kind: 'task_annotation', trace_external_id: traceTask!.external_id }]);
+  }
   const deadlineState = $derived(localDeadline?.fulfillment.value.kind ?? null);
 </script>
 
@@ -143,6 +173,18 @@
     {#if item?.milestone}<span>◇ Marked as a milestone</span>{/if}
   </div>
 
+  {#if estimateKind}
+    <form class="estimate" onsubmit={saveEstimate}>
+      <strong>Work estimate</strong>
+      <div class="estimate-fields">
+        <label>Work left (min)<input type="number" min="0" step="5" bind:value={effortText} placeholder="Unknown" /></label>
+        <label>Smallest session (min)<input type="number" min="1" step="5" bind:value={chunkText} placeholder="Unknown" /></label>
+        <button type="submit" disabled={busy}>Save</button>
+      </div>
+      <p class="small-note">Kept on this computer. {estimateKind === 'deadline' ? 'The deadline from its source is unchanged.' : 'Trace keeps the task itself.'} Blank stays unknown.</p>
+    </form>
+  {/if}
+
   {#if place || notes || event?.tentative || event?.occupancy === 'transparent'}
     <dl class="state-details">
       {#if place}<div><dt>Place</dt><dd>{place}</dd></div>{/if}
@@ -175,5 +217,9 @@
   .confirm { border: 1px solid var(--risk); background: var(--risk-soft); border-radius: var(--radius-sm); padding: 10px 12px; margin-bottom: 14px; font-size: 13px; display: grid; gap: 8px; }
   .confirm div { display: flex; gap: 6px; }
   .notes { white-space: pre-wrap; }
+  .estimate { display: grid; gap: 8px; padding: 12px; border: 1px solid var(--line); border-radius: var(--radius-sm); background: var(--surface); margin-bottom: 16px; font-size: 13px; }
+  .estimate-fields { display: flex; gap: 8px; align-items: end; flex-wrap: wrap; }
+  .estimate-fields label { display: grid; gap: 3px; font-size: 11px; color: var(--muted); flex: 1 1 100px; }
+  .estimate-fields input { width: 100%; }
   .evidence summary { cursor: pointer; font-weight: 600; font-size: 13px; margin-bottom: 10px; }
 </style>

@@ -43,7 +43,7 @@ export interface UsualAvailability {
   meta: Meta; zone: string; blocks: { weekday: Weekday; start_minute: number; end_minute: number }[];
   contexts: { kind: 'unknown' } | { kind: 'known'; value: string[] }; energy_capacity: Capacity;
 }
-export type MutationKind = LocalKind | 'routine_outcome' | 'anchor_series' | 'series_skip' | 'usual_availability' | 'imported_handled';
+export type MutationKind = LocalKind | 'routine_outcome' | 'anchor_series' | 'series_skip' | 'usual_availability' | 'imported_handled' | 'anchor_annotation' | 'deadline_annotation';
 export interface LocalMutation {
   action: 'upsert' | 'remove'; kind: MutationKind; id?: string;
   title?: string; zone?: string; all_day?: boolean; start?: string; end?: string; due?: string;

@@ -355,3 +355,56 @@ fn the_calendar_range_merges_local_series_and_imported_rows() {
     assert_eq!(seminar.color.as_deref(), Some("#286580"));
     assert!(calendar::range(&stored, now(), now(), now()).is_err());
 }
+
+#[test]
+fn imported_deadlines_accept_local_work_estimates_and_reject_unknown_targets() {
+    let mut store = Store::memory().unwrap();
+    add(&mut store, COURSEWORK, CalendarMode::Coursework, now());
+    let input = read(&store, now());
+    let upcoming = input
+        .deadlines
+        .iter()
+        .find(|d| d.title == "Synthetic problem set 2")
+        .unwrap();
+    let mut usual = LocalMutation::upsert(LocalKind::UsualAvailability);
+    usual.blocks = [Weekday::Wed, Weekday::Thu, Weekday::Fri]
+        .into_iter()
+        .map(|weekday| temporal_app::local::BlockInput {
+            weekday,
+            start: "09:00".into(),
+            end: "17:00".into(),
+        })
+        .collect();
+    store.mutate_local(&usual, now()).unwrap();
+    let mut estimate = LocalMutation::upsert(LocalKind::DeadlineAnnotation);
+    estimate.id = Some(upcoming.meta.id.to_string());
+    estimate.effort_minutes = Some(120);
+    estimate.minimum_chunk_minutes = Some(30);
+    estimate.replace_work = true;
+    store.mutate_local(&estimate, now()).unwrap();
+    let input = read(&store, now());
+    let note = input
+        .deadline_annotations
+        .iter()
+        .find(|a| a.target_id == upcoming.meta.id)
+        .unwrap();
+    assert!(matches!(note.work, DeadlineWork::Standalone(_)));
+    let output = temporal_core::evaluate(&input).unwrap();
+    let pressure = output
+        .pressures
+        .iter()
+        .find(|p| p.deadline_id == upcoming.meta.id)
+        .unwrap();
+    assert!(pressure.ratio.is_some());
+    // The source fact itself is unchanged by the estimate.
+    assert_eq!(
+        input
+            .deadlines
+            .iter()
+            .find(|d| d.meta.id == upcoming.meta.id)
+            .unwrap(),
+        upcoming
+    );
+    estimate.id = Some("00000000-0000-4000-8000-00000000dead".into());
+    assert!(store.mutate_local(&estimate, now()).is_err());
+}

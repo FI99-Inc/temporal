@@ -520,6 +520,27 @@ impl Store {
                 handled.source_id = source.clone();
             }
         }
+        // A changed deadline annotation must describe a deadline that exists:
+        // a local one, or an imported one currently in view.
+        let changed = next.local.deadline_annotations.iter().filter(|note| {
+            !previous
+                .local
+                .deadline_annotations
+                .iter()
+                .any(|old| old.target_id == note.target_id && old.revision == note.revision)
+        });
+        for note in changed {
+            let id = note.target_id.to_string();
+            if !next
+                .local
+                .deadlines
+                .iter()
+                .any(|d| d.meta.id == note.target_id)
+                && !imported.contains_key(&id)
+            {
+                return Err("That deadline is not available to annotate.".into());
+            }
+        }
         next.local.updated_at = Some(now);
         next.local.revision = next
             .local
@@ -887,12 +908,13 @@ fn parsed_calendars(
                         |r| r.get(0),
                     )
                     .map_err(db_error)?;
+                // Stored text parsed when it was saved. If a later version cannot
+                // read it, that calendar shows no events instead of stopping the
+                // app; its stored text is kept for the next refresh.
                 let value = Arc::new(if text.is_empty() {
                     empty_calendar()
                 } else {
-                    ics::parse(&text, fallback).map_err(|_| {
-                        "A stored calendar could not be read; it was left unchanged.".to_string()
-                    })?
+                    ics::parse(&text, fallback).unwrap_or_else(|_| empty_calendar())
                 });
                 cache.insert(id, (calendar.revision, value.clone()));
                 value
