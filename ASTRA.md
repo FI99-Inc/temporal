@@ -24,6 +24,11 @@ repeating local events, usual weekly availability, read-only iCalendar import
 (file or subscription), reminders, and a Windows installer. Horizon stays Home
 and every Gate 0–2 invariant holds.
 
+Later the same day the user rejected the first UI as generic and asked for a
+utilitarian, Teenage-Engineering-like design. D-016 records the visual
+language; every page, dialog, and the three themes (Paper, Ink, Rose) were
+restyled with no change to engine or command behavior.
+
 Build note: this environment has no Windows host. The Windows executable and
 NSIS installer are cross-built with the `x86_64-pc-windows-gnu` target and
 MinGW (Microsoft's MSVC download hosts are not reachable here); a GitHub

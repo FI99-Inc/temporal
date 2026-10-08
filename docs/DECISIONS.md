@@ -120,6 +120,26 @@ deadline keeps its provenance, stays visible in the Calendar labelled
 Unacknowledged past imported deadlines remain overdue, as the contract says.
 Revisit when a source can report fulfillment (the deferred Quercus adapter).
 
+### D-016 — Utilitarian visual language (user directive, 2026-10-08)
+
+The user rejected the first calendar-replacement UI as generic ("the most AI
+looking app") and asked for a utilitarian, instrument-panel look in the spirit
+of Teenage Engineering's site, pointing at a two-colour reference with giant
+blocky type and ruled grids.
+
+The visual system is therefore: hard 1px rules and square corners (no rounded
+cards, soft shadows, or gradients); a wide black display face (Archivo, bundled
+locally) for headings and numbers; a monospace face (IBM Plex Mono) for labels,
+times, and controls in uppercase; numbered sections (01, 02, …); inversion for
+active and fixed things; one signal colour for now and risk; and hatching for
+time that is closed or declared. Themes are System, Paper (light), Ink (dark),
+and Rose (the reference's pink and bottle green).
+
+This changes appearance only. Species encodings keep their meaning (solid =
+fixed, diamond = deadline, hatched = declared time, dashed = optional or
+advice), and the O-003 composition (Today first, compressed time below) holds.
+Fonts ship with the app; nothing is fetched at runtime.
+
 ## Open questions
 
 These are intentionally not blockers for documentation Gate 0 unless a gate explicitly requires them.
