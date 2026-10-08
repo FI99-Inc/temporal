@@ -74,6 +74,38 @@ When Google/Outlook integrations arrive, begin with read-only import.
 
 Temporal behavior must be testable with an injected clock and synthetic scenarios.
 
+### D-014 — Calendar-replacement release (user directive, 2026-10-08)
+
+The user asked to "finish temporal, fix the UI, engine logic, and get a fully
+functioning version ready … to start using temporal as a true calendar
+(replacement)", delivered as "a proper executable desktop app". Under the
+authority order in `AGENTS.md`, this instruction reorders Gate 3 and authorizes
+the following, without reopening D-001–D-013:
+
+- Horizon stays Home. A secondary **Calendar** utility (Day, Week, Month) is
+  now earned: it is the place to place, read, and edit fixed facts quickly.
+- Local fixed events (Anchors) may repeat. A bounded local series is expanded
+  by the application boundary into ordinary individual Anchors with stable
+  derived identities; the core still receives only normalized occurrences.
+- A **usual weekly availability** may be declared once. It expands into the
+  explicit, non-overlapping availability declarations the core already
+  consumes. An explicit one-off declaration takes precedence over the usual
+  pattern for the time it covers. Nothing infers free time from an empty grid.
+- **Read-only iCalendar import** from a chosen file or a subscription URL
+  (Google, Outlook, Quercus/Canvas, or another calendar). The adapter expands
+  recurrence into bounded occurrences keyed by the source's own recurrence
+  identifier, keeps per-calendar source identity and health, and never writes
+  back. A subscription URL is treated as a credential.
+- **Desktop reminders** before fixed events and a Windows **installer**.
+  Gate 3.6's "packaging" prohibition is superseded for this personal build;
+  public distribution, signing, auto-update, and stores remain excluded.
+- The Quercus REST adapter (Tasks 3.1–3.3) is deferred, not abandoned:
+  Canvas's own calendar feed reaches coursework dates through the iCalendar
+  boundary. The personal-local trial (3.5) now runs on this release.
+
+Still excluded: mobile, cloud storage, accounts, telemetry, write-back to any
+external source, machine-authored time blocking, and AI.
+
 ## Open questions
 
 These are intentionally not blockers for documentation Gate 0 unless a gate explicitly requires them.

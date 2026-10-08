@@ -5,27 +5,27 @@ reports in `docs/BUILD-GATES.md` carry the detailed evidence.
 
 ## Current state
 
-**Project phase:** Primitive Windows application
+**Project phase:** Calendar-replacement release (user-directed, D-014)
 
-**Current gate:** Gate 3 — Quercus and real personal trial (not started)
+**Current gate:** Gate 4 — Calendar-replacement release (in progress)
 
-**Current task:** 3.1 Verify the Quercus source contract
+**Current task:** 4.1 Settings, display zone, and a bounded evaluation slice
 
-**Status:** Gates 0, 1, and 2 complete; Task 3.1 next
+**Status:** Gates 0–2 complete. Gate 3 reordered by D-014 on 2026-10-08:
+its Quercus REST adapter (3.1–3.3) is deferred; the personal trial (3.5) runs
+on the Gate 4 release.
 
-The user has authorized building the application and emphasized prompt delivery
-of a highly personal app. Keep implementation focused on a usable Horizon. One
-internal Rust crate now evaluates validated snapshots into lifecycle, source
-health, Windows, conflicts, fit, pressure, and suggestion-validity results.
-The Windows Tauri/Svelte shell now presents twelve synthetic weeks with virtual
-time, nonlinear geometry, separate temporal species, and inspectable evidence.
-Trace 1.0 JSON imports into an app-owned SQLite cache with stable mappings,
-atomic reconciliation, retained last-known state, and visible source health.
-Local temporal forms and work annotations now persist in the same app-owned
-store, with explicit completion and Routine outcomes. A bounded `today-v1` edit
-selects Fixed, Worth doing, Loose, and On the radar from one evaluation and
-explains itself without writing anything. The app is verified against synthetic
-inputs and one snapshot source; it has never met real coursework.
+On 2026-10-08 the user asked for a fully functioning version they can use as a
+true calendar replacement, delivered as an executable desktop app, with UI and
+engine fixes. D-014 records what that authorizes: a secondary Calendar utility,
+repeating local events, usual weekly availability, read-only iCalendar import
+(file or subscription), reminders, and a Windows installer. Horizon stays Home
+and every Gate 0–2 invariant holds.
+
+Build note: this environment has no Windows host. The Windows executable and
+NSIS installer are cross-built with the `x86_64-pc-windows-gnu` target and
+MinGW (Microsoft's MSVC download hosts are not reachable here); a GitHub
+Actions workflow reproduces the MSVC build on Windows.
 
 ## Settled posture
 
@@ -41,7 +41,9 @@ inputs and one snapshot source; it has never met real coursework.
 
 ## Immediate objective
 
-Execute **3.1 Verify the Quercus source contract** from `docs/BUILD-GATES.md`:
+Execute Gate 4 in order (see `docs/BUILD-GATES.md`). The former immediate
+objective, kept for when the Quercus REST adapter resumes: **3.1 Verify the
+Quercus source contract** from `docs/BUILD-GATES.md`:
 read-only investigation of what Quercus/Canvas actually exposes, its
 authentication, pagination, rate limits, error shapes, and the precision and
 timezone of every date field, before any adapter code. Record what the source

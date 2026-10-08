@@ -941,6 +941,96 @@ by default, and any write back to Trace or Quercus.
 
 ---
 
+## Gate 4 — Calendar-replacement release (user-directed)
+
+D-014 reorders the work: the user wants to stop using a conventional calendar
+and use Temporal Engine instead, from an installed Windows executable. Gate 3's
+Quercus REST adapter is deferred; its personal trial runs on this release.
+Every task keeps the core invariants: facts stay distinct from advice, the
+core stays deterministic with injected time, and nothing is written back to
+any external source.
+
+### 4.1 Settings, display zone, and a bounded evaluation slice
+
+- **Acceptance:** an app-owned settings record (display zone defaulting to the
+  system zone, week start, reminder lead, theme) persists across restart. The
+  Horizon evaluation receives only facts relevant to its range: present
+  Anchors intersecting the civil day containing `now` through the evaluation
+  end, unresolved Deadlines at any time, and recently resolved ones. Removing
+  old facts from the slice never deletes or rewrites them.
+- **Verification:** store tests for settings round-trip, slice selection, and
+  annotation integrity; existing suites unchanged.
+
+### 4.2 Repeating local events and usual availability
+
+- **Acceptance:** a local series (daily, weekly on chosen weekdays, or monthly
+  on the start day, with interval, end date or count, and skipped dates)
+  expands into individual Anchors with stable derived UUIDv4 identities.
+  Ambiguous DST wall times take the earlier offset; nonexistent ones move
+  forward by the gap. A usual weekly availability pattern expands into
+  explicit declarations; explicit one-off declarations win where they overlap.
+- **Verification:** expansion tests across DST, month ends, counts, skips,
+  and identity stability; store round-trip and core validation of the result.
+
+### 4.3 Read-only iCalendar import
+
+- **Acceptance:** a chosen `.ics` file or subscription URL becomes its own
+  calendar source with label, kind, health, and last-known events. RRULE,
+  RDATE, EXDATE, RECURRENCE-ID overrides, cancelled instances, all-day dates,
+  IANA and common Windows TZIDs are normalized into bounded occurrences keyed
+  by UID and original start. A Canvas/Quercus "coursework" calendar maps
+  assignment entries to real Deadlines; everything else is an Anchor.
+  A failed refresh keeps last-known events and exposes health. The URL lives
+  in Windows Credential Manager, never in SQLite, logs, or the frontend.
+- **Verification:** synthetic parser/expansion fixtures, reconciliation and
+  failure tests, and a repository scan for credential-shaped strings.
+
+### 4.4 Calendar utility and redesigned shell
+
+- **Acceptance:** the app opens on the user's own Horizon (synthetic examples
+  move to a secondary place). Navigation reaches Horizon, Calendar (Day/Week/
+  Month), Sources, and Settings. The Calendar shows fixed facts, deadlines,
+  soft items, and declared availability with distinct shapes and provenance;
+  imported events are visibly read-only. Light and dark themes, keyboard
+  navigation, and reduced motion are respected.
+- **Verification:** geometry/layout unit tests, svelte-check, and a browser
+  walkthrough with synthetic data.
+
+### 4.5 Event editor and quick add
+
+- **Acceptance:** creating an event takes one click on the grid or one line of
+  text ("Lab Tue 2-4pm every week until Dec 5"). A deterministic parser shows
+  its interpretation before saving. The editor edits, deletes, skips one
+  occurrence of a series, or edits the whole series. Deadlines, intentions,
+  and routines remain distinct kinds.
+- **Verification:** parser unit tests with an injected date; mutation tests.
+
+### 4.6 Reminders
+
+- **Acceptance:** an optional notification fires a configurable number of
+  minutes before each upcoming fixed event while the app runs, at most once
+  per occurrence. Closing the window can keep the app in the tray so
+  reminders continue. Notifications contain only the event title and time.
+- **Verification:** deterministic due-reminder selection tests.
+
+### 4.7 Windows installer and CI build
+
+- **Acceptance:** a per-user NSIS installer with icons and Start-menu entry
+  installs a release executable with no development bridge. A GitHub Actions
+  workflow reproduces the build on Windows with MSVC.
+- **Verification:** cross-built installer from a clean checkout, inspected
+  imports, and the workflow run.
+
+### 4.8 Verify Gate 4 and hand off
+
+- **Acceptance:** full core/app/frontend suites, installer build, a recorded
+  manual walkthrough, residual risks, and an updated ASTRA pointer.
+
+Gate 4 excludes write-back, cloud sync, accounts, telemetry, AI, mobile,
+signing, auto-update, and public distribution.
+
+---
+
 ## Future gates
 
 External calendars, companion-surface integration, travel/opportunity quality, effort calibration, refined visual design, packaging, and FI99 evaluation remain future work.
