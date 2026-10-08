@@ -563,7 +563,9 @@ fn migration_local_failure_and_clock_rewind_keep_last_committed_state() {
     // Build a synthetic v1 cache using the prior committed table schema.
     let connection = rusqlite::Connection::open(&path).unwrap();
     connection
-        .execute_batch("DROP TABLE local_temporal_state; PRAGMA user_version=1;")
+        .execute_batch(
+            "DROP TABLE local_temporal_state; DROP TABLE app_settings; DROP TABLE calendar_sources; PRAGMA user_version=1;",
+        )
         .unwrap();
     drop(connection);
     let mut store = Store::open(&path).unwrap();

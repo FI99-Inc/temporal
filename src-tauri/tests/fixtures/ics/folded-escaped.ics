@@ -1,0 +1,12 @@
+BEGIN:VCALENDAR
+VERSION:2.0
+PRODID:-//Synthetic Calendar Co//Fixtures//EN
+BEGIN:VEVENT
+UID:synthetic-folded-1@example.invalid
+DTSTART:20260922T150000Z
+DTEND:20260922T160000Z
+SUMMARY:Synthetic Seminar\, Room 4\nSecond line of a very long title tha
+ t continues on the folded line
+LOCATION:Building B\; Floor 2
+END:VEVENT
+END:VCALENDAR

@@ -108,6 +108,10 @@ fn date(at: Instant, zone: ZoneId, format: &str) -> String {
 pub(crate) fn at(at: Instant, zone: ZoneId) -> String {
     date(at, zone, "%a %b %-d, %-I:%M %p")
 }
+#[cfg_attr(not(feature = "desktop"), allow(dead_code))]
+pub(crate) fn clock(at: Instant, zone: ZoneId) -> String {
+    date(at, zone, "%-I:%M %p")
+}
 fn span_label(span: &TemporalSpan, zone: ZoneId) -> String {
     match span {
         TemporalSpan::Timed(s) => format!(

@@ -57,103 +57,102 @@ The documents are part of the product contract, not background notes.
 
 `AGENTS.md` defines authority and working discipline. `docs/DECISIONS.md` holds settled decisions; the product/spec documents elaborate them. Implementation contracts must refine those semantics, not override them. `docs/BUILD-GATES.md` controls work scope and evidence; `ASTRA.md` points to the first incomplete task. Neither progress document can settle a new product decision.
 
+## Using Temporal (0.2, calendar-replacement release)
+
+Gate 4 (D-014) turns the prototype into an app you can live in. Install it
+with the per-user Windows installer (`Temporal Engine_0.2.0_x64-setup.exe`);
+no administrator rights are needed, and WebView2 is fetched only if Windows
+lacks it. Everything is stored on this computer in
+`%APPDATA%\local.temporal.engine\temporal-engine.sqlite3`.
+
+First run:
+
+1. **Settings → Usual availability.** Declare the hours you are usually
+   willing to work. Temporal only suggests work inside declared time; an
+   empty calendar is never treated as free time.
+2. **Sources → Add a calendar.** Subscribe with a link (Google's "secret
+   address in iCal format", Outlook's published ICS link, or Quercus's
+   Calendar Feed) or import an `.ics` file. Choose *Coursework* for Quercus so
+   assignments become real deadlines. Links are kept in Windows Credential
+   Manager; subscriptions refresh at start-up and every three hours.
+3. **Sources → Trace tasks.** Choose your Trace JSON export once; Temporal
+   re-reads it whenever the file changes.
+
+Daily use:
+
+- **Horizon** (home) answers what is fixed, what fits before it, what is
+  getting risky, and what is only a suggestion. Select anything to see why.
+- **Calendar** shows Day, Week, and Month. Drag on the grid to create an
+  event; imported events are read-only and keep their source colour.
+- **Quick add** (press `/`): `Lab Tue 2-4pm every week until Dec 5`,
+  `PS3 due Fri 11:59pm`, `maybe call grandma sunday`. The interpretation is
+  shown before anything is saved; `Shift+Enter` opens the full editor.
+- Repeating events can be edited or skipped one occurrence at a time.
+- Past assignments from a coursework feed count as overdue until you mark
+  them handled (D-015); the source itself is never changed.
+- Reminders appear before fixed events (Settings). Closing the window keeps
+  Temporal in the notification area so reminders continue; quit from its
+  tray menu.
+
+Keyboard: `/` quick add · `N` new event · `H` Horizon · `C` Calendar ·
+`3` Sources · `4` Settings · in Calendar `T` today, `←`/`→` move, `D`/`W`/`M`
+change view · `Ctrl+Enter` saves in the editor · `Esc` closes.
+
 ## Development
 
-Gates 0, 1, and 2 are complete. The app runs on Windows with a bounded daily
-edit above a compressed Horizon, local temporal input, and a read-only Trace 1.0
-JSON import into Temporal Engine's own SQLite cache. It is verified against
-synthetic inputs; it has not yet met real coursework. Choose an example week,
-advance virtual time, or select My time to inspect the retained local snapshot.
-Trace still owns task text, status, completion, priority, context, and its
-exported due value; Temporal Engine does not write Trace's database. A non-null
-Trace due value remains visibly unresolved until a source contract preserves its
-precision and timezone.
+Gates 0–2 are complete; Gate 4 is the user-directed calendar-replacement
+release (see `docs/BUILD-GATES.md`). Trace still owns task text, status,
+completion, priority, context, and its exported due value; Temporal Engine
+never writes Trace's database or any calendar it reads.
 
-Use Node **24.x** (verified with 24.15.0/npm 11.12.1), the Rust toolchain below,
-and the Windows WebView2 runtime. Dependencies are pinned in `package-lock.json`
-and `Cargo.lock`. From the repository root, install the locked frontend packages
-once, then launch the development app:
+Use Node **24.x** and the Rust toolchain pinned in `rust-toolchain.toml`
+(1.98.0, rustfmt, clippy). Dependencies are locked in `package-lock.json` and
+`Cargo.lock`.
 
 ```powershell
 npm ci
-npm run app
+npm run app            # development app with hot reload
+npx tauri build        # release executable and per-user NSIS installer
 ```
 
-For a local executable with the frontend bundled, without a development server:
+The installer lands in `target/release/bundle/nsis/`. On Windows this needs
+the MSVC C++ build tools and Windows SDK. The GitHub Actions workflow in
+`.github/workflows/build.yml` runs every check on Linux and builds the
+installer on `windows-latest`, uploading it as a workflow artifact.
 
-```powershell
-npm run build
-cargo build -p temporal-app --bin temporal-app --features custom-protocol --locked
-.\target\debug\temporal-app.exe
+Cross-building from Linux (used when no Windows host is available) needs
+MinGW-w64 and NSIS (`gcc-mingw-w64-x86-64`, `nsis`) and the
+`x86_64-pc-windows-gnu` Rust target:
+
+```bash
+npx tauri build --target x86_64-pc-windows-gnu --bundles nsis
 ```
 
-This is a local debug prototype, not an installer. Run it in your normal Windows
-session so WebView2 can create its app-specific profile. The twelve synthetic
-examples include all ten required Horizon cases plus source freshness and a
-flexible Routine. Time controls change only the selected synthetic snapshot.
-
-`npm run preview` provides the same synthetic app boundary at
+`npm run preview` serves the same Rust command surface at
 `http://127.0.0.1:1420` for browser verification. Its development-only bridge
-executes the fixed `scenario-preview` binary and uses a synthetic cache under
-`.cache/browser-preview`; it is absent from the bundled app. The preview clock
-is frozen so imports and screenshots are repeatable. Stop that server before
-starting `npm run app`, which uses the same port.
+runs the `scenario-preview` binary against a synthetic cache in
+`.cache/browser-preview`, with time frozen (override with `PREVIEW_NOW`). It is
+absent from the bundled app. The twelve synthetic example weeks remain under
+**Settings → Explore example weeks**.
 
-To import personal Trace data, use Trace's `Ctrl+K` → `Export as JSON`, then
-choose `Import Trace JSON` in My time. The export is read as bytes and copied
-only into Temporal Engine's own app-data cache. The first adapter has a 10 MiB
-input limit and a 24-hour source-freshness limit. Failed or stale imports leave
-the previous snapshot visible and expose the source health result. Re-export
-after changing tasks in Trace; this first boundary is intentionally a snapshot,
-not a live connection.
-
-Open **Manage local time** in My time to add and edit fixed Anchors,
-real Deadlines, soft Intentions, weekly Routines, declared Availability, and work
-annotations through the retained Trace task picker. Removed Trace references stay
-labelled and available for managing their local work links. Local edits stay in Temporal Engine's own
-SQLite cache, retain stable IDs and revisions across restart, and never write back to
-Trace. Use an IANA timezone and the date-only controls when the precision is civil-day
-based; leaving effort blank preserves an unknown estimate. Completion and routine
-pause/outcome actions are explicit user state, so passage alone does not close or
-overdue a flexible record.
-
-**Today** presents the finite daily edit documented in `docs/TODAY-POLICY.md`:
-Fixed facts that fall today, at most three Worth doing candidates, at most two
-Loose ones, and at most three awareness rows On the radar. A flexible row shows
-an advisory range inside declared availability that fits before civil midnight;
-it reserves nothing, records nothing, and creates no deadline. Selecting a row
-opens the same inspector the Horizon uses, and **Why these, and what they are
-not** lists the ordering rationale, the conditional source basis, the expiry,
-and the typed evidence. An empty group is a real answer: an empty calendar does
-not establish availability, so unknown compatibility never fills a quota. Local
-time re-evaluates each minute while visible and on focus; the preview stays
-frozen.
-
-The first local editor accepts exact estimates or unknown effort and bounded
-weekly rules. Ambiguous or nonexistent daylight-saving wall times are rejected;
-it has no offset-choice control yet. The display zone is currently America/Toronto,
-while each dated record retains its explicit zone.
-
-`temporal_core::evaluate(&input)` validates a normalized snapshot and returns
-the complete deterministic `EvaluationOutput`, using the input's explicit time.
-`codec::decode_input` accepts strict synthetic JSON and `codec::canonical_bytes`
-encodes stable comparison bytes. `tests/scenarios.rs` runs the 81 documented
-inputs through this boundary with explicit semantic expectations.
-
-Use Rust **1.98.0**, pinned in `rust-toolchain.toml`, with rustfmt and clippy. On Windows, install the MSVC C++ build tools and Windows SDK (Visual Studio's Desktop development with C++ workload). The initial setup was checked with Visual Studio 2022 Community's MSVC toolchain. Rust dependencies are locked in `Cargo.lock`.
-
-Run the frontend build before Rust's all-feature checks so bundled assets exist:
+Checks (run the frontend build before Rust's all-feature checks so bundled
+assets exist):
 
 ```text
 npm test
 npm run build
-cargo metadata --no-deps --format-version 1
-cargo check --workspace --all-targets --locked
 cargo fmt --all -- --check
 cargo clippy --workspace --all-targets --all-features --locked -- -D warnings
 cargo test --workspace --all-features --locked
 ```
 
-Keep private local inputs under ignored `local-private/`; repository fixtures must be synthetic. A local wayfinder map tracks remaining decisions outside this repository. `ASTRA.md` and the gate evidence remain the implementation handoff. Do not place personal exports in the repository.
+`temporal_core::evaluate(&input)` validates a normalized snapshot and returns
+the complete deterministic `EvaluationOutput`, using the input's explicit
+time. The app boundary normalizes everything it feeds the core: local series
+and usual availability expand into ordinary Anchors and declarations, and
+iCalendar recurrence expands into bounded occurrences keyed by the source's
+own identity. Time calculations use pinned Chrono 0.4.45 and Chrono-TZ 0.10.4
+(IANA 2025b); RRULE expansion uses rrule 0.14.0.
 
-Time calculations use pinned [Chrono 0.4.45](https://docs.rs/chrono/0.4.45/chrono/) with only its `std` feature and [Chrono-TZ 0.10.4](https://docs.rs/chrono-tz/0.10.4/chrono_tz/) with bundled IANA **2025b** rules. The core does not enable Chrono's system-clock or machine-local-zone features. Updating these pins is an explicit dependency change requiring the civil-time tests to pass. After initial dependency acquisition, the checks also run with Cargo's `--offline` flag.
+Keep private local inputs under ignored `local-private/`; repository fixtures
+must be synthetic. Never commit calendar links, exports, or personal data.

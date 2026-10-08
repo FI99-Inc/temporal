@@ -21,6 +21,7 @@ pub fn source_id(kind: SourceKind) -> SourceId {
         SourceKind::Google => 3,
         SourceKind::Quercus => 4,
         SourceKind::Outlook => 5,
+        SourceKind::Calendar => 6,
     };
     format!("10000000-0000-4000-8000-{ordinal:012}")
         .parse()
@@ -118,6 +119,7 @@ impl Builder {
                 SourceKind::Google => ("Synthetic calendar", Some(SourceRole::Anchors)),
                 SourceKind::Quercus => ("Synthetic coursework", Some(SourceRole::Deadlines)),
                 SourceKind::Outlook => ("Synthetic Outlook", Some(SourceRole::Anchors)),
+                SourceKind::Calendar => ("Synthetic feed", Some(SourceRole::Anchors)),
             };
             input.sources.push(Source {
                 id,

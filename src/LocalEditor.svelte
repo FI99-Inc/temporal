@@ -64,7 +64,7 @@
 </script>
 
 <details class="local-panel" bind:open>
-  <summary>Manage local time <span>{records.length} records · add, edit, and record outcomes</span></summary>
+  <summary><span class="index">03</span>Plans and estimates <span>{records.length} records · routines, one-off availability, Trace work</span></summary>
   <div class="local-toolbar" aria-label="Add local input">
     {#each kinds as choice}<button disabled={busy} onclick={() => create(choice.kind)}>+ {choice.label}</button>{/each}
   </div>

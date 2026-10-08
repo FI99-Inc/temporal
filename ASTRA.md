@@ -5,27 +5,34 @@ reports in `docs/BUILD-GATES.md` carry the detailed evidence.
 
 ## Current state
 
-**Project phase:** Primitive Windows application
+**Project phase:** Calendar-replacement release (user-directed, D-014)
 
-**Current gate:** Gate 3 — Quercus and real personal trial (not started)
+**Current gate:** Gate 4 — Calendar-replacement release (in progress)
 
-**Current task:** 3.1 Verify the Quercus source contract
+**Current task:** 4.8 Verify Gate 4 on Windows (install, connect real
+calendars, confirm reminders), then the Gate 3.5 personal-local trial
 
-**Status:** Gates 0, 1, and 2 complete; Task 3.1 next
+**Status:** Gates 0–2 complete. Gate 4 Tasks 4.1–4.7 complete with evidence
+in `docs/BUILD-GATES.md`; 4.8 waits on the user's first Windows install. Gate
+3 was reordered by D-014: its Quercus REST adapter (3.1–3.3) is deferred and
+its personal trial (3.5) runs on this release.
 
-The user has authorized building the application and emphasized prompt delivery
-of a highly personal app. Keep implementation focused on a usable Horizon. One
-internal Rust crate now evaluates validated snapshots into lifecycle, source
-health, Windows, conflicts, fit, pressure, and suggestion-validity results.
-The Windows Tauri/Svelte shell now presents twelve synthetic weeks with virtual
-time, nonlinear geometry, separate temporal species, and inspectable evidence.
-Trace 1.0 JSON imports into an app-owned SQLite cache with stable mappings,
-atomic reconciliation, retained last-known state, and visible source health.
-Local temporal forms and work annotations now persist in the same app-owned
-store, with explicit completion and Routine outcomes. A bounded `today-v1` edit
-selects Fixed, Worth doing, Loose, and On the radar from one evaluation and
-explains itself without writing anything. The app is verified against synthetic
-inputs and one snapshot source; it has never met real coursework.
+On 2026-10-08 the user asked for a fully functioning version they can use as a
+true calendar replacement, delivered as an executable desktop app, with UI and
+engine fixes. D-014 records what that authorizes: a secondary Calendar utility,
+repeating local events, usual weekly availability, read-only iCalendar import
+(file or subscription), reminders, and a Windows installer. Horizon stays Home
+and every Gate 0–2 invariant holds.
+
+Later the same day the user rejected the first UI as generic and asked for a
+utilitarian, Teenage-Engineering-like design. D-016 records the visual
+language; every page, dialog, and the three themes (Paper, Ink, Rose) were
+restyled with no change to engine or command behavior.
+
+Build note: this environment has no Windows host. The Windows executable and
+NSIS installer are cross-built with the `x86_64-pc-windows-gnu` target and
+MinGW (Microsoft's MSVC download hosts are not reachable here); a GitHub
+Actions workflow reproduces the MSVC build on Windows.
 
 ## Settled posture
 
@@ -41,7 +48,9 @@ inputs and one snapshot source; it has never met real coursework.
 
 ## Immediate objective
 
-Execute **3.1 Verify the Quercus source contract** from `docs/BUILD-GATES.md`:
+Execute Gate 4 in order (see `docs/BUILD-GATES.md`). The former immediate
+objective, kept for when the Quercus REST adapter resumes: **3.1 Verify the
+Quercus source contract** from `docs/BUILD-GATES.md`:
 read-only investigation of what Quercus/Canvas actually exposes, its
 authentication, pagination, rate limits, error shapes, and the precision and
 timezone of every date field, before any adapter code. Record what the source
@@ -118,6 +127,13 @@ where the model first meets real coursework; separate observation from change.
   while exposing `partial` health; re-import restored healthy state. A process
   restart preserved the whole cache. Gate 2 is complete; its report carries the
   full evidence.
+
+- Gate 4 (2026-10-08): settings, local series, usual availability, bounded
+  slice, read-only iCalendar sources (43 parser tests), Calendar Day/Week/
+  Month, quick add, event editor, reminders with tray and single instance,
+  and a 0.2.0 per-user NSIS installer cross-built with MinGW. Engine fix F-1:
+  Trace health no longer qualifies every window. 120 frontend and 187 Rust
+  tests pass; CI's clean Linux job passed. Not yet launched on Windows.
 
 ## Open questions and residual limits
 

@@ -1,0 +1,19 @@
+BEGIN:VCALENDAR
+VERSION:2.0
+PRODID:-//Synthetic Calendar Co//Fixtures//EN
+BEGIN:VEVENT
+UID:synthetic-series-cancel-1@example.invalid
+DTSTART;TZID=America/Toronto:20260907T090000
+DTEND;TZID=America/Toronto:20260907T100000
+RRULE:FREQ=WEEKLY;COUNT=3
+SUMMARY:Synthetic Series
+END:VEVENT
+BEGIN:VEVENT
+UID:synthetic-series-cancel-1@example.invalid
+RECURRENCE-ID;TZID=America/Toronto:20260921T090000
+DTSTART;TZID=America/Toronto:20260921T090000
+DTEND;TZID=America/Toronto:20260921T100000
+STATUS:CANCELLED
+SUMMARY:Synthetic Cancelled Session
+END:VEVENT
+END:VCALENDAR

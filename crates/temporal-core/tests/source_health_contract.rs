@@ -207,3 +207,31 @@ fn trace_due_uses_task_catalog_coverage_without_a_deadline_interval() {
             .any(|need| need.source_id == trace && need.role == SourceRole::Deadlines)
     );
 }
+
+#[test]
+fn a_generic_calendar_source_is_qualified_like_any_imported_source() {
+    for (name, expected) in [
+        ("S12/base", Health::Healthy),
+        ("S12/failed", Health::Unavailable),
+        ("S12/freshness_plus_ms", Health::Stale),
+    ] {
+        let mut case = support::case(name);
+        let google = source_id(&case, SourceKind::Google);
+        for source in &mut case.input.sources {
+            if source.id == google {
+                source.kind = SourceKind::Calendar;
+            }
+        }
+        temporal_core::validation::validate(&case.input).unwrap();
+        let row = source_health(&case.input)
+            .unwrap()
+            .into_iter()
+            .find(|row| row.source_id == google)
+            .unwrap();
+        assert_eq!(row.health, expected, "{name}");
+    }
+    assert_eq!(
+        serde_json::to_string(&SourceKind::Calendar).unwrap(),
+        "\"calendar\""
+    );
+}

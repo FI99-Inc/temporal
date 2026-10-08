@@ -1,15 +1,19 @@
-// Package the CLI-rendered PNG into a Windows ICO container, without adding
-// platform scaffolds or generating icons for platforms the app does not support.
-import { readFile, writeFile } from 'node:fs/promises';
-const directory = new URL('../src-tauri/icons/', import.meta.url);
-const png = await readFile(new URL('128x128.png', directory));
-const header = Buffer.alloc(22);
-header.writeUInt16LE(1, 2); // icon
-header.writeUInt16LE(1, 4); // one image
-header[6] = 128; header[7] = 128;
-header.writeUInt16LE(1, 10);
-header.writeUInt16LE(32, 12);
-header.writeUInt32LE(png.length, 14);
-header.writeUInt32LE(22, 18);
-await writeFile(new URL('icon.ico', directory), Buffer.concat([header, png]));
-await writeFile(new URL('icon.png', directory), png);
+// Regenerate the Windows icon set from the 1024 px source (rendered from
+// icons/mark.svg). Only the files the Windows bundle uses are kept; no
+// Android, iOS, or macOS scaffolds are added to the repository.
+import { execFileSync } from 'node:child_process';
+import { copyFile, mkdtemp, rm } from 'node:fs/promises';
+import { tmpdir } from 'node:os';
+import { join } from 'node:path';
+import { fileURLToPath } from 'node:url';
+
+const icons = fileURLToPath(new URL('../src-tauri/icons/', import.meta.url));
+const scratch = await mkdtemp(join(tmpdir(), 'temporal-icons-'));
+try {
+  execFileSync('npx', ['tauri', 'icon', join(icons, 'icon-source.png'), '-o', scratch], { stdio: 'inherit', shell: process.platform === 'win32' });
+  for (const name of ['icon.ico', 'icon.png', '32x32.png', '128x128.png', '128x128@2x.png']) {
+    await copyFile(join(scratch, name), join(icons, name));
+  }
+} finally {
+  await rm(scratch, { recursive: true, force: true });
+}

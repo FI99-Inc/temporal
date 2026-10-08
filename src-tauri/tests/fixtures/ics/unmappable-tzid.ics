@@ -1,0 +1,10 @@
+BEGIN:VCALENDAR
+VERSION:2.0
+PRODID:-//Synthetic Calendar Co//Fixtures//EN
+BEGIN:VEVENT
+UID:synthetic-unknown-1@example.invalid
+DTSTART;TZID=Synthetic/Unknown_Zone:20260915T090000
+DTEND;TZID=Synthetic/Unknown_Zone:20260915T100000
+SUMMARY:Synthetic Unknown Zone Meeting
+END:VEVENT
+END:VCALENDAR

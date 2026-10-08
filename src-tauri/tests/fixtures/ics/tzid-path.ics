@@ -1,0 +1,16 @@
+BEGIN:VCALENDAR
+VERSION:2.0
+PRODID:-//Synthetic Calendar Co//Fixtures//EN
+BEGIN:VEVENT
+UID:synthetic-path-1@example.invalid
+DTSTART;TZID=/mozilla.org/20050126_1/America/New_York:20260915T090000
+DTEND;TZID=/mozilla.org/20050126_1/America/New_York:20260915T100000
+SUMMARY:Synthetic Path Zone Meeting
+END:VEVENT
+BEGIN:VEVENT
+UID:synthetic-path-2@example.invalid
+DTSTART;TZID=/citadel.org/20190103_1/America/Toronto:20260915T110000
+DTEND;TZID=/citadel.org/20190103_1/America/Toronto:20260915T120000
+SUMMARY:Synthetic Citadel Zone Meeting
+END:VEVENT
+END:VCALENDAR

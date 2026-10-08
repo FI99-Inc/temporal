@@ -12,15 +12,17 @@ function syntheticPreview(): Plugin {
       const id = url.searchParams.get('scenarioId') ?? '';
       const minutes = url.searchParams.get('offsetMinutes') ?? '0';
       const cache = fileURLToPath(new URL('./.cache/browser-preview/temporal-engine.sqlite3', import.meta.url));
-      const frozenTime = '2026-09-09T12:00:00.000Z';
+      const frozenTime = process.env.PREVIEW_NOW ?? '2026-09-09T12:00:00.000Z';
       const importing = url.pathname === '/import_trace_json';
       const mutating = url.pathname === '/mutate_local';
-      const writing = importing || mutating;
+      const calling = url.pathname === '/call';
+      const writing = importing || mutating || calling;
       const args = url.pathname === '/scenario_catalog' ? ['catalog']
         : url.pathname === '/evaluate_scenario' && /^S\d{2}$/.test(id) && /^\d{1,5}$/.test(minutes) ? [id, minutes]
         : url.pathname === '/personal_snapshot' ? ['personal', cache, frozenTime]
         : importing ? ['import', cache, frozenTime]
-        : mutating ? ['mutate', cache, frozenTime] : null;
+        : mutating ? ['mutate', cache, frozenTime]
+        : calling ? ['call', cache, frozenTime] : null;
       if (req.headers.origin && !['http://127.0.0.1:1420','http://localhost:1420'].includes(req.headers.origin)) { res.statusCode=403; res.end('Same-origin preview requests only'); return; }
       if (req.method !== (writing ? 'POST' : 'GET') || !args) { res.statusCode = 400; res.end('Invalid synthetic preview request'); return; }
       try {
@@ -29,7 +31,7 @@ function syntheticPreview(): Plugin {
           const parts: Buffer[] = []; let size = 0;
           for await (const chunk of req) {
             const part = Buffer.from(chunk); size += part.length;
-            if (size > 10 * 1024 * 1024) { res.statusCode=413; res.end('Export exceeds the preview size limit'); return; }
+            if (size > 21 * 1024 * 1024) { res.statusCode=413; res.end('Input exceeds the preview size limit'); return; }
             parts.push(part);
           }
           body = new TextDecoder('utf-8',{fatal:true}).decode(Buffer.concat(parts));

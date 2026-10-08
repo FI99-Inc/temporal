@@ -1,7 +1,11 @@
 //! App-owned temporal records and the narrow mutation boundary for local input.
+use crate::series::{
+    self, AnchorSeries, EventDetails, SeriesFrequency, SeriesRule, SeriesTiming, UsualAvailability,
+    WeeklyBlock,
+};
 use serde::{Deserialize, Serialize};
 use std::{
-    collections::BTreeSet,
+    collections::{BTreeMap, BTreeSet},
     num::{NonZeroU32, NonZeroU64},
 };
 use temporal_core::{domain::*, time::*};
@@ -22,6 +26,29 @@ pub struct LocalState {
     pub anchor_annotations: Vec<AnchorAnnotation>,
     pub deadline_annotations: Vec<DeadlineAnnotation>,
     pub task_annotations: Vec<TaskAnnotation>,
+    /// Repeating fixed events; each occurrence evaluates as an ordinary Anchor.
+    #[serde(default)]
+    pub anchor_series: Vec<AnchorSeries>,
+    /// The usual weekly availability, expanded into explicit declarations.
+    #[serde(default)]
+    pub usual_availability: Option<UsualAvailability>,
+    /// Display-only place and notes for single local Anchors and Deadlines.
+    #[serde(default)]
+    pub event_details: BTreeMap<String, EventDetails>,
+    /// Imported deadlines the person marked handled, by deadline identity.
+    /// The source fact is unchanged; the acknowledgement only leaves it out of
+    /// pressure and the daily edit (D-015).
+    #[serde(default)]
+    pub handled_imports: BTreeMap<String, Handled>,
+}
+
+#[derive(Clone, Debug, Eq, PartialEq, Serialize, Deserialize)]
+#[serde(deny_unknown_fields)]
+pub struct Handled {
+    pub recorded_at: Instant,
+    /// The calendar source the deadline belonged to when marked.
+    #[serde(default)]
+    pub source_id: String,
 }
 
 impl LocalState {
@@ -43,6 +70,10 @@ impl LocalState {
             anchor_annotations: vec![],
             deadline_annotations: vec![],
             task_annotations: vec![],
+            anchor_series: vec![],
+            usual_availability: None,
+            event_details: BTreeMap::new(),
+            handled_imports: BTreeMap::new(),
         }
     }
 }
@@ -66,6 +97,19 @@ pub enum LocalKind {
     TaskAnnotation,
     AnchorAnnotation,
     DeadlineAnnotation,
+    AnchorSeries,
+    SeriesSkip,
+    UsualAvailability,
+    ImportedHandled,
+}
+
+/// One usual weekly block as typed in the Settings page.
+#[derive(Clone, Debug, Serialize, Deserialize)]
+#[serde(deny_unknown_fields)]
+pub struct BlockInput {
+    pub weekday: Weekday,
+    pub start: String,
+    pub end: String,
 }
 
 #[derive(Clone, Copy, Debug, Eq, PartialEq, Serialize, Deserialize)]
@@ -144,6 +188,20 @@ pub struct LocalMutation {
     pub energy_requirement: Option<EnergyRequirement>,
     #[serde(default)]
     pub energy_capacity: Option<EnergyCapacity>,
+    /// Series rule fields. Supplying `frequency` replaces the whole rule.
+    #[serde(default)]
+    pub frequency: Option<SeriesFrequency>,
+    #[serde(default)]
+    pub interval: Option<u32>,
+    #[serde(default)]
+    pub count: Option<u32>,
+    /// Display-only free text; an empty string clears it.
+    #[serde(default)]
+    pub place: Option<String>,
+    #[serde(default)]
+    pub notes: Option<String>,
+    #[serde(default)]
+    pub blocks: Vec<BlockInput>,
 }
 
 fn default_zone() -> String {
@@ -183,6 +241,12 @@ impl LocalMutation {
             outcome: None,
             energy_requirement: None,
             energy_capacity: None,
+            frequency: None,
+            interval: None,
+            count: None,
+            place: None,
+            notes: None,
+            blocks: vec![],
         }
     }
 }
@@ -237,15 +301,37 @@ pub(crate) fn apply(
     if mutation.paused.is_some() && mutation.kind != LocalKind::Routine {
         return Err("only a Routine can be paused".into());
     }
-    if (mutation.outcome.is_some() || mutation.occurrence_date.is_some())
-        && mutation.kind != LocalKind::RoutineOutcome
-    {
+    if mutation.outcome.is_some() && mutation.kind != LocalKind::RoutineOutcome {
         return Err("an outcome needs a Routine occurrence".into());
     }
+    if mutation.occurrence_date.is_some()
+        && !matches!(
+            mutation.kind,
+            LocalKind::RoutineOutcome | LocalKind::SeriesSkip
+        )
+    {
+        return Err("an occurrence date needs a Routine or repeating event".into());
+    }
     if (mutation.occupancy.is_some() || mutation.certainty.is_some())
-        && mutation.kind != LocalKind::Anchor
+        && !matches!(mutation.kind, LocalKind::Anchor | LocalKind::AnchorSeries)
     {
         return Err("occupancy and certainty apply only to an Anchor".into());
+    }
+    if (mutation.frequency.is_some() || mutation.interval.is_some() || mutation.count.is_some())
+        && mutation.kind != LocalKind::AnchorSeries
+    {
+        return Err("only a repeating event has a repeat rule".into());
+    }
+    if (mutation.place.is_some() || mutation.notes.is_some())
+        && !matches!(
+            mutation.kind,
+            LocalKind::Anchor | LocalKind::Deadline | LocalKind::AnchorSeries
+        )
+    {
+        return Err("place and notes describe events and deadlines".into());
+    }
+    if !mutation.blocks.is_empty() && mutation.kind != LocalKind::UsualAvailability {
+        return Err("weekly blocks describe usual availability".into());
     }
     // Supplying an ID edits that existing species. New IDs are allocated here.
     if let Some(id) = &mutation.id {
@@ -259,6 +345,10 @@ pub(crate) fn apply(
             LocalKind::Routine => state.routines.iter().any(|r| r.meta.id.to_string() == *id),
             LocalKind::Availability => state
                 .availability
+                .iter()
+                .any(|r| r.meta.id.to_string() == *id),
+            LocalKind::AnchorSeries | LocalKind::SeriesSkip => state
+                .anchor_series
                 .iter()
                 .any(|r| r.meta.id.to_string() == *id),
             _ => true,
@@ -290,6 +380,23 @@ fn upsert(
         LocalKind::AnchorAnnotation => upsert_anchor_annotation(state, mutation, now),
         LocalKind::DeadlineAnnotation => {
             upsert_deadline_annotation(state, mutation, trace_tasks, now)
+        }
+        LocalKind::AnchorSeries => upsert_series(state, mutation, now),
+        LocalKind::SeriesSkip => skip_occurrence(state, mutation, now, true),
+        LocalKind::UsualAvailability => upsert_usual(state, mutation, now),
+        LocalKind::ImportedHandled => {
+            let id = parse_id::<DeadlineId>(mutation.id.as_deref())?.to_string();
+            if state.handled_imports.contains_key(&id) {
+                return Err("that deadline is already marked handled".into());
+            }
+            state.handled_imports.insert(
+                id,
+                Handled {
+                    recorded_at: now,
+                    source_id: String::new(),
+                },
+            );
+            Ok(())
         }
     }
 }
@@ -357,6 +464,31 @@ fn remove(
                 target,
                 "deadline annotation",
             )
+        }
+        LocalKind::AnchorSeries => {
+            let id = parse_id::<AnchorId>(mutation.id.as_deref())?;
+            let record = state
+                .anchor_series
+                .iter_mut()
+                .find(|r| r.meta.id == id)
+                .ok_or("repeating event does not exist")?;
+            record.presence = Presence::Removed;
+            touch(&mut record.meta, now)?;
+            Ok(())
+        }
+        LocalKind::SeriesSkip => skip_occurrence(state, mutation, now, false),
+        LocalKind::UsualAvailability => {
+            if state.usual_availability.take().is_none() {
+                return Err("usual availability is not declared".into());
+            }
+            Ok(())
+        }
+        LocalKind::ImportedHandled => {
+            let id = parse_id::<DeadlineId>(mutation.id.as_deref())?.to_string();
+            if state.handled_imports.remove(&id).is_none() {
+                return Err("that deadline is not marked handled".into());
+            }
+            Ok(())
         }
     }
 }
@@ -431,6 +563,7 @@ fn upsert_anchor(
         location,
     };
     replace_or_push(&mut state.anchors, record);
+    update_details(state, &id.to_string(), input)?;
     if input.milestone.is_some() || input.importance.is_some() {
         let mut annotation_input = input.clone();
         annotation_input.id = Some(id.to_string());
@@ -472,6 +605,7 @@ fn upsert_deadline(
         fulfillment,
     };
     replace_or_push(&mut state.deadlines, record);
+    update_details(state, &id.to_string(), input)?;
     if input.milestone.is_some()
         || input.importance.is_some()
         || has_work(input)
@@ -856,6 +990,241 @@ fn upsert_deadline_annotation(
         confirmation: existing.and_then(|record| record.confirmation.clone()),
     };
     replace_or_push(&mut state.deadline_annotations, record);
+    Ok(())
+}
+
+/// Place and notes are display text kept beside the fact, never inside it.
+fn update_details(state: &mut LocalState, id: &str, input: &LocalMutation) -> Result<(), String> {
+    if input.place.is_none() && input.notes.is_none() {
+        return Ok(());
+    }
+    let mut details = state.event_details.get(id).cloned().unwrap_or_default();
+    if input.place.is_some() {
+        details.place = series::clean_text(input.place.as_deref(), 200, "Place")?;
+    }
+    if input.notes.is_some() {
+        details.notes = series::clean_text(input.notes.as_deref(), 4000, "Notes")?;
+    }
+    if details.is_empty() {
+        state.event_details.remove(id);
+    } else {
+        state.event_details.insert(id.to_string(), details);
+    }
+    Ok(())
+}
+
+/// `YYYY-MM-DDTHH:MM[...]` into a civil date and minute of day.
+fn split_wall(value: &str) -> Result<(LocalDate, u32), String> {
+    let date = value
+        .get(..10)
+        .ok_or("use YYYY-MM-DDTHH:MM")?
+        .parse::<LocalDate>()
+        .map_err(time_error)?;
+    let minute = series::parse_minute(value.get(11..16).ok_or("use YYYY-MM-DDTHH:MM")?, false)?;
+    Ok((date, u32::from(minute)))
+}
+
+fn upsert_series(
+    state: &mut LocalState,
+    input: &LocalMutation,
+    now: Instant,
+) -> Result<(), String> {
+    let id = upsert_id::<AnchorId>(input.id.as_deref())?;
+    let existing = state
+        .anchor_series
+        .iter()
+        .find(|record| record.meta.id == id)
+        .cloned();
+    let title = match input.title.as_deref() {
+        Some(value) => required(Some(value), "event title")?.to_string(),
+        None => existing
+            .as_ref()
+            .map(|record| record.title.clone())
+            .ok_or("event title is required")?,
+    };
+    let zone = parse_zone(&input.zone)?;
+    let has_span = input.all_day || input.start.is_some() || input.start_date.is_some();
+    let (first_date, timing) = if !has_span {
+        let record = existing.as_ref().ok_or("event time is required")?;
+        (record.first_date, record.timing.clone())
+    } else if input.all_day {
+        let start = required(input.start_date.as_deref(), "first date")?
+            .parse::<LocalDate>()
+            .map_err(time_error)?;
+        let end = required(input.end_date_exclusive.as_deref(), "end date")?
+            .parse::<LocalDate>()
+            .map_err(time_error)?;
+        let mut days = 0u32;
+        let mut cursor = start;
+        while cursor < end {
+            cursor = cursor.next_day().map_err(time_error)?;
+            days += 1;
+            if days > 366 {
+                return Err("an all-day occurrence can last at most a year".into());
+            }
+        }
+        let days = NonZeroU32::new(days).ok_or("the end date must follow the first date")?;
+        (start, SeriesTiming::AllDay { days })
+    } else {
+        let (date, start_minute) = split_wall(required(input.start.as_deref(), "start time")?)?;
+        let (end_date, end_minute) = split_wall(required(input.end.as_deref(), "end time")?)?;
+        let start = series::resolve_wall(date, start_minute, zone).map_err(time_error)?;
+        let end = series::resolve_wall(end_date, end_minute, zone).map_err(time_error)?;
+        let minutes = end
+            .duration_since(start)
+            .map_err(|_| "the end must follow the start".to_string())?
+            / 60_000;
+        let minutes = u32::try_from(minutes)
+            .ok()
+            .filter(|m| *m <= 7 * 24 * 60)
+            .and_then(NonZeroU32::new)
+            .ok_or("an occurrence lasts between one minute and one week")?;
+        (
+            date,
+            SeriesTiming::Timed {
+                start_minute: u16::try_from(start_minute).map_err(|_| "invalid start")?,
+                duration_minutes: minutes,
+            },
+        )
+    };
+    let rule = match (input.frequency, existing.as_ref()) {
+        (Some(frequency), _) => {
+            let until = input
+                .until_date_exclusive
+                .as_deref()
+                .filter(|value| !value.trim().is_empty())
+                .map(|value| value.parse::<LocalDate>().map_err(time_error))
+                .transpose()?;
+            if until.is_some_and(|until| until <= first_date) {
+                return Err("the repeat must end after the first occurrence".into());
+            }
+            SeriesRule {
+                frequency,
+                interval: NonZeroU32::new(input.interval.unwrap_or(1))
+                    .filter(|n| n.get() <= 99)
+                    .ok_or("repeat every 1 to 99 periods")?,
+                weekdays: if frequency == SeriesFrequency::Weekly {
+                    input.weekdays.iter().copied().collect()
+                } else {
+                    BTreeSet::new()
+                },
+                until_date_exclusive: until,
+                count: input
+                    .count
+                    .map(|count| {
+                        NonZeroU32::new(count)
+                            .filter(|n| n.get() <= 5000)
+                            .ok_or("repeat between 1 and 5000 times")
+                    })
+                    .transpose()?,
+            }
+        }
+        (None, Some(record)) => record.rule.clone(),
+        (None, None) => return Err("choose how this event repeats".into()),
+    };
+    let mut details = existing
+        .as_ref()
+        .map(|record| record.details.clone())
+        .unwrap_or_default();
+    if input.place.is_some() {
+        details.place = series::clean_text(input.place.as_deref(), 200, "Place")?;
+    }
+    if input.notes.is_some() {
+        details.notes = series::clean_text(input.notes.as_deref(), 4000, "Notes")?;
+    }
+    let record = AnchorSeries {
+        meta: next_meta(existing.as_ref().map(|record| &record.meta), id, now)?,
+        title,
+        presence: Presence::Present,
+        zone,
+        first_date,
+        timing,
+        rule,
+        skipped: existing
+            .as_ref()
+            .map(|record| record.skipped.clone())
+            .unwrap_or_default(),
+        occupancy: input
+            .occupancy
+            .or_else(|| existing.as_ref().map(|r| r.occupancy))
+            .ok_or("declare whether this event blocks availability")?,
+        reported_certainty: input.certainty.unwrap_or_else(|| {
+            existing
+                .as_ref()
+                .map_or(ReportedCertainty::Confirmed, |r| r.reported_certainty)
+        }),
+        location: if input.context.is_some() {
+            context_tag(input.context.as_deref())?
+        } else {
+            existing.as_ref().and_then(|record| record.location.clone())
+        },
+        details,
+    };
+    if let Some(slot) = state
+        .anchor_series
+        .iter_mut()
+        .find(|record| record.meta.id == id)
+    {
+        *slot = record;
+    } else {
+        state.anchor_series.push(record);
+    }
+    Ok(())
+}
+
+fn skip_occurrence(
+    state: &mut LocalState,
+    input: &LocalMutation,
+    now: Instant,
+    skip: bool,
+) -> Result<(), String> {
+    let id = parse_id::<AnchorId>(input.id.as_deref())?;
+    let date = required(input.occurrence_date.as_deref(), "occurrence date")?
+        .parse::<LocalDate>()
+        .map_err(time_error)?;
+    let record = state
+        .anchor_series
+        .iter_mut()
+        .find(|record| record.meta.id == id)
+        .ok_or("repeating event does not exist")?;
+    let changed = if skip {
+        record.skipped.insert(date)
+    } else {
+        record.skipped.remove(&date)
+    };
+    if !changed {
+        return Err(if skip {
+            "that occurrence is already skipped".into()
+        } else {
+            "that occurrence is not skipped".into()
+        });
+    }
+    touch(&mut record.meta, now)
+}
+
+fn upsert_usual(state: &mut LocalState, input: &LocalMutation, now: Instant) -> Result<(), String> {
+    let blocks = input
+        .blocks
+        .iter()
+        .map(|block| {
+            Ok(WeeklyBlock {
+                weekday: block.weekday,
+                start_minute: series::parse_minute(&block.start, false)?,
+                end_minute: series::parse_minute(&block.end, true)?,
+            })
+        })
+        .collect::<Result<Vec<_>, String>>()?;
+    series::validate_blocks(&blocks)?;
+    let existing = state.usual_availability.as_ref();
+    let id = existing.map_or_else(|| upsert_id::<AvailabilityId>(None), |u| Ok(u.meta.id))?;
+    let meta = next_meta(existing.map(|u| &u.meta), id, now)?;
+    state.usual_availability = Some(UsualAvailability {
+        meta,
+        zone: parse_zone(&input.zone)?,
+        blocks,
+        contexts: declared_contexts(input.context.as_deref())?,
+        energy_capacity: input.energy_capacity.unwrap_or(EnergyCapacity::Unknown),
+    });
     Ok(())
 }
 

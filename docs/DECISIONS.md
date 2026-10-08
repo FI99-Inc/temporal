@@ -74,6 +74,72 @@ When Google/Outlook integrations arrive, begin with read-only import.
 
 Temporal behavior must be testable with an injected clock and synthetic scenarios.
 
+### D-014 — Calendar-replacement release (user directive, 2026-10-08)
+
+The user asked to "finish temporal, fix the UI, engine logic, and get a fully
+functioning version ready … to start using temporal as a true calendar
+(replacement)", delivered as "a proper executable desktop app". Under the
+authority order in `AGENTS.md`, this instruction reorders Gate 3 and authorizes
+the following, without reopening D-001–D-013:
+
+- Horizon stays Home. A secondary **Calendar** utility (Day, Week, Month) is
+  now earned: it is the place to place, read, and edit fixed facts quickly.
+- Local fixed events (Anchors) may repeat. A bounded local series is expanded
+  by the application boundary into ordinary individual Anchors with stable
+  derived identities; the core still receives only normalized occurrences.
+- A **usual weekly availability** may be declared once. It expands into the
+  explicit, non-overlapping availability declarations the core already
+  consumes. An explicit one-off declaration takes precedence over the usual
+  pattern for the time it covers. Nothing infers free time from an empty grid.
+- **Read-only iCalendar import** from a chosen file or a subscription URL
+  (Google, Outlook, Quercus/Canvas, or another calendar). The adapter expands
+  recurrence into bounded occurrences keyed by the source's own recurrence
+  identifier, keeps per-calendar source identity and health, and never writes
+  back. A subscription URL is treated as a credential.
+- **Desktop reminders** before fixed events and a Windows **installer**.
+  Gate 3.6's "packaging" prohibition is superseded for this personal build;
+  public distribution, signing, auto-update, and stores remain excluded.
+- The Quercus REST adapter (Tasks 3.1–3.3) is deferred, not abandoned:
+  Canvas's own calendar feed reaches coursework dates through the iCalendar
+  boundary. The personal-local trial (3.5) now runs on this release.
+
+Still excluded: mobile, cloud storage, accounts, telemetry, write-back to any
+external source, machine-authored time blocking, and AI.
+
+### D-015 — Marking an imported deadline handled (provisional)
+
+An iCalendar feed (including Canvas/Quercus) reports deadlines but never their
+submission state, and the domain contract lets only the owning source resolve
+a source-owned deadline. Without a remedy every past assignment would remain
+overdue forever, filling the radar with work already done.
+
+The app therefore keeps an explicit, local **handled** acknowledgement beside
+an imported deadline. It never writes a resolution into the source fact: the
+deadline keeps its provenance, stays visible in the Calendar labelled
+"handled", and only leaves pressure and the daily edit. Undo is one action.
+Unacknowledged past imported deadlines remain overdue, as the contract says.
+Revisit when a source can report fulfillment (the deferred Quercus adapter).
+
+### D-016 — Utilitarian visual language (user directive, 2026-10-08)
+
+The user rejected the first calendar-replacement UI as generic ("the most AI
+looking app") and asked for a utilitarian, instrument-panel look in the spirit
+of Teenage Engineering's site, pointing at a two-colour reference with giant
+blocky type and ruled grids.
+
+The visual system is therefore: hard 1px rules and square corners (no rounded
+cards, soft shadows, or gradients); a wide black display face (Archivo, bundled
+locally) for headings and numbers; a monospace face (IBM Plex Mono) for labels,
+times, and controls in uppercase; numbered sections (01, 02, …); inversion for
+active and fixed things; one signal colour for now and risk; and hatching for
+time that is closed or declared. Themes are System, Paper (light), Ink (dark),
+and Rose (the reference's pink and bottle green).
+
+This changes appearance only. Species encodings keep their meaning (solid =
+fixed, diamond = deadline, hatched = declared time, dashed = optional or
+advice), and the O-003 composition (Today first, compressed time below) holds.
+Fonts ship with the app; nothing is fetched at runtime.
+
 ## Open questions
 
 These are intentionally not blockers for documentation Gate 0 unless a gate explicitly requires them.

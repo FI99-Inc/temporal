@@ -10,6 +10,8 @@ pub enum SourceKind {
     Quercus,
     Google,
     Outlook,
+    /// Another read-only iCalendar feed or file (D-014).
+    Calendar,
 }
 
 #[derive(Clone, Debug, Eq, PartialEq, serde::Serialize, serde::Deserialize)]
